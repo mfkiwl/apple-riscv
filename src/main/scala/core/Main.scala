@@ -23,13 +23,9 @@ import spinal.core._
 
 object Main{
   def main(args: Array[String]) {
-    val cfg = new cpu_cfg
+    val param = new CPU_PARAM()
     SpinalConfig(
       targetDirectory = "rtl/core"
-    ).generateVerilog(new program_counter(cfg)).printPruned()
-
-    SpinalConfig(
-      targetDirectory = "rtl/core"
-    ).generateVerilog(new register_file(cfg)).printPruned()
+    ).generateVerilog(new apple_riscv(param)).printPruned()
   }
 }

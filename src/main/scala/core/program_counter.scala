@@ -19,18 +19,18 @@ package core
 
 import spinal.core._
 
-case class pc_io(cfg: cpu_cfg) extends Bundle{
+case class pc_io(param: CPU_PARAM) extends Bundle{
     // IO port
-    val pc_in  = in UInt(cfg.PC_WIDTH bits)      // branch address calculated from branch unit
+    val pc_in  = in UInt(param.PC_WIDTH bits)      // branch address calculated from branch unit
     val branch = in Bool                 // takes the branch/jump
     val stall  = in Bool                  // stall the pc
-    val pc_out = out UInt(cfg.PC_WIDTH bits)
+    val pc_out = out UInt(param.PC_WIDTH bits)
 }
 
-case class program_counter(cfg: cpu_cfg) extends Component {
-    val io    = new pc_io(cfg)
+case class program_counter(param: CPU_PARAM) extends Component {
+    val io    = new pc_io(param)
 
-    val pc = Reg(UInt(cfg.PC_WIDTH bits)) init 0
+    val pc = Reg(UInt(param.PC_WIDTH bits)) init 0
     when(!io.stall) {
         when(io.branch) {
             pc := io.pc_in
