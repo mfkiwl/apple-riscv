@@ -28,12 +28,14 @@ case class rf_io(param: CPU_PARAM) extends Bundle{
     // Parameter
     val ADDR_WIDTH = log2Up(param.RF_SIZE)
     // Port A
-    val rs1_addr     = in UInt(ADDR_WIDTH bits)
+    val rs1_rd_addr  = in UInt(ADDR_WIDTH bits)
+    val rs1_wr_addr  = in UInt(ADDR_WIDTH bits)
     val rs1_data_in  = in Bits(param.RF_WIDTH bits)
     val rs1_wen      = in Bool
     val rs1_data_out = out Bits(param.RF_WIDTH bits)
     // Port B
-    val rs2_addr     = in UInt(ADDR_WIDTH bits)
+    val rs2_rd_addr  = in UInt(ADDR_WIDTH bits)
+    val rs2_wr_addr  = in UInt(ADDR_WIDTH bits)
     val rs2_data_in  = in Bits(param.RF_WIDTH bits)
     val rs2_wen      = in Bool
     val rs2_data_out = out Bits(param.RF_WIDTH bits)
@@ -41,7 +43,7 @@ case class rf_io(param: CPU_PARAM) extends Bundle{
 
 case class register_file(param: CPU_PARAM) extends Component {
     val SIZE  = param.RF_SIZE
-    val io    = new rf_io(param)
+    val io    = rf_io(param)
 
     val rs1_data = Bits(param.RF_WIDTH bits)
     val rs2_data = Bits(param.RF_WIDTH bits)
@@ -55,30 +57,30 @@ case class register_file(param: CPU_PARAM) extends Component {
     // RAM A
     rs1_ram.write(
         enable = io.rs1_wen,
-        address = io.rs1_addr,
+        address = io.rs1_wr_addr,
         data = io.rs1_data_in
     )
     rs1_data := rs1_ram.readAsync(
-        address = io.rs1_addr
+        address = io.rs1_rd_addr
     )
     // RAM B
     rs2_ram.write(
         enable = io.rs2_wen,
-        address = io.rs2_addr,
+        address = io.rs2_wr_addr,
         data = io.rs2_data_in
     )
     rs2_data := rs2_ram.readAsync(
-        address = io.rs2_addr
+        address = io.rs2_rd_addr
     )
 
     // Special logic for x0
-    when(io.rs1_addr === 0) {
+    when(io.rs1_rd_addr === 0) {
         io.rs1_data_out := 0
     } otherwise {
         io.rs1_data_out := rs1_data
     }
 
-    when(io.rs2_addr === 0) {
+    when(io.rs2_rd_addr === 0) {
         io.rs2_data_out := 0
     } otherwise {
         io.rs2_data_out := rs2_data

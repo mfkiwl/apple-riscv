@@ -33,10 +33,10 @@ class CPU_PARAM {
     val RF_ADDR_WDITH   = log2Up(RF_SIZE)   // Register File address width
     // Instruction RAM
     val INST_RAM_DATA_WIDTH = DATA_WIDTH
-    val INST_RAM_ADDR_WIDTH = 20            // 4MB Instruction RAM
+    val INST_RAM_ADDR_WIDTH = 10            // 4KB Instruction RAM
     // Data RAM
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH
-    val DATA_RAM_ADDR_WIDTH = 20            // 4KB Data RAM
+    val DATA_RAM_ADDR_WIDTH = 20            // 4MB Data RAM
 
     // ==========================
     // Instruction Format

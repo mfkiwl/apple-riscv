@@ -24,10 +24,10 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
 
     // Instruction field
     val opcode      = out Bits(7 bits)  // FIXME? Do we need this as output?
-    val rd          = out Bits(5 bits)
+    val rd          = out UInt(5 bits)
     val func3       = out Bits(3 bits)
-    val rs1         = out Bits(5 bits)
-    val rs2         = out Bits(5 bits)
+    val rs1         = out UInt(5 bits)
+    val rs2         = out UInt(5 bits)
     val func7       = out Bits(7 bits)
 
     // Register file control
@@ -48,18 +48,17 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
 }
 
 case class instruction_decoder(param: CPU_PARAM) extends Component {
-    val io          = new dec_io(param)
+    val io          = dec_io(param)
 
     // ============================================
     // Extract each field from the instruction
     // ============================================
     io.opcode  := io.inst(6 downto 0)
-    io.rd      := io.inst(11 downto 7)
+    io.rd      := io.inst(11 downto 7).asUInt
     io.func3   := io.inst(14 downto 12)
-    io.rs1     := io.inst(19 downto 15)
-    io.rs2     := io.inst(24 downto 20)
+    io.rs1     := io.inst(19 downto 15).asUInt
+    io.rs2     := io.inst(24 downto 20).asUInt
     io.func7   := io.inst(31 downto 25)
-    io.imm     := 0 // FIXME
 
     // ============================================     
     // Main Decoder Logic
@@ -81,4 +80,8 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     // ALU can save the timing for decode logic
     io.alu_la_op := op_logic_arithm | op_logic_arithm_imm
     io.alu_mem_op := op_store | op_load
+
+    // Immediate value
+    io.imm     := 0 // Default
+    when(op_logic_arithm_imm) { io.imm(11 downto 0) :=  io.inst(31 downto 20)}
 }

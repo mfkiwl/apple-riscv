@@ -35,15 +35,15 @@ case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
     // data ram
     val data_ram_wen    = out Bool
     val data_ram_ren    = out Bool
-    val data_ram_addr   = out UInt(param.INST_RAM_ADDR_WIDTH bits)
-    val data_ram_data_out = out Bits(param.INST_RAM_DATA_WIDTH bits)
-    val data_ram_data_in = in Bits(param.INST_RAM_DATA_WIDTH bits)    // data come 1 cycle after ren
+    val data_ram_addr   = out UInt(param.DATA_RAM_ADDR_WIDTH bits)
+    val data_ram_data_out = out Bits(param.DATA_RAM_DATA_WIDTH bits)
+    val data_ram_data_in = in Bits(param.DATA_RAM_DATA_WIDTH bits)    // data come 1 cycle after ren
 
 }
 
 case class apple_riscv (param: CPU_PARAM) extends Component {
 
-    val io = new apple_riscv_io(param)
+    val io = apple_riscv_io(param)
 
     // =========================
     // Wire Declaration
@@ -82,7 +82,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
 
     // instruction ram has 1 read latency so data come from the ram directly instead of the pipe stage
-    val id_instruction = io.inst_ram_data_out
+    val id_instruction = io.inst_ram_data_in
 
     // Decoder
     val decoder_inst = instruction_decoder(param)
@@ -90,8 +90,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // register file instance
     val register_file_inst = register_file(param)
-    register_file_inst.io.rs1_addr := decoder_inst.io.rs1.asUInt
-    register_file_inst.io.rs2_addr := decoder_inst.io.rs2.asUInt
+    register_file_inst.io.rs1_rd_addr := decoder_inst.io.rs1
+    register_file_inst.io.rs2_rd_addr := decoder_inst.io.rs2
     val rs1_data_out = register_file_inst.io.rs1_data_out
     val rs2_data_out = register_file_inst.io.rs2_data_out
 
@@ -100,40 +100,26 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
 
     // instruction field
-    val id_ex_rd           = Reg(Bits(5 bits))
-    val id_ex_func3        = Reg(Bits(3 bits))
-    val id_ex_rs1          = Reg(Bits(5 bits))
-    val id_ex_rs2          = Reg(Bits(5 bits))
-    val id_ex_func7        = Reg(Bits(7 bits))
-    // decoded control signal
-    val id_ex_rs1_wen      = Reg(Bool) init False
-    val id_ex_rs2_wen      = Reg(Bool) init False
-    val id_ex_data_ram_wen = Reg(Bool) init False
-    val id_ex_data_ram_ren = Reg(Bool) init False
-    val id_ex_alu_la_op    = Reg(Bool) init False
-    val id_ex_alu_mem_op   = Reg(Bool) init False
-    // register file value
-    val id_ex_op1          = Reg(Bits(param.DATA_WIDTH bits))
-    val id_ex_op2          = Reg(Bits(param.DATA_WIDTH bits))
+    val id_ex_rd           = RegNextWhen(decoder_inst.io.rd, not_pipe_stall)
+    val id_ex_func3        = RegNextWhen(decoder_inst.io.func3, not_pipe_stall)
+    val id_ex_rs1          = RegNextWhen(decoder_inst.io.rs1, not_pipe_stall)
+    val id_ex_rs2          = RegNextWhen(decoder_inst.io.rs2, not_pipe_stall)
+    val id_ex_func7        = RegNextWhen(decoder_inst.io.func7, not_pipe_stall)
 
-    when(not_pipe_stall) {
-        id_ex_rd              := decoder_inst.io.rd
-        id_ex_func3           := decoder_inst.io.func3
-        id_ex_rs1             := decoder_inst.io.rs1
-        id_ex_rs2             := decoder_inst.io.rs2
-        id_ex_func7           := decoder_inst.io.func7
-        id_ex_rs1_wen         := decoder_inst.io.rs1_wen
-        id_ex_rs2_wen         := decoder_inst.io.rs2_wen
-        id_ex_data_ram_wen    := decoder_inst.io.data_ram_wen
-        id_ex_data_ram_ren    := decoder_inst.io.data_ram_ren
-        id_ex_alu_la_op       := decoder_inst.io.alu_la_op
-        id_ex_alu_mem_op      := decoder_inst.io.alu_mem_op
-        id_ex_op1             := register_file_inst.io.rs1_data_out
-        // Register re-timing:
-        // We select the immediate value and register value at ID stage instead of EX stage
-        id_ex_op2             := Mux(decoder_inst.io.imm_sel, decoder_inst.io.imm,
-                                    register_file_inst.io.rs2_data_out)
-    }
+    // decoded control signal
+    val id_ex_rs1_wen      = RegNextWhen(decoder_inst.io.rs1_wen, not_pipe_stall) init False
+    val id_ex_rs2_wen      = RegNextWhen(decoder_inst.io.rs2_wen, not_pipe_stall) init False
+    val id_ex_data_ram_wen = RegNextWhen(decoder_inst.io.data_ram_wen, not_pipe_stall) init False
+    val id_ex_data_ram_ren = RegNextWhen(decoder_inst.io.data_ram_ren, not_pipe_stall) init False
+    val id_ex_alu_la_op    = RegNextWhen(decoder_inst.io.alu_la_op, not_pipe_stall) init False
+    val id_ex_alu_mem_op   = RegNextWhen(decoder_inst.io.alu_mem_op, not_pipe_stall) init False
+    
+    // register file value
+    val id_ex_op1          = RegNextWhen(register_file_inst.io.rs1_data_out, not_pipe_stall)
+    // Register re-timing:
+    // We select the immediate value and register value at ID stage inst
+    val id_ex_op2_next     = Mux(decoder_inst.io.imm_sel, decoder_inst.io.imm, register_file_inst.io.rs2_data_out)
+    val id_ex_op2          = RegNextWhen(id_ex_op2_next, not_pipe_stall)
 
     // =========================
     // EX stage
@@ -156,8 +142,12 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex_mem_rs2_wen      = RegNextWhen(id_ex_rs2_wen, not_pipe_stall) init False
     val ex_mem_data_ram_wen = RegNextWhen(id_ex_data_ram_wen, not_pipe_stall) init False
     val ex_mem_data_ram_ren = RegNextWhen(id_ex_data_ram_ren, not_pipe_stall) init False
+
     // data signal
     val ex_mem_alu_out      = RegNextWhen(alu_inst.io.alu_out, not_pipe_stall)
+    val ex_mem_rs1          = RegNextWhen(id_ex_rs1, not_pipe_stall)
+    val ex_mem_rs2          = RegNextWhen(id_ex_rs2, not_pipe_stall)
+    val ex_mem_rd           = RegNextWhen(id_ex_rd, not_pipe_stall)
 
     // =========================
     // Mem stage
@@ -175,8 +165,12 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // control signal       
     val mem_wb_rs1_wen      = RegNextWhen(ex_mem_rs1_wen, not_pipe_stall) init False
     val mem_wb_rs2_wen      = RegNextWhen(ex_mem_rs2_wen, not_pipe_stall) init False
+
     // data signal
     val mem_wb_alu_out      = RegNextWhen(ex_mem_alu_out, not_pipe_stall)
+    val mem_wb_rs1          = RegNextWhen(ex_mem_rs1, not_pipe_stall)
+    val mem_wb_rs2          = RegNextWhen(ex_mem_rs2, not_pipe_stall)
+    val mem_wb_rd           = RegNextWhen(ex_mem_rd, not_pipe_stall)
 
     // =========================
     // WB stage
@@ -184,7 +178,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // Write back to register
     register_file_inst.io.rs1_wen := mem_wb_rs1_wen
-    register_file_inst.io.rs2_wen := mem_wb_rs2_wen
+    register_file_inst.io.rs1_wr_addr := mem_wb_rd
     register_file_inst.io.rs1_data_in := mem_wb_alu_out
+    register_file_inst.io.rs2_wen := mem_wb_rs2_wen
+    register_file_inst.io.rs2_wr_addr := mem_wb_rd
     register_file_inst.io.rs2_data_in := mem_wb_alu_out
 }

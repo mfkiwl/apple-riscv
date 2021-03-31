@@ -39,3 +39,11 @@ bin/
 simWorkspace/
 tmp/
 null
+
+# cocotb and testbench related
+*__pycache__
+test/cocotb/*.xml
+test/cocotb/sim_build/*
+*.gtkw
+*.vvp
+
