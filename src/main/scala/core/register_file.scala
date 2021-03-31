@@ -17,6 +17,7 @@
 // - Register File has two RW ports
 // - x0 is fixed to value ZERO
 // - Register File read is async
+// - Support internal forwarding
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,18 +28,16 @@ import spinal.core._
 case class rf_io(param: CPU_PARAM) extends Bundle{
     // Parameter
     val ADDR_WIDTH = log2Up(param.RF_SIZE)
-    // Port A
+    // Read Port A
     val rs1_rd_addr  = in UInt(ADDR_WIDTH bits)
-    val rs1_wr_addr  = in UInt(ADDR_WIDTH bits)
-    val rs1_data_in  = in Bits(param.RF_WIDTH bits)
-    val rs1_wen      = in Bool
     val rs1_data_out = out Bits(param.RF_WIDTH bits)
-    // Port B
+    // Read Port B
     val rs2_rd_addr  = in UInt(ADDR_WIDTH bits)
-    val rs2_wr_addr  = in UInt(ADDR_WIDTH bits)
-    val rs2_data_in  = in Bits(param.RF_WIDTH bits)
-    val rs2_wen      = in Bool
     val rs2_data_out = out Bits(param.RF_WIDTH bits)
+    // common
+    val register_wen      = in Bool
+    val register_wr_addr  = in UInt(ADDR_WIDTH bits)
+    val rd_in             = in Bits(param.RF_WIDTH bits)
 }
 
 case class register_file(param: CPU_PARAM) extends Component {
@@ -56,18 +55,18 @@ case class register_file(param: CPU_PARAM) extends Component {
 
     // RAM A
     rs1_ram.write(
-        enable = io.rs1_wen,
-        address = io.rs1_wr_addr,
-        data = io.rs1_data_in
+        enable = io.register_wen,
+        address = io.register_wr_addr,
+        data = io.rd_in
     )
     rs1_data := rs1_ram.readAsync(
         address = io.rs1_rd_addr
     )
     // RAM B
     rs2_ram.write(
-        enable = io.rs2_wen,
-        address = io.rs2_wr_addr,
-        data = io.rs2_data_in
+        enable = io.register_wen,
+        address = io.register_wr_addr,
+        data = io.rd_in
     )
     rs2_data := rs2_ram.readAsync(
         address = io.rs2_rd_addr
@@ -76,13 +75,17 @@ case class register_file(param: CPU_PARAM) extends Component {
     // Special logic for x0
     when(io.rs1_rd_addr === 0) {
         io.rs1_data_out := 0
-    } otherwise {
+    }.elsewhen((io.rs1_rd_addr === io.register_wr_addr) && (io.register_wen === True)) {
+        io.rs1_data_out := io.rd_in
+    }.otherwise {
         io.rs1_data_out := rs1_data
     }
 
     when(io.rs2_rd_addr === 0) {
         io.rs2_data_out := 0
-    } otherwise {
+    }.elsewhen((io.rs2_rd_addr === io.register_wr_addr) && (io.register_wen === True)) {
+        io.rs2_data_out := io.rd_in
+    }.otherwise {
         io.rs2_data_out := rs2_data
     }
 }

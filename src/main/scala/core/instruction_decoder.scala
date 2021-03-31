@@ -31,8 +31,9 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
     val func7       = out Bits(7 bits)
 
     // Register file control
-    val rs1_wen    = out Bool
-    val rs2_wen    = out Bool
+    val register_wen    = out Bool
+    val register_rs1_ren = out Bool
+    val register_rs2_ren = out Bool
 
     // Memory control
     val data_ram_wen = out Bool
@@ -71,8 +72,9 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     val op_auipc = (io.opcode === param.OP_AUIPC)
 
     io.imm_sel := op_logic_arithm_imm
-    io.rs1_wen := (op_logic_arithm | op_logic_arithm_imm | op_load)     // TODO: Can we simplify this logic?
-    io.rs2_wen := io.rs1_wen
+    io.register_wen := (op_logic_arithm | op_logic_arithm_imm | op_load)     // TODO: Can we simplify this logic?
+    io.register_rs1_ren := (op_logic_arithm | op_logic_arithm_imm | op_load)
+    io.register_rs2_ren := op_logic_arithm
     io.data_ram_wen := op_store
     io.data_ram_ren := op_load
 

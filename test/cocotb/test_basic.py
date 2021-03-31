@@ -24,6 +24,7 @@ from common import *
 from imem_data import or1
 from imem_data import logic_arithmetic1
 from imem_data import logic_arithmetic2
+from imem_data import forward_logic1
 
 ###############################
 # Test suites
@@ -36,10 +37,13 @@ async def test_or1(dut):
 
 @cocotb.test()
 async def test_logic_arithmetic1(dut):
-    """ Simple ORI/OR instruction test """
-    await run_test(dut, logic_arithmetic1.imem_data, logic_arithmetic1.expected_register, 10000)
+    await run_test(dut, logic_arithmetic1.imem_data, logic_arithmetic1.expected_register, 300)
 
 @cocotb.test()
 async def test_logic_arithmetic2(dut):
-    """ Simple ORI/OR instruction test """
-    await run_test(dut, logic_arithmetic2.imem_data, logic_arithmetic2.expected_register, 10000)
+    await run_test(dut, logic_arithmetic2.imem_data, logic_arithmetic2.expected_register, 300)
+
+@cocotb.test()
+async def test_forward_logic1(dut):
+    """ Test the forward logic """
+    await run_test(dut, forward_logic1.imem_data, forward_logic1.expected_register, 300)
