@@ -26,7 +26,7 @@ async def reset(dut, time=20):
     await FallingEdge(dut.clk)
     dut.reset = 0
 
-async def load_imem(dut, imem):
+def load_imem(dut, imem):
     """ Load the instruction ram data """
     print("[TB-INFO]: Loading Instruction Memory")
     size = len(imem)
@@ -34,16 +34,18 @@ async def load_imem(dut, imem):
         dut.DUT_apple_riscv_soc.instruction_ram.ram[i] = imem[i]
     print(f"[TB-INFO]: Loading Instruction Memory done. Memory size is {size}")
 
-async def check_register(dut, expected):
+def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
+        #print(str(key) + ' => ' + str(value))
+        #print(dut.DUT_apple_riscv_soc.cpu_core.register_file_inst.rs1_ram[key])
         assert value == dut.DUT_apple_riscv_soc.cpu_core.register_file_inst.rs1_ram[key]
         assert value == dut.DUT_apple_riscv_soc.cpu_core.register_file_inst.rs2_ram[key]
 
 async def run_test(dut, imm_data, expected_register, runtime=100):
-    await load_imem(dut, imm_data)
+    load_imem(dut, imm_data)
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
-    await Timer(100, units="ns")
-    await check_register(dut, expected_register)
+    await Timer(runtime, units="ns")
+    check_register(dut, expected_register)

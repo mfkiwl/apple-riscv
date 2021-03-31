@@ -83,5 +83,9 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
 
     // Immediate value
     io.imm     := 0 // Default
-    when(op_logic_arithm_imm) { io.imm(11 downto 0) :=  io.inst(31 downto 20)}
+    when(op_logic_arithm_imm) {
+        val lowerBits: SInt = io.inst(31 downto 20).asSInt
+        io.imm := (lowerBits.resize(param.DATA_WIDTH)).asBits
+
+    }
 }

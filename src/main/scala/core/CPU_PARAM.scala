@@ -52,9 +52,13 @@ class CPU_PARAM {
     val OP_AUIPC             = Integer.parseInt("0010111", 2)        // AUIPC instruction
     val OP_LUI               = Integer.parseInt("0110111", 2)        // LUI instruction
 
-    // Logic arithmetic func3
-    val LA_F3_AND      = Integer.parseInt("111", 2) // AND operation
-    val LA_F3_OR       = Integer.parseInt("110", 2) // OR operation
-    val LA_F3_XOR      = Integer.parseInt("100", 2) // XOR operation
-    val LA_F3_ADD_SUB  = Integer.parseInt("000", 2) // ADD and SUB operation
+    // Logic arithmetic func3 field
+    val LA_F3_AND      = Integer.parseInt("111", 2) // AND
+    val LA_F3_OR       = Integer.parseInt("110", 2) // OR
+    val LA_F3_XOR      = Integer.parseInt("100", 2) // XOR
+    val LA_F3_ADD_SUB  = Integer.parseInt("000", 2) // ADD, SUB
+    val LA_F3_SR       = Integer.parseInt("101", 2) // SRL, SRLI, SRA, SRAI
+    val LA_F3_SL       = Integer.parseInt("001", 2) // SLL, SLLI
+    val LA_F3_SLT      = Integer.parseInt("010", 2) // SLT, SLTI
+    val LA_F3_SLTU     = Integer.parseInt("011", 2) // SLTU, SLTIU
 }

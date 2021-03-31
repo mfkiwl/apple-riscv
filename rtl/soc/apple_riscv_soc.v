@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 81afb9e8b0731fead35e6e4cc77f0511ce25eec8
+// Git hash  : ee023f36401f17ef27c1a91ac224ff7f64039688
 
 
 
@@ -162,6 +162,7 @@ module apple_riscv (
   reg                 id_ex_data_ram_ren;
   reg                 id_ex_alu_la_op;
   reg                 id_ex_alu_mem_op;
+  reg                 id_ex_imm_sel;
   reg        [31:0]   id_ex_op1;
   wire       [31:0]   id_ex_op2_next;
   reg        [31:0]   id_ex_op2;
@@ -221,13 +222,14 @@ module apple_riscv (
     .reset              (reset                                     )  //i
   );
   alu alu_inst (
-    .io_op1           (id_ex_op1[31:0]            ), //i
-    .io_op2           (id_ex_op2[31:0]            ), //i
-    .io_alu_out       (alu_inst_io_alu_out[31:0]  ), //o
-    .io_func3         (id_ex_func3[2:0]           ), //i
-    .io_func7         (id_ex_func7[6:0]           ), //i
-    .io_alu_la_op     (id_ex_alu_la_op            ), //i
-    .io_alu_mem_op    (id_ex_alu_mem_op           )  //i
+    .io_op1            (id_ex_op1[31:0]            ), //i
+    .io_op2            (id_ex_op2[31:0]            ), //i
+    .io_alu_out        (alu_inst_io_alu_out[31:0]  ), //o
+    .io_func3          (id_ex_func3[2:0]           ), //i
+    .io_func7          (id_ex_func7[6:0]           ), //i
+    .io_alu_la_op      (id_ex_alu_la_op            ), //i
+    .io_alu_mem_op     (id_ex_alu_mem_op           ), //i
+    .io_alu_imm_sel    (id_ex_imm_sel              )  //i
   );
   assign pipe_stall = 1'b0;
   assign not_pipe_stall = (! pipe_stall);
@@ -252,6 +254,7 @@ module apple_riscv (
       id_ex_data_ram_ren <= 1'b0;
       id_ex_alu_la_op <= 1'b0;
       id_ex_alu_mem_op <= 1'b0;
+      id_ex_imm_sel <= 1'b0;
       ex_mem_rs1_wen <= 1'b0;
       ex_mem_rs2_wen <= 1'b0;
       ex_mem_data_ram_wen <= 1'b0;
@@ -279,6 +282,9 @@ module apple_riscv (
       end
       if(not_pipe_stall)begin
         id_ex_alu_mem_op <= decoder_inst_io_alu_mem_op;
+      end
+      if(not_pipe_stall)begin
+        id_ex_imm_sel <= decoder_inst_io_imm_sel;
       end
       if(not_pipe_stall)begin
         ex_mem_rs1_wen <= id_ex_rs1_wen;
@@ -359,9 +365,21 @@ module alu (
   input      [2:0]    io_func3,
   input      [6:0]    io_func7,
   input               io_alu_la_op,
-  input               io_alu_mem_op
+  input               io_alu_mem_op,
+  input               io_alu_imm_sel
 );
+  wire       [31:0]   _zz_1;
+  wire       [31:0]   _zz_2;
+  wire       [31:0]   _zz_3;
+  wire       [31:0]   op1_signed;
+  wire       [31:0]   op2_signed;
+  wire       [31:0]   add_result;
+  wire       [31:0]   sub_result;
+  wire       [4:0]    shift_value;
 
+  assign _zz_1 = io_op2;
+  assign _zz_2 = ($signed(_zz_3) >>> shift_value);
+  assign _zz_3 = io_op1;
   always @ (*) begin
     io_alu_out = 32'h0;
     if(io_alu_la_op)begin
@@ -375,12 +393,44 @@ module alu (
         3'b100 : begin
           io_alu_out = (io_op1 ^ io_op2);
         end
+        3'b000 : begin
+          if(io_alu_imm_sel)begin
+            io_alu_out = add_result;
+          end else begin
+            if((io_func7[5] == 1'b1))begin
+              io_alu_out = sub_result;
+            end else begin
+              io_alu_out = add_result;
+            end
+          end
+        end
+        3'b101 : begin
+          if((io_func7[5] == 1'b1))begin
+            io_alu_out = _zz_2;
+          end else begin
+            io_alu_out = (io_op1 >>> shift_value);
+          end
+        end
+        3'b001 : begin
+          io_alu_out = (io_op1 <<< shift_value);
+        end
+        3'b010 : begin
+          io_alu_out = 32'h0;
+          io_alu_out[0] = ($signed(op1_signed) < $signed(op2_signed));
+        end
         default : begin
+          io_alu_out = 32'h0;
+          io_alu_out[0] = (io_op1 < io_op2);
         end
       endcase
     end
   end
 
+  assign op1_signed = io_op1;
+  assign op2_signed = io_op2;
+  assign add_result = ($signed(op1_signed) + $signed(op2_signed));
+  assign sub_result = ($signed(op1_signed) - $signed(op2_signed));
+  assign shift_value = _zz_1[4 : 0];
 
 endmodule
 
@@ -457,6 +507,8 @@ module instruction_decoder (
   output              io_alu_mem_op,
   output reg [31:0]   io_imm
 );
+  wire       [11:0]   _zz_1;
+  wire       [31:0]   _zz_2;
   wire                op_logic_arithm;
   wire                op_logic_arithm_imm;
   wire                op_store;
@@ -464,6 +516,8 @@ module instruction_decoder (
   wire                op_lui;
   wire                op_auipc;
 
+  assign _zz_1 = io_inst[31 : 20];
+  assign _zz_2 = {{20{_zz_1[11]}}, _zz_1};
   assign io_opcode = io_inst[6 : 0];
   assign io_rd = io_inst[11 : 7];
   assign io_func3 = io_inst[14 : 12];
@@ -486,7 +540,7 @@ module instruction_decoder (
   always @ (*) begin
     io_imm = 32'h0;
     if(op_logic_arithm_imm)begin
-      io_imm[11 : 0] = io_inst[31 : 20];
+      io_imm = _zz_2;
     end
   end
 

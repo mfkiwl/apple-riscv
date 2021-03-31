@@ -113,6 +113,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id_ex_data_ram_ren = RegNextWhen(decoder_inst.io.data_ram_ren, not_pipe_stall) init False
     val id_ex_alu_la_op    = RegNextWhen(decoder_inst.io.alu_la_op, not_pipe_stall) init False
     val id_ex_alu_mem_op   = RegNextWhen(decoder_inst.io.alu_mem_op, not_pipe_stall) init False
+    val id_ex_imm_sel      = RegNextWhen(decoder_inst.io.imm_sel, not_pipe_stall) init False
     
     // register file value
     val id_ex_op1          = RegNextWhen(register_file_inst.io.rs1_data_out, not_pipe_stall)
@@ -132,6 +133,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     alu_inst.io.func7       := id_ex_func7
     alu_inst.io.alu_la_op   := id_ex_alu_la_op
     alu_inst.io.alu_mem_op  := id_ex_alu_mem_op
+    alu_inst.io.alu_imm_sel := id_ex_imm_sel
 
     // =========================
     // EX/Mem Pipeline
