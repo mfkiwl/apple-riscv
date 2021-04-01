@@ -9,7 +9,7 @@
 ##
 ## ================== Description ==================
 ##
-## common routine for the testbench
+## Basic test suites for the cpu
 ##
 ##################################################################################################
 
@@ -17,7 +17,9 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, Timer
 
-
+###############################
+# Common function
+###############################
 
 async def reset(dut, time=20):
     """ Reset the design """
@@ -66,3 +68,29 @@ async def run_test(dut, imm_data, expected_register, runtime=400, imem_size_to_c
     await Timer(runtime, units="ns")
     check_register(dut, expected_register)
     #print_register(dut, 17)
+
+###############################
+# Test suites
+###############################
+
+import or1
+@cocotb.test()
+async def test_or1(dut):
+    """ Simple ORI/OR instruction test """
+    await run_test(dut, or1.imem_data, or1.expected_register)
+
+import logic_arithmetic1
+@cocotb.test()
+async def test_logic_arithmetic1(dut):
+    await run_test(dut, logic_arithmetic1.imem_data, logic_arithmetic1.expected_register, 300)
+
+import logic_arithmetic2
+@cocotb.test()
+async def test_logic_arithmetic2(dut):
+    await run_test(dut, logic_arithmetic2.imem_data, logic_arithmetic2.expected_register, 300)
+
+import forward_logic1
+@cocotb.test()
+async def test_forward_logic1(dut):
+    """ Test the forward logic """
+    await run_test(dut, forward_logic1.imem_data, forward_logic1.expected_register, 300)

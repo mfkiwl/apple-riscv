@@ -3,7 +3,7 @@
 TOPLEVEL_LANG = verilog
 
 REPO_ROOT     = $(shell git rev-parse --show-toplevel)
-TB_PATH       = $(REPO_ROOT)/test/verilog
+TB_PATH       = $(REPO_ROOT)/tests/verilog
 RTL_SOC_PATH  = $(REPO_ROOT)/rtl/soc
 
 TB_FILES      = $(TB_PATH)/apple_riscv_soc_tb.v
@@ -13,7 +13,7 @@ VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
 TOPLEVEL = apple_riscv_soc_tb
-MODULE   ?= test_basic
+MODULE   = sanity_check
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
