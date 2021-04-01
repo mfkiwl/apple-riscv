@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 6d1151e6c2dda749baf3a9a2e4d4bcd7eb63da20
+// Git hash  : 39cd66ee80ff446bf7fe06d2fc09555df033a4fe
 
 
 
@@ -16,22 +16,24 @@ module apple_riscv_soc (
   wire                cpu_core_io_data_ram_ren;
   wire       [19:0]   cpu_core_io_data_ram_addr;
   wire       [31:0]   cpu_core_io_data_ram_data_out;
+  wire       [3:0]    cpu_core_io_data_ram_byte_enable;
   wire       [31:0]   instruction_ram_io_data_out;
   wire       [31:0]   data_ram_io_data_out;
 
   apple_riscv cpu_core (
-    .io_inst_ram_wen         (cpu_core_io_inst_ram_wen             ), //o
-    .io_inst_ram_ren         (cpu_core_io_inst_ram_ren             ), //o
-    .io_inst_ram_addr        (cpu_core_io_inst_ram_addr[9:0]       ), //o
-    .io_inst_ram_data_out    (cpu_core_io_inst_ram_data_out[31:0]  ), //o
-    .io_inst_ram_data_in     (instruction_ram_io_data_out[31:0]    ), //i
-    .io_data_ram_wen         (cpu_core_io_data_ram_wen             ), //o
-    .io_data_ram_ren         (cpu_core_io_data_ram_ren             ), //o
-    .io_data_ram_addr        (cpu_core_io_data_ram_addr[19:0]      ), //o
-    .io_data_ram_data_out    (cpu_core_io_data_ram_data_out[31:0]  ), //o
-    .io_data_ram_data_in     (data_ram_io_data_out[31:0]           ), //i
-    .clk                     (clk                                  ), //i
-    .reset                   (reset                                )  //i
+    .io_inst_ram_wen            (cpu_core_io_inst_ram_wen               ), //o
+    .io_inst_ram_ren            (cpu_core_io_inst_ram_ren               ), //o
+    .io_inst_ram_addr           (cpu_core_io_inst_ram_addr[9:0]         ), //o
+    .io_inst_ram_data_out       (cpu_core_io_inst_ram_data_out[31:0]    ), //o
+    .io_inst_ram_data_in        (instruction_ram_io_data_out[31:0]      ), //i
+    .io_data_ram_wen            (cpu_core_io_data_ram_wen               ), //o
+    .io_data_ram_ren            (cpu_core_io_data_ram_ren               ), //o
+    .io_data_ram_addr           (cpu_core_io_data_ram_addr[19:0]        ), //o
+    .io_data_ram_data_out       (cpu_core_io_data_ram_data_out[31:0]    ), //o
+    .io_data_ram_data_in        (data_ram_io_data_out[31:0]             ), //i
+    .io_data_ram_byte_enable    (cpu_core_io_data_ram_byte_enable[3:0]  ), //o
+    .clk                        (clk                                    ), //i
+    .reset                      (reset                                  )  //i
   );
   instruction_ram_onchip instruction_ram (
     .io_wen         (cpu_core_io_inst_ram_wen             ), //i
@@ -123,12 +125,15 @@ module apple_riscv (
   output     [19:0]   io_data_ram_addr,
   output     [31:0]   io_data_ram_data_out,
   input      [31:0]   io_data_ram_data_in,
+  output     [3:0]    io_data_ram_byte_enable,
   input               clk,
   input               reset
 );
   wire       [31:0]   _zz_1;
   wire                _zz_2;
   wire                _zz_3;
+  wire       [19:0]   _zz_4;
+  wire                _zz_5;
   wire       [31:0]   pc_inst_io_pc_out;
   wire       [6:0]    decoder_inst_io_opcode;
   wire       [4:0]    decoder_inst_io_rd;
@@ -141,6 +146,9 @@ module apple_riscv (
   wire                decoder_inst_io_register_rs2_ren;
   wire                decoder_inst_io_data_ram_wen;
   wire                decoder_inst_io_data_ram_ren;
+  wire                decoder_inst_io_data_ram_access_byte;
+  wire                decoder_inst_io_data_ram_access_halfword;
+  wire                decoder_inst_io_data_ram_load_unsigned;
   wire                decoder_inst_io_imm_sel;
   wire                decoder_inst_io_alu_la_op;
   wire                decoder_inst_io_alu_mem_op;
@@ -148,7 +156,13 @@ module apple_riscv (
   wire       [31:0]   register_file_inst_io_rs1_data_out;
   wire       [31:0]   register_file_inst_io_rs2_data_out;
   wire       [31:0]   alu_inst_io_alu_out;
-  wire       [31:0]   _zz_4;
+  wire       [31:0]   memory_controller_inst_io_mc2cpu_data;
+  wire                memory_controller_inst_io_mc2cpu_data_vld;
+  wire                memory_controller_inst_io_mc2mem_wen;
+  wire                memory_controller_inst_io_mc2mem_ren;
+  wire       [19:0]   memory_controller_inst_io_mc2mem_addr;
+  wire       [31:0]   memory_controller_inst_io_mc2mem_data;
+  wire       [3:0]    memory_controller_inst_io_mc2mem_byte_enable;
   wire                pipe_stall;
   wire                not_pipe_stall;
   reg        [31:0]   if_id_pc;
@@ -160,23 +174,31 @@ module apple_riscv (
   reg                 id_ex_register_wen;
   reg                 id_ex_data_ram_wen;
   reg                 id_ex_data_ram_ren;
+  reg                 id_ex_register_rs1_ren;
+  reg                 id_ex_register_rs2_ren;
   reg                 id_ex_alu_la_op;
   reg                 id_ex_alu_mem_op;
   reg                 id_ex_imm_sel;
-  reg                 id_ex_register_rs1_ren;
-  reg                 id_ex_register_rs2_ren;
+  reg                 id_ex_data_ram_access_byte;
+  reg                 id_ex_data_ram_access_halfword;
+  reg                 id_ex_data_ram_load_unsigned;
   reg        [31:0]   id_ex_rs1_value;
-  wire       [31:0]   id_ex_rs2_imm_value_next;
-  reg        [31:0]   id_ex_rs2_imm_value;
+  reg        [31:0]   id_ex_rs2_value;
+  wire       [31:0]   id_ex_rs2_value_or_imm_next;
+  reg        [31:0]   id_ex_rs2_value_or_imm;
   reg        [31:0]   id_ex_op1;
   reg        [31:0]   id_ex_op2;
   reg                 ex_mem_register_wen;
   reg                 ex_mem_data_ram_wen;
   reg                 ex_mem_data_ram_ren;
+  reg                 ex_mem_data_ram_access_byte;
+  reg                 ex_mem_data_ram_access_halfword;
+  reg                 ex_mem_data_ram_load_unsigned;
   reg        [31:0]   ex_mem_alu_out;
   reg        [4:0]    ex_mem_rs1;
   reg        [4:0]    ex_mem_rs2;
   reg        [4:0]    ex_mem_rd;
+  reg        [31:0]   ex_mem_rs2_value;
   reg                 mem_wb_register_wen;
   reg        [31:0]   mem_wb_alu_out;
   reg        [4:0]    mem_wb_rs1;
@@ -191,7 +213,6 @@ module apple_riscv (
   wire                forward_rs2_from_mem;
   wire                forward_rs2_from_wb;
 
-  assign _zz_4 = ex_mem_alu_out;
   program_counter pc_inst (
     .io_pc_in     (_zz_1[31:0]              ), //i
     .io_branch    (_zz_2                    ), //i
@@ -201,22 +222,25 @@ module apple_riscv (
     .reset        (reset                    )  //i
   );
   instruction_decoder decoder_inst (
-    .io_inst                (io_inst_ram_data_in[31:0]         ), //i
-    .io_opcode              (decoder_inst_io_opcode[6:0]       ), //o
-    .io_rd                  (decoder_inst_io_rd[4:0]           ), //o
-    .io_func3               (decoder_inst_io_func3[2:0]        ), //o
-    .io_rs1                 (decoder_inst_io_rs1[4:0]          ), //o
-    .io_rs2                 (decoder_inst_io_rs2[4:0]          ), //o
-    .io_func7               (decoder_inst_io_func7[6:0]        ), //o
-    .io_register_wen        (decoder_inst_io_register_wen      ), //o
-    .io_register_rs1_ren    (decoder_inst_io_register_rs1_ren  ), //o
-    .io_register_rs2_ren    (decoder_inst_io_register_rs2_ren  ), //o
-    .io_data_ram_wen        (decoder_inst_io_data_ram_wen      ), //o
-    .io_data_ram_ren        (decoder_inst_io_data_ram_ren      ), //o
-    .io_imm_sel             (decoder_inst_io_imm_sel           ), //o
-    .io_alu_la_op           (decoder_inst_io_alu_la_op         ), //o
-    .io_alu_mem_op          (decoder_inst_io_alu_mem_op        ), //o
-    .io_imm                 (decoder_inst_io_imm[31:0]         )  //o
+    .io_inst                        (io_inst_ram_data_in[31:0]                 ), //i
+    .io_opcode                      (decoder_inst_io_opcode[6:0]               ), //o
+    .io_rd                          (decoder_inst_io_rd[4:0]                   ), //o
+    .io_func3                       (decoder_inst_io_func3[2:0]                ), //o
+    .io_rs1                         (decoder_inst_io_rs1[4:0]                  ), //o
+    .io_rs2                         (decoder_inst_io_rs2[4:0]                  ), //o
+    .io_func7                       (decoder_inst_io_func7[6:0]                ), //o
+    .io_register_wen                (decoder_inst_io_register_wen              ), //o
+    .io_register_rs1_ren            (decoder_inst_io_register_rs1_ren          ), //o
+    .io_register_rs2_ren            (decoder_inst_io_register_rs2_ren          ), //o
+    .io_data_ram_wen                (decoder_inst_io_data_ram_wen              ), //o
+    .io_data_ram_ren                (decoder_inst_io_data_ram_ren              ), //o
+    .io_data_ram_access_byte        (decoder_inst_io_data_ram_access_byte      ), //o
+    .io_data_ram_access_halfword    (decoder_inst_io_data_ram_access_halfword  ), //o
+    .io_data_ram_load_unsigned      (decoder_inst_io_data_ram_load_unsigned    ), //o
+    .io_imm_sel                     (decoder_inst_io_imm_sel                   ), //o
+    .io_alu_la_op                   (decoder_inst_io_alu_la_op                 ), //o
+    .io_alu_mem_op                  (decoder_inst_io_alu_mem_op                ), //o
+    .io_imm                         (decoder_inst_io_imm[31:0]                 )  //o
   );
   register_file register_file_inst (
     .io_rs1_rd_addr         (decoder_inst_io_rs1[4:0]                  ), //i
@@ -239,6 +263,24 @@ module apple_riscv (
     .io_alu_mem_op     (id_ex_alu_mem_op           ), //i
     .io_alu_imm_sel    (id_ex_imm_sel              )  //i
   );
+  memory_controller memory_controller_inst (
+    .io_cpu2mc_wen            (ex_mem_data_ram_wen                                ), //i
+    .io_cpu2mc_ren            (ex_mem_data_ram_ren                                ), //i
+    .io_cpu2mc_addr           (_zz_4[19:0]                                        ), //i
+    .io_cpu2mc_data           (ex_mem_rs2_value[31:0]                             ), //i
+    .io_mc2cpu_data           (memory_controller_inst_io_mc2cpu_data[31:0]        ), //o
+    .io_mc2cpu_data_vld       (memory_controller_inst_io_mc2cpu_data_vld          ), //o
+    .io_cpu2mc_LS_byte        (ex_mem_data_ram_access_byte                        ), //i
+    .io_cpu2mc_LS_halfword    (ex_mem_data_ram_access_halfword                    ), //i
+    .io_cpu2mc_LW_unsigned    (ex_mem_data_ram_load_unsigned                      ), //i
+    .io_mc2mem_wen            (memory_controller_inst_io_mc2mem_wen               ), //o
+    .io_mc2mem_ren            (memory_controller_inst_io_mc2mem_ren               ), //o
+    .io_mc2mem_addr           (memory_controller_inst_io_mc2mem_addr[19:0]        ), //o
+    .io_mem2mc_data           (io_data_ram_data_in[31:0]                          ), //i
+    .io_mem2mc_data_vld       (_zz_5                                              ), //i
+    .io_mc2mem_data           (memory_controller_inst_io_mc2mem_data[31:0]        ), //o
+    .io_mc2mem_byte_enable    (memory_controller_inst_io_mc2mem_byte_enable[3:0]  )  //o
+  );
   assign pipe_stall = 1'b0;
   assign not_pipe_stall = (! pipe_stall);
   assign _zz_2 = 1'b0;
@@ -248,11 +290,13 @@ module apple_riscv (
   assign io_inst_ram_ren = 1'b1;
   assign io_inst_ram_addr = pc_inst_io_pc_out[9 : 0];
   assign io_inst_ram_data_out = 32'h0;
-  assign id_ex_rs2_imm_value_next = (decoder_inst_io_imm_sel ? decoder_inst_io_imm : register_file_inst_io_rs2_data_out);
-  assign io_data_ram_addr = _zz_4[19 : 0];
-  assign io_data_ram_data_out = 32'h0;
-  assign io_data_ram_wen = ex_mem_data_ram_wen;
-  assign io_data_ram_ren = ex_mem_data_ram_ren;
+  assign id_ex_rs2_value_or_imm_next = (decoder_inst_io_imm_sel ? decoder_inst_io_imm : register_file_inst_io_rs2_data_out);
+  assign _zz_4 = ex_mem_alu_out[19 : 0];
+  assign io_data_ram_wen = memory_controller_inst_io_mc2mem_wen;
+  assign io_data_ram_ren = memory_controller_inst_io_mc2mem_ren;
+  assign io_data_ram_addr = memory_controller_inst_io_mc2mem_addr;
+  assign io_data_ram_data_out = memory_controller_inst_io_mc2mem_data;
+  assign io_data_ram_byte_enable = memory_controller_inst_io_mc2mem_byte_enable;
   assign rs1_match_mem = (id_ex_rs1 == ex_mem_rd);
   assign rs1_match_wb = (id_ex_rs1 == mem_wb_rd);
   assign forward_rs1_from_mem = (id_ex_register_rs1_ren && rs1_match_mem);
@@ -280,7 +324,7 @@ module apple_riscv (
       if(forward_rs2_from_wb)begin
         id_ex_op2 = mem_wb_alu_out;
       end else begin
-        id_ex_op2 = id_ex_rs2_imm_value;
+        id_ex_op2 = id_ex_rs2_value_or_imm;
       end
     end
   end
@@ -291,9 +335,6 @@ module apple_riscv (
       id_ex_register_wen <= 1'b0;
       id_ex_data_ram_wen <= 1'b0;
       id_ex_data_ram_ren <= 1'b0;
-      id_ex_alu_la_op <= 1'b0;
-      id_ex_alu_mem_op <= 1'b0;
-      id_ex_imm_sel <= 1'b0;
       id_ex_register_rs1_ren <= 1'b0;
       id_ex_register_rs2_ren <= 1'b0;
       ex_mem_register_wen <= 1'b0;
@@ -312,15 +353,6 @@ module apple_riscv (
       end
       if(not_pipe_stall)begin
         id_ex_data_ram_ren <= decoder_inst_io_data_ram_ren;
-      end
-      if(not_pipe_stall)begin
-        id_ex_alu_la_op <= decoder_inst_io_alu_la_op;
-      end
-      if(not_pipe_stall)begin
-        id_ex_alu_mem_op <= decoder_inst_io_alu_mem_op;
-      end
-      if(not_pipe_stall)begin
-        id_ex_imm_sel <= decoder_inst_io_imm_sel;
       end
       if(not_pipe_stall)begin
         id_ex_register_rs1_ren <= decoder_inst_io_register_rs1_ren;
@@ -360,10 +392,40 @@ module apple_riscv (
       id_ex_func7 <= decoder_inst_io_func7;
     end
     if(not_pipe_stall)begin
+      id_ex_alu_la_op <= decoder_inst_io_alu_la_op;
+    end
+    if(not_pipe_stall)begin
+      id_ex_alu_mem_op <= decoder_inst_io_alu_mem_op;
+    end
+    if(not_pipe_stall)begin
+      id_ex_imm_sel <= decoder_inst_io_imm_sel;
+    end
+    if(not_pipe_stall)begin
+      id_ex_data_ram_access_byte <= decoder_inst_io_data_ram_access_byte;
+    end
+    if(not_pipe_stall)begin
+      id_ex_data_ram_access_halfword <= decoder_inst_io_data_ram_access_halfword;
+    end
+    if(not_pipe_stall)begin
+      id_ex_data_ram_load_unsigned <= decoder_inst_io_data_ram_load_unsigned;
+    end
+    if(not_pipe_stall)begin
       id_ex_rs1_value <= register_file_inst_io_rs1_data_out;
     end
     if(not_pipe_stall)begin
-      id_ex_rs2_imm_value <= id_ex_rs2_imm_value_next;
+      id_ex_rs2_value <= register_file_inst_io_rs2_data_out;
+    end
+    if(not_pipe_stall)begin
+      id_ex_rs2_value_or_imm <= id_ex_rs2_value_or_imm_next;
+    end
+    if(not_pipe_stall)begin
+      ex_mem_data_ram_access_byte <= id_ex_data_ram_access_byte;
+    end
+    if(not_pipe_stall)begin
+      ex_mem_data_ram_access_halfword <= id_ex_data_ram_access_halfword;
+    end
+    if(not_pipe_stall)begin
+      ex_mem_data_ram_load_unsigned <= id_ex_data_ram_load_unsigned;
     end
     if(not_pipe_stall)begin
       ex_mem_alu_out <= alu_inst_io_alu_out;
@@ -376,6 +438,9 @@ module apple_riscv (
     end
     if(not_pipe_stall)begin
       ex_mem_rd <= id_ex_rd;
+    end
+    if(not_pipe_stall)begin
+      ex_mem_rs2_value <= id_ex_rs2_value;
     end
     if(not_pipe_stall)begin
       mem_wb_alu_out <= ex_mem_alu_out;
@@ -391,6 +456,204 @@ module apple_riscv (
     end
   end
 
+
+endmodule
+
+module memory_controller (
+  input               io_cpu2mc_wen,
+  input               io_cpu2mc_ren,
+  input      [19:0]   io_cpu2mc_addr,
+  input      [31:0]   io_cpu2mc_data,
+  output reg [31:0]   io_mc2cpu_data,
+  output              io_mc2cpu_data_vld,
+  input               io_cpu2mc_LS_byte,
+  input               io_cpu2mc_LS_halfword,
+  input               io_cpu2mc_LW_unsigned,
+  output              io_mc2mem_wen,
+  output              io_mc2mem_ren,
+  output reg [19:0]   io_mc2mem_addr,
+  input      [31:0]   io_mem2mc_data,
+  input               io_mem2mc_data_vld,
+  output reg [31:0]   io_mc2mem_data,
+  output reg [3:0]    io_mc2mem_byte_enable
+);
+  wire       [7:0]    _zz_1;
+  wire       [31:0]   _zz_2;
+  wire       [7:0]    _zz_3;
+  wire       [31:0]   _zz_4;
+  wire       [7:0]    _zz_5;
+  wire       [31:0]   _zz_6;
+  wire       [7:0]    _zz_7;
+  wire       [31:0]   _zz_8;
+  wire       [15:0]   _zz_9;
+  wire       [31:0]   _zz_10;
+  wire       [15:0]   _zz_11;
+  wire       [31:0]   _zz_12;
+  wire       [7:0]    cpu2mc_data_7_0;
+  wire       [15:0]   cpu2mc_data_15_0;
+  wire       [7:0]    mem2mc_data_byte0;
+  wire       [7:0]    mem2mc_data_byte1;
+  wire       [7:0]    mem2mc_data_byte2;
+  wire       [7:0]    mem2mc_data_byte3;
+  wire       [15:0]   mem2mc_data_hw0;
+  wire       [15:0]   mem2mc_data_hw1;
+  wire       [31:0]   mem2mc_data_byte0_unsign_ext;
+  wire       [31:0]   mem2mc_data_byte1_unsign_ext;
+  wire       [31:0]   mem2mc_data_byte2_unsign_ext;
+  wire       [31:0]   mem2mc_data_byte3_unsign_ext;
+  wire       [31:0]   mem2mc_data_hw0_unsign_ext;
+  wire       [31:0]   mem2mc_data_hw1_unsign_ext;
+  wire       [31:0]   mem2mc_data_byte0_sign_ext;
+  wire       [31:0]   mem2mc_data_byte1_sign_ext;
+  wire       [31:0]   mem2mc_data_byte2_sign_ext;
+  wire       [31:0]   mem2mc_data_byte3_sign_ext;
+  wire       [31:0]   mem2mc_data_hw0_sign_ext;
+  wire       [31:0]   mem2mc_data_hw1_sign_ext;
+  wire       [1:0]    mem_byte_addr;
+
+  assign _zz_1 = mem2mc_data_byte0;
+  assign _zz_2 = {{24{_zz_1[7]}}, _zz_1};
+  assign _zz_3 = mem2mc_data_byte1;
+  assign _zz_4 = {{24{_zz_3[7]}}, _zz_3};
+  assign _zz_5 = mem2mc_data_byte2;
+  assign _zz_6 = {{24{_zz_5[7]}}, _zz_5};
+  assign _zz_7 = mem2mc_data_byte3;
+  assign _zz_8 = {{24{_zz_7[7]}}, _zz_7};
+  assign _zz_9 = mem2mc_data_hw0;
+  assign _zz_10 = {{16{_zz_9[15]}}, _zz_9};
+  assign _zz_11 = mem2mc_data_hw1;
+  assign _zz_12 = {{16{_zz_11[15]}}, _zz_11};
+  assign cpu2mc_data_7_0 = io_cpu2mc_data[7 : 0];
+  assign cpu2mc_data_15_0 = io_cpu2mc_data[15 : 0];
+  assign mem2mc_data_byte0 = io_mem2mc_data[7 : 0];
+  assign mem2mc_data_byte1 = io_mem2mc_data[15 : 8];
+  assign mem2mc_data_byte2 = io_mem2mc_data[23 : 16];
+  assign mem2mc_data_byte3 = io_mem2mc_data[31 : 24];
+  assign mem2mc_data_hw0 = io_mem2mc_data[15 : 0];
+  assign mem2mc_data_hw1 = io_mem2mc_data[31 : 16];
+  assign mem2mc_data_byte0_unsign_ext = {24'd0, mem2mc_data_byte0};
+  assign mem2mc_data_byte1_unsign_ext = {24'd0, mem2mc_data_byte1};
+  assign mem2mc_data_byte2_unsign_ext = {24'd0, mem2mc_data_byte2};
+  assign mem2mc_data_byte3_unsign_ext = {24'd0, mem2mc_data_byte3};
+  assign mem2mc_data_hw0_unsign_ext = {16'd0, mem2mc_data_hw0};
+  assign mem2mc_data_hw1_unsign_ext = {16'd0, mem2mc_data_hw1};
+  assign mem2mc_data_byte0_sign_ext = _zz_2;
+  assign mem2mc_data_byte1_sign_ext = _zz_4;
+  assign mem2mc_data_byte2_sign_ext = _zz_6;
+  assign mem2mc_data_byte3_sign_ext = _zz_8;
+  assign mem2mc_data_hw0_sign_ext = _zz_10;
+  assign mem2mc_data_hw1_sign_ext = _zz_12;
+  always @ (*) begin
+    io_mc2mem_data = io_cpu2mc_data;
+    if(io_cpu2mc_LS_byte)begin
+      io_mc2mem_data = 32'h0;
+      case(mem_byte_addr)
+        2'b00 : begin
+          io_mc2mem_data[7 : 0] = cpu2mc_data_7_0;
+        end
+        2'b01 : begin
+          io_mc2mem_data[15 : 8] = cpu2mc_data_7_0;
+        end
+        2'b10 : begin
+          io_mc2mem_data[23 : 16] = cpu2mc_data_7_0;
+        end
+        default : begin
+          io_mc2mem_data[31 : 24] = cpu2mc_data_7_0;
+        end
+      endcase
+    end else begin
+      if(io_cpu2mc_LS_halfword)begin
+        io_mc2mem_data = 32'h0;
+        case(mem_byte_addr)
+          2'b00 : begin
+            io_mc2mem_data[15 : 0] = cpu2mc_data_15_0;
+          end
+          2'b10 : begin
+            io_mc2mem_data[31 : 16] = cpu2mc_data_15_0;
+          end
+          default : begin
+          end
+        endcase
+      end
+    end
+  end
+
+  always @ (*) begin
+    io_mc2cpu_data = io_mem2mc_data;
+    if(io_cpu2mc_LS_byte)begin
+      case(mem_byte_addr)
+        2'b00 : begin
+          io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_byte0_unsign_ext : mem2mc_data_byte0_sign_ext);
+        end
+        2'b01 : begin
+          io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_byte1_unsign_ext : mem2mc_data_byte1_sign_ext);
+        end
+        2'b10 : begin
+          io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_byte2_unsign_ext : mem2mc_data_byte2_sign_ext);
+        end
+        default : begin
+          io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_byte3_unsign_ext : mem2mc_data_byte3_sign_ext);
+        end
+      endcase
+    end else begin
+      if(io_cpu2mc_LS_halfword)begin
+        io_mc2cpu_data = 32'h0;
+        case(mem_byte_addr)
+          2'b00 : begin
+            io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_hw0_unsign_ext : mem2mc_data_hw0_sign_ext);
+          end
+          2'b10 : begin
+            io_mc2cpu_data = (io_cpu2mc_LW_unsigned ? mem2mc_data_hw1_unsign_ext : mem2mc_data_hw1_sign_ext);
+          end
+          default : begin
+          end
+        endcase
+      end
+    end
+  end
+
+  always @ (*) begin
+    io_mc2mem_byte_enable = 4'b1111;
+    if(io_cpu2mc_LS_byte)begin
+      case(mem_byte_addr)
+        2'b00 : begin
+          io_mc2mem_byte_enable = 4'b0001;
+        end
+        2'b01 : begin
+          io_mc2mem_byte_enable = 4'b0010;
+        end
+        2'b10 : begin
+          io_mc2mem_byte_enable = 4'b0100;
+        end
+        default : begin
+          io_mc2mem_byte_enable = 4'b1000;
+        end
+      endcase
+    end else begin
+      if(io_cpu2mc_LS_halfword)begin
+        case(mem_byte_addr)
+          2'b00 : begin
+            io_mc2mem_byte_enable = 4'b0011;
+          end
+          2'b10 : begin
+            io_mc2mem_byte_enable = 4'b1100;
+          end
+          default : begin
+          end
+        endcase
+      end
+    end
+  end
+
+  always @ (*) begin
+    io_mc2mem_addr = io_cpu2mc_addr;
+    io_mc2mem_addr[1 : 0] = 2'b00;
+  end
+
+  assign mem_byte_addr = io_cpu2mc_addr[1 : 0];
+  assign io_mc2mem_ren = io_cpu2mc_ren;
+  assign io_mc2mem_wen = io_cpu2mc_wen;
+  assign io_mc2cpu_data_vld = io_mem2mc_data_vld;
 
 endmodule
 
@@ -416,6 +679,11 @@ module alu (
   assign _zz_1 = io_op2;
   assign _zz_2 = ($signed(_zz_3) >>> shift_value);
   assign _zz_3 = io_op1;
+  assign op1_signed = io_op1;
+  assign op2_signed = io_op2;
+  assign add_result = ($signed(op1_signed) + $signed(op2_signed));
+  assign sub_result = ($signed(op1_signed) - $signed(op2_signed));
+  assign shift_value = _zz_1[4 : 0];
   always @ (*) begin
     io_alu_out = 32'h0;
     if(io_alu_la_op)begin
@@ -462,11 +730,6 @@ module alu (
     end
   end
 
-  assign op1_signed = io_op1;
-  assign op2_signed = io_op2;
-  assign add_result = ($signed(op1_signed) + $signed(op2_signed));
-  assign sub_result = ($signed(op1_signed) - $signed(op2_signed));
-  assign shift_value = _zz_1[4 : 0];
 
 endmodule
 
@@ -544,6 +807,9 @@ module instruction_decoder (
   output              io_register_rs2_ren,
   output              io_data_ram_wen,
   output              io_data_ram_ren,
+  output              io_data_ram_access_byte,
+  output              io_data_ram_access_halfword,
+  output              io_data_ram_load_unsigned,
   output              io_imm_sel,
   output              io_alu_la_op,
   output              io_alu_mem_op,
@@ -551,6 +817,8 @@ module instruction_decoder (
 );
   wire       [11:0]   _zz_1;
   wire       [31:0]   _zz_2;
+  wire       [11:0]   _zz_3;
+  wire       [31:0]   _zz_4;
   wire                op_logic_arithm;
   wire                op_logic_arithm_imm;
   wire                op_store;
@@ -560,6 +828,8 @@ module instruction_decoder (
 
   assign _zz_1 = io_inst[31 : 20];
   assign _zz_2 = {{20{_zz_1[11]}}, _zz_1};
+  assign _zz_3 = {io_inst[31 : 25],io_inst[11 : 7]};
+  assign _zz_4 = {{20{_zz_3[11]}}, _zz_3};
   assign io_opcode = io_inst[6 : 0];
   assign io_rd = io_inst[11 : 7];
   assign io_func3 = io_inst[14 : 12];
@@ -572,18 +842,25 @@ module instruction_decoder (
   assign op_load = (io_opcode == 7'h03);
   assign op_lui = (io_opcode == 7'h37);
   assign op_auipc = (io_opcode == 7'h17);
-  assign io_imm_sel = op_logic_arithm_imm;
+  assign io_imm_sel = ((op_logic_arithm_imm || op_load) || op_store);
   assign io_register_wen = ((op_logic_arithm || op_logic_arithm_imm) || op_load);
   assign io_register_rs1_ren = ((op_logic_arithm || op_logic_arithm_imm) || op_load);
   assign io_register_rs2_ren = op_logic_arithm;
   assign io_data_ram_wen = op_store;
   assign io_data_ram_ren = op_load;
+  assign io_data_ram_access_byte = (io_func3 == 3'b000);
+  assign io_data_ram_access_halfword = (io_func3 == 3'b001);
+  assign io_data_ram_load_unsigned = ((io_func3 == 3'b100) || (io_func3 == 3'b101));
   assign io_alu_la_op = (op_logic_arithm || op_logic_arithm_imm);
   assign io_alu_mem_op = (op_store || op_load);
   always @ (*) begin
     io_imm = 32'h0;
-    if(op_logic_arithm_imm)begin
+    if((op_logic_arithm_imm || op_load))begin
       io_imm = _zz_2;
+    end else begin
+      if(op_store)begin
+        io_imm = _zz_4;
+      end
     end
   end
 
