@@ -11,7 +11,10 @@
     - Fixed a major bug on the forwarding logic.
     - Re-designed the logic on how the rs2 register and immediate value are handled.
       - The original design combines them in the ID stage, which create a severe bug after introducing forwarding logic
-  - TODO: Need to implement the stall logic for load dependence
+  - Designed the stall logic on load data dependency
+    - Added enable on the instruction ram model for the stall logic
+    - Added a HDU (Hazard Detection Unit) to handle the stall logic on load data dependency
+    - Added more tests on forwarding and stalling
 
 - 03/31/2021
   - Implemented the forwarding logic and wrote cocotb test

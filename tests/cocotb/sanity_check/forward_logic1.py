@@ -1,8 +1,7 @@
 """
  === Description ===
 
- Simple logic and arithmetic instruction test.
- Mainly test the logic operation and arithmetic operation with signed/negative value
+ Testing the forward logic
 
  === ASM ===
 

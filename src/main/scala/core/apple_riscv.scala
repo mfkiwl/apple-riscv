@@ -29,6 +29,7 @@ case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
     val inst_ram_wen = out Bool
     val inst_ram_ren = out Bool
     val inst_ram_addr = out UInt(param.INST_RAM_ADDR_WIDTH bits)
+    val inst_ram_enable = out Bool
     val inst_ram_data_out = out Bits(param.INST_RAM_DATA_WIDTH bits)
     val inst_ram_data_in = in Bits(param.INST_RAM_DATA_WIDTH bits)    // data come 1 cycle after ren
 
@@ -54,9 +55,28 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Common Wire
     // =========================
 
-    // pipeline stall indicator
-    val pipe_stall = False
-    val not_pipe_stall = !pipe_stall
+
+    // Place holder for inserting NOP instruction
+    // The stage prefix indicate if the instruction in the current stage is valid
+    val if_inst_valid = Bool
+    val id_inst_valid = Bool
+    val ex_inst_valid = Bool
+    val mem_inst_valid = Bool
+    val wb_inst_valid = Bool
+
+    // Place holder for the stall/run signal
+    // The stage prefix indicate if we need to stall the pipeline entering this stage
+    // For example, id_pipe_stall will stall if_id pipeline stage
+    val if_pipe_stall = Bool
+    val id_pipe_stall = Bool
+    val ex_pipe_stall = False
+    val mem_pipe_stall = False
+    val wb_pipe_stall = False
+    val if_pipe_run = ~if_pipe_stall
+    val id_pipe_run = ~id_pipe_stall
+    val ex_pipe_run = ~ex_pipe_stall
+    val mem_pipe_run = ~mem_pipe_stall
+    val wb_pipe_run = ~wb_pipe_stall
 
     // =========================
     // IF Stage
@@ -65,12 +85,13 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // == program counter == //
     val pc_inst = program_counter(param)
     pc_inst.io.branch := False
-    pc_inst.io.stall := False
+    pc_inst.io.stall := if_pipe_stall
     pc_inst.io.pc_in := 0
 
     // == instruction RAM == //
     io.inst_ram_wen := False
     io.inst_ram_ren := True
+    io.inst_ram_enable := if_pipe_run
     io.inst_ram_addr := pc_inst.io.pc_out(param.INST_RAM_ADDR_WIDTH - 1 downto 0)
     io.inst_ram_data_out := 0
 
@@ -78,11 +99,13 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // IF/ID Pipeline
     // =========================
 
-    val if_id_pc = RegNextWhen(pc_inst.io.pc_out, not_pipe_stall) init 0
+    val if_id_pc = RegNextWhen(pc_inst.io.pc_out, id_pipe_run) init 0
+    val if_id_inst_valid = RegNextWhen(if_inst_valid, id_pipe_run) init False
 
     // =========================
     // ID stage
     // =========================
+
 
     // instruction ram has 1 read latency so data come from the ram directly instead of the pipe stage
     val id_instruction = io.inst_ram_data_in
@@ -102,31 +125,35 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // ID/EX Pipeline
     // =========================
 
-    // instruction field
-    val id_ex_rd = RegNextWhen(decoder_inst.io.rd, not_pipe_stall)
-    val id_ex_func3 = RegNextWhen(decoder_inst.io.func3, not_pipe_stall)
-    val id_ex_rs1 = RegNextWhen(decoder_inst.io.rs1, not_pipe_stall)
-    val id_ex_rs2 = RegNextWhen(decoder_inst.io.rs2, not_pipe_stall)
-    val id_ex_func7 = RegNextWhen(decoder_inst.io.func7, not_pipe_stall)
+    // == Control signal == //
+    val id_ex_inst_valid = RegNextWhen(id_inst_valid, ex_pipe_run) init False
+    val id_ex_register_wen = RegNextWhen(decoder_inst.io.register_wen & id_inst_valid, ex_pipe_run) init False
+    val id_ex_data_ram_wen = RegNextWhen(decoder_inst.io.data_ram_wen & id_inst_valid, ex_pipe_run) init False
+    val id_ex_data_ram_ren = RegNextWhen(decoder_inst.io.data_ram_ren & id_inst_valid, ex_pipe_run) init False
+    val id_ex_register_rs1_ren = RegNextWhen(decoder_inst.io.register_rs1_ren & id_inst_valid, ex_pipe_run) init False
+    val id_ex_register_rs2_ren = RegNextWhen(decoder_inst.io.register_rs2_ren & id_inst_valid, ex_pipe_run) init False
 
-    // decoder signal
-    val id_ex_register_wen = RegNextWhen(decoder_inst.io.register_wen, not_pipe_stall) init False
-    val id_ex_data_ram_wen = RegNextWhen(decoder_inst.io.data_ram_wen, not_pipe_stall) init False
-    val id_ex_data_ram_ren = RegNextWhen(decoder_inst.io.data_ram_ren, not_pipe_stall) init False
-    val id_ex_register_rs1_ren = RegNextWhen(decoder_inst.io.register_rs1_ren, not_pipe_stall) init False
-    val id_ex_register_rs2_ren = RegNextWhen(decoder_inst.io.register_rs2_ren, not_pipe_stall) init False
+    // == Other signal == //
 
-    val id_ex_alu_la_op = RegNextWhen(decoder_inst.io.alu_la_op, not_pipe_stall)
-    val id_ex_alu_mem_op = RegNextWhen(decoder_inst.io.alu_mem_op, not_pipe_stall)
-    val id_ex_imm_sel = RegNextWhen(decoder_inst.io.imm_sel, not_pipe_stall)
-    val id_ex_data_ram_access_byte = RegNextWhen(decoder_inst.io.data_ram_access_byte, not_pipe_stall)
-    val id_ex_data_ram_access_halfword = RegNextWhen(decoder_inst.io.data_ram_access_halfword, not_pipe_stall)
-    val id_ex_data_ram_load_unsigned = RegNextWhen(decoder_inst.io.data_ram_load_unsigned, not_pipe_stall)
+    // Instruction field
+    val id_ex_rd = RegNextWhen(decoder_inst.io.rd, ex_pipe_run)
+    val id_ex_func3 = RegNextWhen(decoder_inst.io.func3, ex_pipe_run)
+    val id_ex_rs1 = RegNextWhen(decoder_inst.io.rs1, ex_pipe_run)
+    val id_ex_rs2 = RegNextWhen(decoder_inst.io.rs2, ex_pipe_run)
+    val id_ex_func7 = RegNextWhen(decoder_inst.io.func7, ex_pipe_run)
+
+    // ALU control signal
+    val id_ex_alu_la_op = RegNextWhen(decoder_inst.io.alu_la_op, ex_pipe_run)
+    val id_ex_alu_mem_op = RegNextWhen(decoder_inst.io.alu_mem_op, ex_pipe_run)
+    val id_ex_imm_sel = RegNextWhen(decoder_inst.io.imm_sel, ex_pipe_run)
+    val id_ex_data_ram_access_byte = RegNextWhen(decoder_inst.io.data_ram_access_byte, ex_pipe_run)
+    val id_ex_data_ram_access_halfword = RegNextWhen(decoder_inst.io.data_ram_access_halfword, ex_pipe_run)
+    val id_ex_data_ram_load_unsigned = RegNextWhen(decoder_inst.io.data_ram_load_unsigned, ex_pipe_run)
     
     // register file value and immediate value
-    val id_ex_rs1_value = RegNextWhen(register_file_inst.io.rs1_data_out, not_pipe_stall)
-    val id_ex_rs2_value = RegNextWhen(register_file_inst.io.rs2_data_out, not_pipe_stall)
-    val id_ex_imm_11_0 = RegNextWhen(decoder_inst.io.imm_11_0, not_pipe_stall)
+    val id_ex_rs1_value = RegNextWhen(register_file_inst.io.rs1_data_out, ex_pipe_run)
+    val id_ex_rs2_value = RegNextWhen(register_file_inst.io.rs2_data_out, ex_pipe_run)
+    val id_ex_imm_11_0 = RegNextWhen(decoder_inst.io.imm_11_0, ex_pipe_run)
 
     // =========================
     // EX stage
@@ -154,19 +181,20 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
 
     // control signal
-    val ex_mem_register_wen = RegNextWhen(id_ex_register_wen, not_pipe_stall) init False
-    val ex_mem_data_ram_wen = RegNextWhen(id_ex_data_ram_wen, not_pipe_stall) init False
-    val ex_mem_data_ram_ren = RegNextWhen(id_ex_data_ram_ren, not_pipe_stall) init False
-    val ex_mem_data_ram_access_byte = RegNextWhen(id_ex_data_ram_access_byte, not_pipe_stall)
-    val ex_mem_data_ram_access_halfword = RegNextWhen(id_ex_data_ram_access_halfword, not_pipe_stall)
-    val ex_mem_data_ram_load_unsigned = RegNextWhen(id_ex_data_ram_load_unsigned, not_pipe_stall)
+    val ex_mem_inst_valid = RegNextWhen(ex_inst_valid, mem_pipe_run) init False
+    val ex_mem_register_wen = RegNextWhen(id_ex_register_wen & ex_inst_valid, mem_pipe_run) init False
+    val ex_mem_data_ram_wen = RegNextWhen(id_ex_data_ram_wen & ex_inst_valid, mem_pipe_run) init False
+    val ex_mem_data_ram_ren = RegNextWhen(id_ex_data_ram_ren & ex_inst_valid, mem_pipe_run) init False
+    val ex_mem_data_ram_access_byte = RegNextWhen(id_ex_data_ram_access_byte & ex_inst_valid, mem_pipe_run)
+    val ex_mem_data_ram_access_halfword = RegNextWhen(id_ex_data_ram_access_halfword & ex_inst_valid, mem_pipe_run)
+    val ex_mem_data_ram_load_unsigned = RegNextWhen(id_ex_data_ram_load_unsigned & ex_inst_valid, mem_pipe_run)
 
     // data signal
-    val ex_mem_alu_out = RegNextWhen(alu_inst.io.alu_out, not_pipe_stall)
-    val ex_mem_rs1 = RegNextWhen(id_ex_rs1, not_pipe_stall)
-    val ex_mem_rs2 = RegNextWhen(id_ex_rs2, not_pipe_stall)
-    val ex_mem_rd = RegNextWhen(id_ex_rd, not_pipe_stall)
-    val ex_mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, not_pipe_stall)
+    val ex_mem_alu_out = RegNextWhen(alu_inst.io.alu_out, mem_pipe_run)
+    val ex_mem_rs1 = RegNextWhen(id_ex_rs1, mem_pipe_run)
+    val ex_mem_rs2 = RegNextWhen(id_ex_rs2, mem_pipe_run)
+    val ex_mem_rd = RegNextWhen(id_ex_rd, mem_pipe_run)
+    val ex_mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, mem_pipe_run)
 
     // =========================
     // Mem stage
@@ -193,15 +221,18 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
     // Mem/WB stage
     // =========================
+
+    val mem_wb_inst_valid = RegNextWhen(mem_inst_valid, wb_pipe_run) init False
+
     // control signal       
-    val mem_wb_register_wen = RegNextWhen(ex_mem_register_wen, not_pipe_stall) init False
-    val mem_wb_data_ram_ren = RegNextWhen(ex_mem_data_ram_ren, not_pipe_stall) init False
+    val mem_wb_register_wen = RegNextWhen(ex_mem_register_wen & mem_inst_valid, wb_pipe_run) init False
+    val mem_wb_data_ram_ren = RegNextWhen(ex_mem_data_ram_ren & mem_inst_valid, wb_pipe_run) init False
 
     // data signal
-    val mem_wb_alu_out = RegNextWhen(ex_mem_alu_out, not_pipe_stall)
-    val mem_wb_rs1 = RegNextWhen(ex_mem_rs1, not_pipe_stall)
-    val mem_wb_rs2 = RegNextWhen(ex_mem_rs2, not_pipe_stall)
-    val mem_wb_rd = RegNextWhen(ex_mem_rd, not_pipe_stall)
+    val mem_wb_alu_out = RegNextWhen(ex_mem_alu_out, wb_pipe_run)
+    val mem_wb_rs1 = RegNextWhen(ex_mem_rs1, wb_pipe_run)
+    val mem_wb_rs2 = RegNextWhen(ex_mem_rs2, wb_pipe_run)
+    val mem_wb_rd = RegNextWhen(ex_mem_rd, wb_pipe_run)
 
     // =========================
     // WB stage
@@ -219,7 +250,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     //////////////////////////////////////////////////////
 
     // =========================
-    // Forwarding Logic
+    // FU - Forwarding Unit
     // =========================
 
     // == EX stage == //
@@ -245,5 +276,40 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
         ex_rs2_value_forwarded := wb_rd_wr_data
     }.otherwise {
         ex_rs2_value_forwarded := id_ex_rs2_value
+    }
+
+    // =================================
+    // HDU - Hazard Detection Unit
+    // =================================
+
+    // Default
+    if_inst_valid := True
+    ex_inst_valid := id_ex_inst_valid
+    mem_inst_valid := ex_mem_inst_valid
+    wb_inst_valid := mem_wb_inst_valid
+
+    // Case 1: Load dependency
+    // If there is immediate data dependence on Load instruction, we need to stall the pipe for one cycle
+    // ID   |  EX  |  MEM | WB
+    // I1   |  LW  |  OR  | ADD
+    // I1   |  NOP |  LW  | OR
+    // I2   |  I1  |  NOP | LW
+    val id_rs1_depends_on_ex_rd = (decoder_inst.io.rs1 === id_ex_rd) & decoder_inst.io.register_rs1_ren
+    val id_rs2_depends_on_ex_rd = (decoder_inst.io.rs2 === id_ex_rd) & decoder_inst.io.register_rs2_ren
+    val stall_on_load_dependence = (id_rs1_depends_on_ex_rd | id_rs2_depends_on_ex_rd) & id_ex_data_ram_ren
+    // Stall
+    when(stall_on_load_dependence) {
+        if_pipe_stall := True
+        id_pipe_stall := True
+    }.otherwise {
+        if_pipe_stall := False
+        id_pipe_stall := False
+    }
+    // Insert Nop
+    when(stall_on_load_dependence) {
+        id_inst_valid := False
+    }.otherwise {
+        id_inst_valid := if_id_inst_valid
+
     }
 }

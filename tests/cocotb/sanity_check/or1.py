@@ -7,7 +7,7 @@
 
 .text
 main:
-    ori     x0, x0, 1
+    ori     x1, x0, 1
 	ori	    x0, x0, 0
 	ori	    x0, x0, 0
 	ori	    x0, x0, 0

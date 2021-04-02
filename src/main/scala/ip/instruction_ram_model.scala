@@ -25,6 +25,7 @@ import spinal.core._
 case class instruction_ram_io(param: CPU_PARAM) extends Bundle {
     val wen    = in Bool
     val ren    = in Bool
+    val enable = in Bool
     val addr   = in UInt(param.INST_RAM_ADDR_WIDTH bits)
     val data_out = out Bits(param.INST_RAM_DATA_WIDTH bits)
     val data_in = in Bits(param.INST_RAM_DATA_WIDTH bits)    // data come 1 cycle after ren
@@ -40,11 +41,11 @@ case class instruction_ram_model(param: CPU_PARAM) extends Component {
     ram.write(
         address = ram_addr,
         data = io.data_in,
-        enable = io.wen
+        enable = io.wen & io.enable
     )
 
     io.data_out := ram.readSync(
         address = ram_addr,
-        enable = io.ren
+        enable = io.ren & io.enable
     )
 }

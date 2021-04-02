@@ -30,6 +30,7 @@ case class apple_riscv_soc(param: CPU_PARAM) extends Component {
     val instruction_ram = instruction_ram_model(param)
     instruction_ram.io.wen := cpu_core.io.inst_ram_wen
     instruction_ram.io.ren := cpu_core.io.inst_ram_ren
+    instruction_ram.io.enable := cpu_core.io.inst_ram_enable
     instruction_ram.io.addr := cpu_core.io.inst_ram_addr
     instruction_ram.io.data_in := cpu_core.io.inst_ram_data_out
     cpu_core.io.inst_ram_data_in := instruction_ram.io.data_out
