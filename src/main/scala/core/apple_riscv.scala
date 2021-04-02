@@ -122,28 +122,27 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id_ex_data_ram_access_byte = RegNextWhen(decoder_inst.io.data_ram_access_byte, not_pipe_stall)
     val id_ex_data_ram_access_halfword = RegNextWhen(decoder_inst.io.data_ram_access_halfword, not_pipe_stall)
     val id_ex_data_ram_load_unsigned = RegNextWhen(decoder_inst.io.data_ram_load_unsigned, not_pipe_stall)
-
-
-    // register file value
+    
+    // register file value and immediate value
     val id_ex_rs1_value = RegNextWhen(register_file_inst.io.rs1_data_out, not_pipe_stall)
     val id_ex_rs2_value = RegNextWhen(register_file_inst.io.rs2_data_out, not_pipe_stall)
-    
-    // Note: Register re-timing:
-    // We select the immediate value and register value at ID stage inst 
-    val id_ex_rs2_value_or_imm_next = Mux(decoder_inst.io.imm_sel, decoder_inst.io.imm, register_file_inst.io.rs2_data_out)
-    val id_ex_rs2_value_or_imm = RegNextWhen(id_ex_rs2_value_or_imm_next, not_pipe_stall)
+    val id_ex_imm_11_0 = RegNextWhen(decoder_inst.io.imm_11_0, not_pipe_stall)
 
     // =========================
     // EX stage
     // =========================
 
-    val id_ex_op1 = Bits(param.DATA_WIDTH bits)
-    val id_ex_op2 = Bits(param.DATA_WIDTH bits)
+    // Place holder for the final register value after the forwarding logic
+    val ex_rs1_value_forwarded = Bits(param.DATA_WIDTH bits)
+    val ex_rs2_value_forwarded = Bits(param.DATA_WIDTH bits)
+
+    // == signed extend the immediate value == //
+    val imm = (id_ex_imm_11_0.resize(param.DATA_WIDTH)).asBits
 
     // ALU instance
     val alu_inst = alu(param)
-    alu_inst.io.op1 := id_ex_op1
-    alu_inst.io.op2 := id_ex_op2
+    alu_inst.io.op1 := ex_rs1_value_forwarded
+    alu_inst.io.op2 := Mux(id_ex_imm_sel, imm, ex_rs2_value_forwarded)
     alu_inst.io.func3 := id_ex_func3
     alu_inst.io.func7 := id_ex_func7
     alu_inst.io.alu_la_op := id_ex_alu_la_op
@@ -167,7 +166,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex_mem_rs1 = RegNextWhen(id_ex_rs1, not_pipe_stall)
     val ex_mem_rs2 = RegNextWhen(id_ex_rs2, not_pipe_stall)
     val ex_mem_rd = RegNextWhen(id_ex_rd, not_pipe_stall)
-    val ex_mem_rs2_value = RegNextWhen(id_ex_rs2_value, not_pipe_stall)
+    val ex_mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, not_pipe_stall)
 
     // =========================
     // Mem stage
@@ -180,10 +179,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     memory_controller_inst.io.cpu2mc_ren := ex_mem_data_ram_ren
     memory_controller_inst.io.cpu2mc_addr := ex_mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt   // ALU output is the address
     memory_controller_inst.io.cpu2mc_data := ex_mem_rs2_value        // Write data is in rs2
-    memory_controller_inst.io.cpu2mc_LS_byte := ex_mem_data_ram_access_byte
-    memory_controller_inst.io.cpu2mc_LS_halfword := ex_mem_data_ram_access_halfword
-    memory_controller_inst.io.cpu2mc_LW_unsigned := ex_mem_data_ram_load_unsigned
-
+    memory_controller_inst.io.cpu2mc_mem_LS_byte := ex_mem_data_ram_access_byte
+    memory_controller_inst.io.cpu2mc_mem_LS_halfword := ex_mem_data_ram_access_halfword
+    memory_controller_inst.io.cpu2mc_mem_LW_unsigned := ex_mem_data_ram_load_unsigned
     // MEM side
     io.data_ram_wen := memory_controller_inst.io.mc2mem_wen
     io.data_ram_ren := memory_controller_inst.io.mc2mem_ren
@@ -197,6 +195,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
     // control signal       
     val mem_wb_register_wen = RegNextWhen(ex_mem_register_wen, not_pipe_stall) init False
+    val mem_wb_data_ram_ren = RegNextWhen(ex_mem_data_ram_ren, not_pipe_stall) init False
 
     // data signal
     val mem_wb_alu_out = RegNextWhen(ex_mem_alu_out, not_pipe_stall)
@@ -208,12 +207,12 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // WB stage
     // =========================
 
-    // Write back to register
+    // == Write back to register == //
     register_file_inst.io.register_wen := mem_wb_register_wen
     register_file_inst.io.register_wr_addr := mem_wb_rd
-    register_file_inst.io.rd_in := mem_wb_alu_out
-
-    memory_controller_inst.io.mc2cpu_data     
+    // Select data between memory output and alu output
+    val wb_rd_wr_data = Mux(mem_wb_data_ram_ren, memory_controller_inst.io.mc2cpu_data, mem_wb_alu_out)
+    register_file_inst.io.rd_in := wb_rd_wr_data
 
     //////////////////////////////////////////////////////
     //         Other Component / Logic                  //
@@ -223,27 +222,28 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Forwarding Logic
     // =========================
 
+    // == EX stage == //
     val rs1_match_mem = (id_ex_rs1 === ex_mem_rd)
     val rs1_match_wb = (id_ex_rs1 === mem_wb_rd)
-    val forward_rs1_from_mem = id_ex_register_rs1_ren & rs1_match_mem
-    val forward_rs1_from_wb = id_ex_register_rs1_ren & rs1_match_wb
+    val forward_rs1_from_mem = id_ex_register_rs1_ren & rs1_match_mem & ex_mem_register_wen
+    val forward_rs1_from_wb = id_ex_register_rs1_ren & rs1_match_wb & mem_wb_register_wen
     when(forward_rs1_from_mem) {
-        id_ex_op1 := ex_mem_alu_out
+        ex_rs1_value_forwarded := ex_mem_alu_out
     }.elsewhen(forward_rs1_from_wb) {
-        id_ex_op1 := mem_wb_alu_out
+        ex_rs1_value_forwarded := wb_rd_wr_data
     }.otherwise {
-        id_ex_op1 := id_ex_rs1_value
+        ex_rs1_value_forwarded := id_ex_rs1_value
     }
 
     val rs2_match_mem = (id_ex_rs2 === ex_mem_rd)
     val rs2_match_wb = (id_ex_rs2 === mem_wb_rd)
-    val forward_rs2_from_mem = id_ex_register_rs2_ren & rs2_match_mem
-    val forward_rs2_from_wb = id_ex_register_rs2_ren & rs2_match_wb
+    val forward_rs2_from_mem = id_ex_register_rs2_ren & rs2_match_mem & ex_mem_register_wen
+    val forward_rs2_from_wb = id_ex_register_rs2_ren & rs2_match_wb & mem_wb_register_wen
     when(forward_rs2_from_mem) {
-        id_ex_op2 := ex_mem_alu_out
+        ex_rs2_value_forwarded := ex_mem_alu_out
     }.elsewhen(forward_rs2_from_wb) {
-        id_ex_op2 := mem_wb_alu_out
+        ex_rs2_value_forwarded := wb_rd_wr_data
     }.otherwise {
-        id_ex_op2 := id_ex_rs2_value_or_imm
+        ex_rs2_value_forwarded := id_ex_rs2_value
     }
 }

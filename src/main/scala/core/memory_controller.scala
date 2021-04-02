@@ -16,6 +16,7 @@
 // - Logic to handle byte and half word access to memory
 // - We always read/write the whole word from/to memory so the address to the memory is aligned
 //   to word address (lower 2 bits is always 0)
+// - ASSUMPTION: CPU need to give the aligned address to memory controller
 // - The byte enable controls the byte being written into memory
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,10 +33,9 @@ case class memory_controller_io(param: CPU_PARAM) extends Bundle {
   val cpu2mc_addr = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
   val cpu2mc_data = in Bits(param.DATA_RAM_DATA_WIDTH bits)
   val mc2cpu_data = out Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val mc2cpu_data_vld = out Bool
-  val cpu2mc_LS_byte = in Bool
-  val cpu2mc_LS_halfword = in Bool
-  val cpu2mc_LW_unsigned = in Bool
+  val cpu2mc_mem_LS_byte = in Bool
+  val cpu2mc_mem_LS_halfword = in Bool
+  val cpu2mc_mem_LW_unsigned = in Bool
 
   // MEM side
   val mc2mem_wen  = out Bool
@@ -50,6 +50,13 @@ case class memory_controller_io(param: CPU_PARAM) extends Bundle {
 case class memory_controller(param: CPU_PARAM) extends Component {
 
   val io = memory_controller_io(param)
+
+  // == Store the information for read data process == //
+  val mem_byte_addr = io.cpu2mc_addr(1 downto 0)
+  val LW_unsigned_s1 = RegNextWhen(io.cpu2mc_mem_LW_unsigned, io.cpu2mc_ren)
+  val LS_byte_s1 = RegNextWhen(io.cpu2mc_mem_LS_byte, io.cpu2mc_ren)
+  val LS_halfword_s1 = RegNextWhen(io.cpu2mc_mem_LS_halfword, io.cpu2mc_ren)
+  val mem_byte_addr_s1 = RegNextWhen(mem_byte_addr, io.cpu2mc_ren)
 
   // == Extract the data field == //
   val cpu2mc_data_7_0  = io.cpu2mc_data(7 downto 0)
@@ -96,54 +103,76 @@ case class memory_controller(param: CPU_PARAM) extends Component {
   io.mc2mem_addr := io.cpu2mc_addr  // Default address mapping
   io.mc2mem_addr(1 downto 0) := 0   // Align the address to word boundary
 
-  val mem_byte_addr = io.cpu2mc_addr(1 downto 0)
 
-  when(io.cpu2mc_LS_byte) {
-    // Set the default value to zero, good for debug
-    // io.mc2cpu_data := 0 // Can't set this. SpinalHDL will fail. Not sure why.
-    io.mc2mem_data := 0
+
+  // Write
+  when(io.cpu2mc_mem_LS_byte) {
     switch(mem_byte_addr) {
       // Byte 0
       is(0) {
         io.mc2mem_data(7 downto 0) := cpu2mc_data_7_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_byte0_unsign_ext, mem2mc_data_byte0_sign_ext)
         io.mc2mem_byte_enable :=  B"0001"
       }
       // Byte 1
       is(1) {
         io.mc2mem_data(15 downto 8) := cpu2mc_data_7_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_byte1_unsign_ext, mem2mc_data_byte1_sign_ext)
         io.mc2mem_byte_enable :=  B"0010"
       }
       // Byte 2
       is(2) {
         io.mc2mem_data(23 downto 16) := cpu2mc_data_7_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_byte2_unsign_ext, mem2mc_data_byte2_sign_ext)
         io.mc2mem_byte_enable :=  B"0100"
       }
       // Byte 3
       is(3) {
         io.mc2mem_data(31 downto 24) := cpu2mc_data_7_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_byte3_unsign_ext, mem2mc_data_byte3_sign_ext)
         io.mc2mem_byte_enable :=  B"1000"
       }
     }
-  }.elsewhen(io.cpu2mc_LS_halfword) {
-    // Set the default value to zero, good for debug
-    io.mc2mem_data := 0
-    io.mc2cpu_data := 0
+  }.elsewhen(io.cpu2mc_mem_LS_halfword) {
     switch(mem_byte_addr) {
       // HW 0
       is(0) {
         io.mc2mem_data(15 downto 0) := cpu2mc_data_15_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_hw0_unsign_ext, mem2mc_data_hw0_sign_ext)
         io.mc2mem_byte_enable :=  B"0011"
       }
       // HW 1
       is(2) {
         io.mc2mem_data(31 downto 16) := cpu2mc_data_15_0
-        io.mc2cpu_data := Mux(io.cpu2mc_LW_unsigned, mem2mc_data_hw1_unsign_ext, mem2mc_data_hw1_sign_ext)
         io.mc2mem_byte_enable :=  B"1100"
+      }
+    }
+  }
+
+  // Read
+  when(LS_byte_s1) {
+    switch(mem_byte_addr_s1) {
+      // Byte 0
+      is(0) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_byte0_unsign_ext, mem2mc_data_byte0_sign_ext)
+      }
+      // Byte 1
+      is(1) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_byte1_unsign_ext, mem2mc_data_byte1_sign_ext)
+      }
+      // Byte 2
+      is(2) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_byte2_unsign_ext, mem2mc_data_byte2_sign_ext)
+      }
+      // Byte 3
+      is(3) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_byte3_unsign_ext, mem2mc_data_byte3_sign_ext)
+      }
+    }
+  }.elsewhen(LS_halfword_s1) {
+    switch(mem_byte_addr_s1) {
+      // HW 0
+      is(0) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_hw0_unsign_ext, mem2mc_data_hw0_sign_ext)
+      }
+      // HW 1
+      is(2) {
+        io.mc2cpu_data := Mux(LW_unsigned_s1, mem2mc_data_hw1_unsign_ext, mem2mc_data_hw1_sign_ext)
       }
     }
   }
@@ -151,5 +180,4 @@ case class memory_controller(param: CPU_PARAM) extends Component {
   // == Other Logic == //
   io.mc2mem_ren := io.cpu2mc_ren
   io.mc2mem_wen := io.cpu2mc_wen
-  io.mc2cpu_data_vld := io.mem2mc_data_vld
 }

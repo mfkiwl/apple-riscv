@@ -94,3 +94,21 @@ import forward_logic1
 async def test_forward_logic1(dut):
     """ Test the forward logic """
     await run_test(dut, forward_logic1.imem_data, forward_logic1.expected_register, 300)
+
+import load_store1
+@cocotb.test()
+async def test_load_store1(dut):
+    """ Test the lw/sw logic """
+    await run_test(dut, load_store1.imem_data, load_store1.expected_register, 1000)
+
+import load_store2
+@cocotb.test()
+async def test_load_store2(dut):
+    """ Test the sb/sh logic """
+    await run_test(dut, load_store2.imem_data, load_store2.expected_register, 1000)
+
+import load_store3
+@cocotb.test()
+async def test_load_store3(dut):
+    """ Test the sb/sh logic """
+    await run_test(dut, load_store3.imem_data, load_store3.expected_register, 1000)

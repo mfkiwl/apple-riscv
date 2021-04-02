@@ -107,5 +107,7 @@ case class alu(param: CPU_PARAM) extends Component {
                 io.alu_out(0) := (io.op1.asUInt < io.op2.asUInt)
             }
         }
+    }.elsewhen(io.alu_mem_op) {
+        io.alu_out := add_result.asBits
     }
 }

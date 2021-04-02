@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: instruction_ram_onchip
+// Module Name: instruction_ram_model
 //
 // Author: Heqing Huang
 // Date Created: 03/30/2021
@@ -13,7 +13,7 @@
 //
 // Instruction RAM
 //
-// - Using FPGA on-chip ram
+// - Instruction RAM simulation model
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ case class instruction_ram_io(param: CPU_PARAM) extends Bundle {
     val data_in = in Bits(param.INST_RAM_DATA_WIDTH bits)    // data come 1 cycle after ren
 }
 
-case class instruction_ram_onchip(param: CPU_PARAM) extends Component {
+case class instruction_ram_model(param: CPU_PARAM) extends Component {
     val io = instruction_ram_io(param)
 
     val SIZE = 1 << (param.INST_RAM_ADDR_WIDTH - 2) // We fetch 4 bytes at a time

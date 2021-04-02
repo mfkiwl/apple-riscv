@@ -48,7 +48,7 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
     val alu_mem_op = out Bool      // ALU operation is store and load
 
     // Other signal
-    val imm = out Bits(param.DATA_WIDTH bits)
+    val imm_11_0 = out SInt(12 bits)
 }
 
 case class instruction_decoder(param: CPU_PARAM) extends Component {
@@ -76,12 +76,12 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
 
     io.imm_sel := (op_logic_arithm_imm | op_load | op_store)
     io.register_wen := (op_logic_arithm | op_logic_arithm_imm | op_load)     // TODO: Can we simplify this logic?
-    io.register_rs1_ren := (op_logic_arithm | op_logic_arithm_imm | op_load)
-    io.register_rs2_ren := op_logic_arithm
+    io.register_rs1_ren := (op_logic_arithm | op_logic_arithm_imm | op_load | op_store)
+    io.register_rs2_ren := op_logic_arithm | op_store
     io.data_ram_wen := op_store
     io.data_ram_ren := op_load
-    io.data_ram_access_byte := (io.func3 === param.LS_F3_LB_SB)
-    io.data_ram_access_halfword := (io.func3 === param.LS_F3_LH_SH)
+    io.data_ram_access_byte := (io.func3 === param.LS_F3_LB_SB | io.func3 === param.LS_F3_LBU)
+    io.data_ram_access_halfword := (io.func3 === param.LS_F3_LH_SH | io.func3 === param.LS_F3_LHU)
     io.data_ram_load_unsigned := (io.func3 === param.LS_F3_LBU) | (io.func3 === param.LS_F3_LHU)
 
     // Some optimization for ALU here. Decode the instruction to just single control signal so
@@ -90,17 +90,14 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     io.alu_mem_op := op_store | op_load
 
     // Immediate value
-    io.imm := 0 // Default
     when(op_logic_arithm_imm | op_load) {
         // Immediate value are signed extended to 32 bits for logic/arithmetic operation
-        val imm_11_0: SInt = io.inst(31 downto 20).asSInt
-        io.imm := (imm_11_0.resize(param.DATA_WIDTH)).asBits
-    }.elsewhen(op_store) {
+        io.imm_11_0 := io.inst(31 downto 20).asSInt
+    }.otherwise {
         // Immediate value are signed extended to 32 bits for store operation
         val imm_4_0 = io.inst(11 downto 7)
         val imm_11_5 = io.inst(31 downto 25)
-        val imm_11_0 = (imm_11_5 ## imm_4_0).asSInt
-        io.imm := (imm_11_0.resize(param.DATA_WIDTH)).asBits
+        io.imm_11_0 := (imm_11_5 ## imm_4_0).asSInt
     }
 
     // FIXME: Need additional logic to determine if the instruction is valid
