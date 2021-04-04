@@ -122,5 +122,23 @@ async def test_load_store2(dut):
 import load_store3
 @cocotb.test()
 async def test_load_store3(dut):
-    """ Test the sb/sh logic """
+    """ Test the lb/lh logic """
     await run_test(dut, load_store3.imem_data, load_store3.expected_register, 1000)
+
+import branch1
+@cocotb.test()
+async def test_branch1(dut):
+    """ Test the beq/bne logic """
+    await run_test(dut, branch1.imem_data, branch1.expected_register, 300)
+
+import branch2
+@cocotb.test()
+async def test_branch2(dut):
+    """ Test the blt/bge logic """
+    await run_test(dut, branch2.imem_data, branch2.expected_register, 400)
+
+import branch3
+@cocotb.test()
+async def test_branch3(dut):
+    """ Test the bltu/bgeu logic """
+    await run_test(dut, branch3.imem_data, branch3.expected_register, 400)

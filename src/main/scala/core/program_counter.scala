@@ -32,7 +32,7 @@ case class program_counter(param: CPU_PARAM) extends Component {
 
     val pc = Reg(UInt(param.PC_WIDTH bits)) init 0
     when(!io.stall) {
-        when(io.branch) {
+        when(io.branch) {   // stall has higher priority then branch
             pc := io.pc_in
         } otherwise {
             pc := pc + 4

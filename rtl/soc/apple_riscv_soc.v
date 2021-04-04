@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : afc6a1340f667ef1c0daba53f68fbf164ec0350d
+// Git hash  : d6856a0168e83bad3c75056f7efa30580889a09c
 
 
 
@@ -162,11 +162,9 @@ module apple_riscv (
   input               clk,
   input               reset
 );
-  wire       [31:0]   _zz_1;
-  wire                _zz_2;
-  wire       [31:0]   _zz_3;
-  wire       [19:0]   _zz_4;
-  wire                _zz_5;
+  wire                _zz_1;
+  wire       [19:0]   _zz_2;
+  wire                _zz_3;
   wire       [31:0]   pc_inst_io_pc_out;
   wire       [6:0]    decoder_inst_io_opcode;
   wire       [4:0]    decoder_inst_io_rd;
@@ -185,17 +183,20 @@ module apple_riscv (
   wire                decoder_inst_io_imm_sel;
   wire                decoder_inst_io_alu_la_op;
   wire                decoder_inst_io_alu_mem_op;
-  wire       [11:0]   decoder_inst_io_imm_11_0;
+  wire                decoder_inst_io_br_op;
+  wire       [31:0]   decoder_inst_io_imm_value;
   wire       [31:0]   register_file_inst_io_rs1_data_out;
   wire       [31:0]   register_file_inst_io_rs2_data_out;
   wire       [31:0]   alu_inst_io_alu_out;
+  wire       [31:0]   branch_unit_inst_io_target_pc;
+  wire                branch_unit_inst_io_branch_taken;
+  wire                branch_unit_inst_io_instruction_address_misaligned_exception;
   wire       [31:0]   memory_controller_inst_io_mc2cpu_data;
   wire                memory_controller_inst_io_mc2mem_wen;
   wire                memory_controller_inst_io_mc2mem_ren;
   wire       [19:0]   memory_controller_inst_io_mc2mem_addr;
   wire       [31:0]   memory_controller_inst_io_mc2mem_data;
   wire       [3:0]    memory_controller_inst_io_mc2mem_byte_enable;
-  wire       [31:0]   _zz_6;
   wire                if_inst_valid;
   reg                 id_inst_valid;
   wire                ex_inst_valid;
@@ -211,6 +212,8 @@ module apple_riscv (
   wire                ex_pipe_run;
   wire                mem_pipe_run;
   wire                wb_pipe_run;
+  wire       [31:0]   target_pc;
+  wire                branch_taken;
   reg        [31:0]   if_id_pc;
   reg                 if_id_inst_valid;
   reg                 id_ex_inst_valid;
@@ -227,15 +230,18 @@ module apple_riscv (
   reg                 id_ex_alu_la_op;
   reg                 id_ex_alu_mem_op;
   reg                 id_ex_imm_sel;
+  reg                 id_ex_br_op;
   reg                 id_ex_data_ram_access_byte;
   reg                 id_ex_data_ram_access_halfword;
   reg                 id_ex_data_ram_load_unsigned;
   reg        [31:0]   id_ex_rs1_value;
   reg        [31:0]   id_ex_rs2_value;
-  reg        [11:0]   id_ex_imm_11_0;
+  reg        [31:0]   id_ex_imm_value;
+  reg        [31:0]   id_ex_pc;
   reg        [31:0]   ex_rs1_value_forwarded;
   reg        [31:0]   ex_rs2_value_forwarded;
-  wire       [31:0]   imm;
+  wire       [31:0]   imm_value;
+  wire       [31:0]   alu_op2_mux_out;
   reg                 ex_mem_inst_valid;
   reg                 ex_mem_register_wen;
   reg                 ex_mem_data_ram_wen;
@@ -268,10 +274,9 @@ module apple_riscv (
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
 
-  assign _zz_6 = {{20{id_ex_imm_11_0[11]}}, id_ex_imm_11_0};
   program_counter pc_inst (
-    .io_pc_in     (_zz_1[31:0]              ), //i
-    .io_branch    (_zz_2                    ), //i
+    .io_pc_in     (target_pc[31:0]          ), //i
+    .io_branch    (branch_taken             ), //i
     .io_stall     (if_pipe_stall            ), //i
     .io_pc_out    (pc_inst_io_pc_out[31:0]  ), //o
     .clk          (clk                      ), //i
@@ -296,7 +301,8 @@ module apple_riscv (
     .io_imm_sel                     (decoder_inst_io_imm_sel                   ), //o
     .io_alu_la_op                   (decoder_inst_io_alu_la_op                 ), //o
     .io_alu_mem_op                  (decoder_inst_io_alu_mem_op                ), //o
-    .io_imm_11_0                    (decoder_inst_io_imm_11_0[11:0]            )  //o
+    .io_br_op                       (decoder_inst_io_br_op                     ), //o
+    .io_imm_value                   (decoder_inst_io_imm_value[31:0]           )  //o
   );
   register_file register_file_inst (
     .io_rs1_rd_addr         (decoder_inst_io_rs1[4:0]                  ), //i
@@ -311,18 +317,28 @@ module apple_riscv (
   );
   alu alu_inst (
     .io_op1            (ex_rs1_value_forwarded[31:0]  ), //i
-    .io_op2            (_zz_3[31:0]                   ), //i
+    .io_op2            (alu_op2_mux_out[31:0]         ), //i
     .io_alu_out        (alu_inst_io_alu_out[31:0]     ), //o
     .io_func3          (id_ex_func3[2:0]              ), //i
     .io_func7          (id_ex_func7[6:0]              ), //i
     .io_alu_la_op      (id_ex_alu_la_op               ), //i
     .io_alu_mem_op     (id_ex_alu_mem_op              ), //i
-    .io_alu_imm_sel    (id_ex_imm_sel                 )  //i
+    .io_alu_imm_sel    (id_ex_imm_sel                 ), //i
+    .io_alu_br_op      (id_ex_br_op                   )  //i
+  );
+  branch_unit branch_unit_inst (
+    .io_branch_result                               (_zz_1                                                         ), //i
+    .io_current_pc                                  (id_ex_pc[31:0]                                                ), //i
+    .io_imm_value                                   (id_ex_imm_value[31:0]                                         ), //i
+    .io_br_op                                       (id_ex_br_op                                                   ), //i
+    .io_target_pc                                   (branch_unit_inst_io_target_pc[31:0]                           ), //o
+    .io_branch_taken                                (branch_unit_inst_io_branch_taken                              ), //o
+    .io_instruction_address_misaligned_exception    (branch_unit_inst_io_instruction_address_misaligned_exception  )  //o
   );
   memory_controller memory_controller_inst (
     .io_cpu2mc_wen                (ex_mem_data_ram_wen                                ), //i
     .io_cpu2mc_ren                (ex_mem_data_ram_ren                                ), //i
-    .io_cpu2mc_addr               (_zz_4[19:0]                                        ), //i
+    .io_cpu2mc_addr               (_zz_2[19:0]                                        ), //i
     .io_cpu2mc_data               (ex_mem_rs2_value[31:0]                             ), //i
     .io_mc2cpu_data               (memory_controller_inst_io_mc2cpu_data[31:0]        ), //o
     .io_cpu2mc_mem_LS_byte        (ex_mem_data_ram_access_byte                        ), //i
@@ -332,7 +348,7 @@ module apple_riscv (
     .io_mc2mem_ren                (memory_controller_inst_io_mc2mem_ren               ), //o
     .io_mc2mem_addr               (memory_controller_inst_io_mc2mem_addr[19:0]        ), //o
     .io_mem2mc_data               (io_data_ram_data_in[31:0]                          ), //i
-    .io_mem2mc_data_vld           (_zz_5                                              ), //i
+    .io_mem2mc_data_vld           (_zz_3                                              ), //i
     .io_mc2mem_data               (memory_controller_inst_io_mc2mem_data[31:0]        ), //o
     .io_mc2mem_byte_enable        (memory_controller_inst_io_mc2mem_byte_enable[3:0]  ), //o
     .clk                          (clk                                                ), //i
@@ -346,16 +362,17 @@ module apple_riscv (
   assign ex_pipe_run = (! ex_pipe_stall);
   assign mem_pipe_run = (! mem_pipe_stall);
   assign wb_pipe_run = (! wb_pipe_stall);
-  assign _zz_2 = 1'b0;
-  assign _zz_1 = 32'h0;
   assign io_inst_ram_wen = 1'b0;
   assign io_inst_ram_ren = 1'b1;
   assign io_inst_ram_enable = if_pipe_run;
   assign io_inst_ram_addr = pc_inst_io_pc_out[9 : 0];
   assign io_inst_ram_data_out = 32'h0;
-  assign imm = _zz_6;
-  assign _zz_3 = (id_ex_imm_sel ? imm : ex_rs2_value_forwarded);
-  assign _zz_4 = ex_mem_alu_out[19 : 0];
+  assign imm_value = id_ex_imm_value;
+  assign alu_op2_mux_out = (id_ex_imm_sel ? imm_value : ex_rs2_value_forwarded);
+  assign _zz_1 = alu_inst_io_alu_out[0];
+  assign target_pc = branch_unit_inst_io_target_pc;
+  assign branch_taken = branch_unit_inst_io_branch_taken;
+  assign _zz_2 = ex_mem_alu_out[19 : 0];
   assign io_data_ram_wen = memory_controller_inst_io_mc2mem_wen;
   assign io_data_ram_ren = memory_controller_inst_io_mc2mem_ren;
   assign io_data_ram_addr = memory_controller_inst_io_mc2mem_addr;
@@ -394,7 +411,7 @@ module apple_riscv (
     end
   end
 
-  assign if_inst_valid = 1'b1;
+  assign if_inst_valid = (! branch_taken);
   assign ex_inst_valid = id_ex_inst_valid;
   assign mem_inst_valid = ex_mem_inst_valid;
   assign wb_inst_valid = mem_wb_inst_valid;
@@ -421,7 +438,7 @@ module apple_riscv (
     if(stall_on_load_dependence)begin
       id_inst_valid = 1'b0;
     end else begin
-      id_inst_valid = if_id_inst_valid;
+      id_inst_valid = (if_id_inst_valid && (! branch_taken));
     end
   end
 
@@ -517,6 +534,9 @@ module apple_riscv (
       id_ex_imm_sel <= decoder_inst_io_imm_sel;
     end
     if(ex_pipe_run)begin
+      id_ex_br_op <= decoder_inst_io_br_op;
+    end
+    if(ex_pipe_run)begin
       id_ex_data_ram_access_byte <= decoder_inst_io_data_ram_access_byte;
     end
     if(ex_pipe_run)begin
@@ -532,7 +552,10 @@ module apple_riscv (
       id_ex_rs2_value <= register_file_inst_io_rs2_data_out;
     end
     if(ex_pipe_run)begin
-      id_ex_imm_11_0 <= decoder_inst_io_imm_11_0;
+      id_ex_imm_value <= decoder_inst_io_imm_value;
+    end
+    if(ex_pipe_run)begin
+      id_ex_pc <= if_id_pc;
     end
     if(mem_pipe_run)begin
       ex_mem_data_ram_access_byte <= (id_ex_data_ram_access_byte && ex_inst_valid);
@@ -789,6 +812,24 @@ module memory_controller (
 
 endmodule
 
+module branch_unit (
+  input               io_branch_result,
+  input      [31:0]   io_current_pc,
+  input      [31:0]   io_imm_value,
+  input               io_br_op,
+  output     [31:0]   io_target_pc,
+  output              io_branch_taken,
+  output              io_instruction_address_misaligned_exception
+);
+  wire       [1:0]    pc_1_0;
+
+  assign io_branch_taken = (io_br_op && io_branch_result);
+  assign io_target_pc = (io_current_pc + io_imm_value);
+  assign pc_1_0 = io_target_pc[1 : 0];
+  assign io_instruction_address_misaligned_exception = (io_branch_taken && (pc_1_0 != 2'b00));
+
+endmodule
+
 module alu (
   input      [31:0]   io_op1,
   input      [31:0]   io_op2,
@@ -797,75 +838,119 @@ module alu (
   input      [6:0]    io_func7,
   input               io_alu_la_op,
   input               io_alu_mem_op,
-  input               io_alu_imm_sel
+  input               io_alu_imm_sel,
+  input               io_alu_br_op
 );
   wire       [31:0]   _zz_1;
   wire       [31:0]   _zz_2;
   wire       [31:0]   _zz_3;
   wire       [31:0]   op1_signed;
   wire       [31:0]   op2_signed;
+  wire       [31:0]   op1_unsigned;
+  wire       [31:0]   op2_unsigned;
   wire       [31:0]   add_result;
   wire       [31:0]   sub_result;
+  wire                isAddOp;
+  wire                beq_result;
+  wire                bne_result;
+  wire                blt_result;
+  wire                bge_result;
+  wire                bltu_result;
+  wire                bgeu_result;
   wire       [4:0]    shift_value;
+  wire       [2:0]    alu_op_ctrl;
 
   assign _zz_1 = io_op2;
   assign _zz_2 = ($signed(_zz_3) >>> shift_value);
   assign _zz_3 = io_op1;
   assign op1_signed = io_op1;
   assign op2_signed = io_op2;
+  assign op1_unsigned = io_op1;
+  assign op2_unsigned = io_op2;
   assign add_result = ($signed(op1_signed) + $signed(op2_signed));
   assign sub_result = ($signed(op1_signed) - $signed(op2_signed));
+  assign isAddOp = (io_alu_imm_sel || ((! io_alu_imm_sel) && (io_func7[5] == 1'b0)));
+  assign beq_result = (io_op1 == io_op2);
+  assign bne_result = (! beq_result);
+  assign blt_result = ($signed(op1_signed) < $signed(op2_signed));
+  assign bge_result = (! blt_result);
+  assign bltu_result = (op1_unsigned < op2_unsigned);
+  assign bgeu_result = (! bltu_result);
   assign shift_value = _zz_1[4 : 0];
   always @ (*) begin
     io_alu_out = 32'h0;
-    if(io_alu_la_op)begin
-      case(io_func3)
-        3'b111 : begin
-          io_alu_out = (io_op1 & io_op2);
-        end
-        3'b110 : begin
-          io_alu_out = (io_op1 | io_op2);
-        end
-        3'b100 : begin
-          io_alu_out = (io_op1 ^ io_op2);
-        end
-        3'b000 : begin
-          if(io_alu_imm_sel)begin
-            io_alu_out = add_result;
-          end else begin
-            if((io_func7[5] == 1'b1))begin
-              io_alu_out = sub_result;
-            end else begin
+    case(alu_op_ctrl)
+      3'b100 : begin
+        case(io_func3)
+          3'b111 : begin
+            io_alu_out = (io_op1 & io_op2);
+          end
+          3'b110 : begin
+            io_alu_out = (io_op1 | io_op2);
+          end
+          3'b100 : begin
+            io_alu_out = (io_op1 ^ io_op2);
+          end
+          3'b000 : begin
+            if((isAddOp == 1'b1))begin
               io_alu_out = add_result;
+            end else begin
+              io_alu_out = sub_result;
             end
           end
-        end
-        3'b101 : begin
-          if((io_func7[5] == 1'b1))begin
-            io_alu_out = _zz_2;
-          end else begin
-            io_alu_out = (io_op1 >>> shift_value);
+          3'b101 : begin
+            if((io_func7[5] == 1'b1))begin
+              io_alu_out = _zz_2;
+            end else begin
+              io_alu_out = (io_op1 >>> shift_value);
+            end
           end
-        end
-        3'b001 : begin
-          io_alu_out = (io_op1 <<< shift_value);
-        end
-        3'b010 : begin
-          io_alu_out = 32'h0;
-          io_alu_out[0] = ($signed(op1_signed) < $signed(op2_signed));
-        end
-        default : begin
-          io_alu_out = 32'h0;
-          io_alu_out[0] = (io_op1 < io_op2);
-        end
-      endcase
-    end else begin
-      if(io_alu_mem_op)begin
+          3'b001 : begin
+            io_alu_out = (io_op1 <<< shift_value);
+          end
+          3'b010 : begin
+            io_alu_out = 32'h0;
+            io_alu_out[0] = ($signed(op1_signed) < $signed(op2_signed));
+          end
+          default : begin
+            io_alu_out = 32'h0;
+            io_alu_out[0] = (io_op1 < io_op2);
+          end
+        endcase
+      end
+      3'b010 : begin
         io_alu_out = add_result;
       end
-    end
+      3'b001 : begin
+        case(io_func3)
+          3'b000 : begin
+            io_alu_out[0] = beq_result;
+          end
+          3'b001 : begin
+            io_alu_out[0] = bne_result;
+          end
+          3'b100 : begin
+            io_alu_out[0] = blt_result;
+          end
+          3'b101 : begin
+            io_alu_out[0] = bge_result;
+          end
+          3'b110 : begin
+            io_alu_out[0] = bltu_result;
+          end
+          3'b111 : begin
+            io_alu_out[0] = bgeu_result;
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
   end
 
+  assign alu_op_ctrl = {{io_alu_la_op,io_alu_mem_op},io_alu_br_op};
 
 endmodule
 
@@ -949,15 +1034,23 @@ module instruction_decoder (
   output              io_imm_sel,
   output              io_alu_la_op,
   output              io_alu_mem_op,
-  output reg [11:0]   io_imm_11_0
+  output              io_br_op,
+  output reg [31:0]   io_imm_value
 );
+  wire       [11:0]   _zz_1;
+  wire       [12:0]   _zz_2;
+  wire       [11:0]   _zz_3;
   wire                op_logic_arithm;
   wire                op_logic_arithm_imm;
   wire                op_store;
   wire                op_load;
+  wire                op_branch;
   wire                op_lui;
   wire                op_auipc;
 
+  assign _zz_1 = io_inst[31 : 20];
+  assign _zz_2 = {{{{io_inst[31],io_inst[7]},io_inst[30 : 25]},io_inst[11 : 8]},1'b0};
+  assign _zz_3 = {io_inst[31 : 25],io_inst[11 : 7]};
   assign io_opcode = io_inst[6 : 0];
   assign io_rd = io_inst[11 : 7];
   assign io_func3 = io_inst[14 : 12];
@@ -968,6 +1061,7 @@ module instruction_decoder (
   assign op_logic_arithm_imm = (io_opcode == 7'h13);
   assign op_store = (io_opcode == 7'h23);
   assign op_load = (io_opcode == 7'h03);
+  assign op_branch = (io_opcode == 7'h63);
   assign op_lui = (io_opcode == 7'h37);
   assign op_auipc = (io_opcode == 7'h17);
   assign io_imm_sel = ((op_logic_arithm_imm || op_load) || op_store);
@@ -981,11 +1075,19 @@ module instruction_decoder (
   assign io_data_ram_load_unsigned = ((io_func3 == 3'b100) || (io_func3 == 3'b101));
   assign io_alu_la_op = (op_logic_arithm || op_logic_arithm_imm);
   assign io_alu_mem_op = (op_store || op_load);
+  assign io_br_op = op_branch;
   always @ (*) begin
+    io_imm_value = 32'h0;
     if((op_logic_arithm_imm || op_load))begin
-      io_imm_11_0 = io_inst[31 : 20];
+      io_imm_value = {{20{_zz_1[11]}}, _zz_1};
     end else begin
-      io_imm_11_0 = {io_inst[31 : 25],io_inst[11 : 7]};
+      if(op_branch)begin
+        io_imm_value = {{19{_zz_2[12]}}, _zz_2};
+      end else begin
+        if(op_store)begin
+          io_imm_value = {{20{_zz_3[11]}}, _zz_3};
+        end
+      end
     end
   end
 

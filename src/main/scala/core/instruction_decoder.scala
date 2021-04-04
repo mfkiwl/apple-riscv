@@ -43,12 +43,13 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
     val data_ram_load_unsigned = out Bool       // load unsigned
 
     // ALU control
-    val imm_sel = out Bool      // select immediate number as op2
-    val alu_la_op = out Bool      // ALU operation is logic and arithmetic
-    val alu_mem_op = out Bool      // ALU operation is store and load
+    val imm_sel = out Bool          // select immediate number as op2
+    val alu_la_op = out Bool        // ALU operation is logic and arithmetic
+    val alu_mem_op = out Bool       // ALU operation is store and load
+    val br_op = out Bool        // ALU operation is branch
 
     // Other signal
-    val imm_11_0 = out SInt(12 bits)
+    val imm_value = out SInt(param.DATA_WIDTH bits)   // Immediate value
 }
 
 case class instruction_decoder(param: CPU_PARAM) extends Component {
@@ -71,6 +72,7 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     val op_logic_arithm_imm = (io.opcode === param.OP_LOGIC_ARITH_IMM)
     val op_store = (io.opcode === param.OP_MEM_STORE)
     val op_load = (io.opcode === param.OP_MEM_LOAD)
+    val op_branch = (io.opcode === param.OP_BRANCH)
     val op_lui = (io.opcode === param.OP_LUI)
     val op_auipc = (io.opcode === param.OP_AUIPC)
 
@@ -88,16 +90,28 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     // ALU can save the timing for decode logic
     io.alu_la_op := op_logic_arithm | op_logic_arithm_imm
     io.alu_mem_op := op_store | op_load
+    io.br_op := op_branch
 
     // Immediate value
+    io.imm_value := 0
     when(op_logic_arithm_imm | op_load) {
         // Immediate value are signed extended to 32 bits for logic/arithmetic operation
-        io.imm_11_0 := io.inst(31 downto 20).asSInt
-    }.otherwise {
-        // Immediate value are signed extended to 32 bits for store operation
+        val imm_11_0 = io.inst(31 downto 20).asSInt
+        io.imm_value := imm_11_0.resized
+    }.elsewhen(op_branch) {
+        val imm_0 = False
+        val imm_4_1 = io.inst(11 downto 8)
+        val imm_10_5 = io.inst(30 downto 25)
+        val imm_11 = io.inst(7)
+        val imm_12 = io.inst(31)
+        val imm_12_0 = imm_12 ## imm_11 ## imm_10_5 ## imm_4_1 ## imm_0
+        io.imm_value := imm_12_0.asSInt.resized
+    }.elsewhen(op_store) {
+        // Immediate value are signed extended to 32 bits for story operation
         val imm_4_0 = io.inst(11 downto 7)
         val imm_11_5 = io.inst(31 downto 25)
-        io.imm_11_0 := (imm_11_5 ## imm_4_0).asSInt
+        val imm_11_0 = imm_11_5 ## imm_4_0
+        io.imm_value := imm_11_0.asSInt.resized
     }
 
     // FIXME: Need additional logic to determine if the instruction is valid

@@ -2,6 +2,13 @@
 
 ## Milestone 0
 
+- 04/03/2021
+  - Change on immediate value logic
+    - Moved the signed extension logic from the EX stage to ID stage
+    - Stores the entire 32 bit immediate value in ID/EX stage pipeline to reduce the work on EX stage
+  - Implemented Branch Instruction
+    - SpinalHDL design and cocotb sanity_check code.
+
 - 04/01/2021
   - Updated the test directory and cocotb test environment
   - Wrote tests for the load/store instruction

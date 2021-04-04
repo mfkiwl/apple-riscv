@@ -55,7 +55,6 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Common Wire
     // =========================
 
-
     // Place holder for inserting NOP instruction
     // The stage prefix indicate if the instruction in the current stage is valid
     val if_inst_valid = Bool
@@ -78,15 +77,19 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val mem_pipe_run = ~mem_pipe_stall
     val wb_pipe_run = ~wb_pipe_stall
 
+    // Place holder for branch/jump related signal
+    val target_pc = UInt(param.PC_WIDTH bits)
+    val branch_taken = Bool
+
     // =========================
     // IF Stage
     // =========================
 
     // == program counter == //
     val pc_inst = program_counter(param)
-    pc_inst.io.branch := False
+    pc_inst.io.branch := branch_taken
     pc_inst.io.stall := if_pipe_stall
-    pc_inst.io.pc_in := 0
+    pc_inst.io.pc_in := target_pc
 
     // == instruction RAM == //
     io.inst_ram_wen := False
@@ -146,6 +149,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id_ex_alu_la_op = RegNextWhen(decoder_inst.io.alu_la_op, ex_pipe_run)
     val id_ex_alu_mem_op = RegNextWhen(decoder_inst.io.alu_mem_op, ex_pipe_run)
     val id_ex_imm_sel = RegNextWhen(decoder_inst.io.imm_sel, ex_pipe_run)
+    val id_ex_br_op = RegNextWhen(decoder_inst.io.br_op, ex_pipe_run)
     val id_ex_data_ram_access_byte = RegNextWhen(decoder_inst.io.data_ram_access_byte, ex_pipe_run)
     val id_ex_data_ram_access_halfword = RegNextWhen(decoder_inst.io.data_ram_access_halfword, ex_pipe_run)
     val id_ex_data_ram_load_unsigned = RegNextWhen(decoder_inst.io.data_ram_load_unsigned, ex_pipe_run)
@@ -153,7 +157,10 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // register file value and immediate value
     val id_ex_rs1_value = RegNextWhen(register_file_inst.io.rs1_data_out, ex_pipe_run)
     val id_ex_rs2_value = RegNextWhen(register_file_inst.io.rs2_data_out, ex_pipe_run)
-    val id_ex_imm_11_0 = RegNextWhen(decoder_inst.io.imm_11_0, ex_pipe_run)
+    val id_ex_imm_value = RegNextWhen(decoder_inst.io.imm_value, ex_pipe_run)
+
+    // PC
+    val id_ex_pc = RegNextWhen(if_id_pc, ex_pipe_run)
 
     // =========================
     // EX stage
@@ -164,17 +171,32 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex_rs2_value_forwarded = Bits(param.DATA_WIDTH bits)
 
     // == signed extend the immediate value == //
-    val imm = (id_ex_imm_11_0.resize(param.DATA_WIDTH)).asBits
+    val imm_value = (id_ex_imm_value.resize(param.DATA_WIDTH))
 
     // ALU instance
     val alu_inst = alu(param)
     alu_inst.io.op1 := ex_rs1_value_forwarded
-    alu_inst.io.op2 := Mux(id_ex_imm_sel, imm, ex_rs2_value_forwarded)
+    val alu_op2_mux_out = Mux(id_ex_imm_sel, imm_value.asBits, ex_rs2_value_forwarded)
+    alu_inst.io.op2 := alu_op2_mux_out
     alu_inst.io.func3 := id_ex_func3
     alu_inst.io.func7 := id_ex_func7
     alu_inst.io.alu_la_op := id_ex_alu_la_op
     alu_inst.io.alu_mem_op := id_ex_alu_mem_op
     alu_inst.io.alu_imm_sel := id_ex_imm_sel
+    alu_inst.io.alu_br_op := id_ex_br_op
+
+    // Branch unit instance
+    val branch_unit_inst = branch_unit(param)
+
+    // TODO: Potential optimization. Dedicated branch result calculation instead of using ALU
+    branch_unit_inst.io.branch_result := alu_inst.io.alu_out(0)
+    branch_unit_inst.io.current_pc := id_ex_pc
+    branch_unit_inst.io.imm_value := id_ex_imm_value
+    branch_unit_inst.io.br_op := id_ex_br_op
+    target_pc := branch_unit_inst.io.target_pc
+    branch_taken := branch_unit_inst.io.branch_taken
+    // FIXME: Exception Logic // = branch_unit_inst.io.instruction_address_misaligned_exception
+
 
     // =========================
     // EX/Mem Pipeline
@@ -283,7 +305,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =================================
 
     // Default
-    if_inst_valid := True
+    if_inst_valid := ~branch_taken
     ex_inst_valid := id_ex_inst_valid
     mem_inst_valid := ex_mem_inst_valid
     wb_inst_valid := mem_wb_inst_valid
@@ -309,7 +331,10 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     when(stall_on_load_dependence) {
         id_inst_valid := False
     }.otherwise {
-        id_inst_valid := if_id_inst_valid
-
+        id_inst_valid := if_id_inst_valid & ~branch_taken
     }
+
+    // =================================
+    // Branch
+    // =================================
 }
