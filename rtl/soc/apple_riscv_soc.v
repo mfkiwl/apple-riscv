@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : d6856a0168e83bad3c75056f7efa30580889a09c
+// Git hash  : 84ddde4c5b4bc1d465c61064db2d8cfa4e81b15b
 
 
 
@@ -184,6 +184,8 @@ module apple_riscv (
   wire                decoder_inst_io_alu_la_op;
   wire                decoder_inst_io_alu_mem_op;
   wire                decoder_inst_io_br_op;
+  wire                decoder_inst_io_lui_op;
+  wire                decoder_inst_io_auipc_op;
   wire       [31:0]   decoder_inst_io_imm_value;
   wire       [31:0]   register_file_inst_io_rs1_data_out;
   wire       [31:0]   register_file_inst_io_rs2_data_out;
@@ -231,6 +233,8 @@ module apple_riscv (
   reg                 id_ex_alu_mem_op;
   reg                 id_ex_imm_sel;
   reg                 id_ex_br_op;
+  reg                 id_ex_lui_op;
+  reg                 id_ex_auipc_op;
   reg                 id_ex_data_ram_access_byte;
   reg                 id_ex_data_ram_access_halfword;
   reg                 id_ex_data_ram_load_unsigned;
@@ -241,6 +245,7 @@ module apple_riscv (
   reg        [31:0]   ex_rs1_value_forwarded;
   reg        [31:0]   ex_rs2_value_forwarded;
   wire       [31:0]   imm_value;
+  wire       [31:0]   alu_op1_mux_out;
   wire       [31:0]   alu_op2_mux_out;
   reg                 ex_mem_inst_valid;
   reg                 ex_mem_register_wen;
@@ -302,6 +307,8 @@ module apple_riscv (
     .io_alu_la_op                   (decoder_inst_io_alu_la_op                 ), //o
     .io_alu_mem_op                  (decoder_inst_io_alu_mem_op                ), //o
     .io_br_op                       (decoder_inst_io_br_op                     ), //o
+    .io_lui_op                      (decoder_inst_io_lui_op                    ), //o
+    .io_auipc_op                    (decoder_inst_io_auipc_op                  ), //o
     .io_imm_value                   (decoder_inst_io_imm_value[31:0]           )  //o
   );
   register_file register_file_inst (
@@ -316,15 +323,17 @@ module apple_riscv (
     .reset                  (reset                                     )  //i
   );
   alu alu_inst (
-    .io_op1            (ex_rs1_value_forwarded[31:0]  ), //i
-    .io_op2            (alu_op2_mux_out[31:0]         ), //i
-    .io_alu_out        (alu_inst_io_alu_out[31:0]     ), //o
-    .io_func3          (id_ex_func3[2:0]              ), //i
-    .io_func7          (id_ex_func7[6:0]              ), //i
-    .io_alu_la_op      (id_ex_alu_la_op               ), //i
-    .io_alu_mem_op     (id_ex_alu_mem_op              ), //i
-    .io_alu_imm_sel    (id_ex_imm_sel                 ), //i
-    .io_alu_br_op      (id_ex_br_op                   )  //i
+    .io_op1             (alu_op1_mux_out[31:0]      ), //i
+    .io_op2             (alu_op2_mux_out[31:0]      ), //i
+    .io_alu_out         (alu_inst_io_alu_out[31:0]  ), //o
+    .io_func3           (id_ex_func3[2:0]           ), //i
+    .io_func7           (id_ex_func7[6:0]           ), //i
+    .io_alu_la_op       (id_ex_alu_la_op            ), //i
+    .io_alu_mem_op      (id_ex_alu_mem_op           ), //i
+    .io_alu_imm_sel     (id_ex_imm_sel              ), //i
+    .io_alu_br_op       (id_ex_br_op                ), //i
+    .io_alu_lui_op      (id_ex_lui_op               ), //i
+    .io_alu_auipc_op    (id_ex_auipc_op             )  //i
   );
   branch_unit branch_unit_inst (
     .io_branch_result                               (_zz_1                                                         ), //i
@@ -368,6 +377,7 @@ module apple_riscv (
   assign io_inst_ram_addr = pc_inst_io_pc_out[9 : 0];
   assign io_inst_ram_data_out = 32'h0;
   assign imm_value = id_ex_imm_value;
+  assign alu_op1_mux_out = (id_ex_auipc_op ? id_ex_pc : ex_rs1_value_forwarded);
   assign alu_op2_mux_out = (id_ex_imm_sel ? imm_value : ex_rs2_value_forwarded);
   assign _zz_1 = alu_inst_io_alu_out[0];
   assign target_pc = branch_unit_inst_io_target_pc;
@@ -535,6 +545,12 @@ module apple_riscv (
     end
     if(ex_pipe_run)begin
       id_ex_br_op <= decoder_inst_io_br_op;
+    end
+    if(ex_pipe_run)begin
+      id_ex_lui_op <= decoder_inst_io_lui_op;
+    end
+    if(ex_pipe_run)begin
+      id_ex_auipc_op <= decoder_inst_io_auipc_op;
     end
     if(ex_pipe_run)begin
       id_ex_data_ram_access_byte <= decoder_inst_io_data_ram_access_byte;
@@ -839,7 +855,9 @@ module alu (
   input               io_alu_la_op,
   input               io_alu_mem_op,
   input               io_alu_imm_sel,
-  input               io_alu_br_op
+  input               io_alu_br_op,
+  input               io_alu_lui_op,
+  input               io_alu_auipc_op
 );
   wire       [31:0]   _zz_1;
   wire       [31:0]   _zz_2;
@@ -858,7 +876,7 @@ module alu (
   wire                bltu_result;
   wire                bgeu_result;
   wire       [4:0]    shift_value;
-  wire       [2:0]    alu_op_ctrl;
+  wire       [4:0]    alu_op_ctrl;
 
   assign _zz_1 = io_op2;
   assign _zz_2 = ($signed(_zz_3) >>> shift_value);
@@ -880,7 +898,7 @@ module alu (
   always @ (*) begin
     io_alu_out = 32'h0;
     case(alu_op_ctrl)
-      3'b100 : begin
+      5'h10 : begin
         case(io_func3)
           3'b111 : begin
             io_alu_out = (io_op1 & io_op2);
@@ -918,10 +936,10 @@ module alu (
           end
         endcase
       end
-      3'b010 : begin
+      5'h08 : begin
         io_alu_out = add_result;
       end
-      3'b001 : begin
+      5'h04 : begin
         case(io_func3)
           3'b000 : begin
             io_alu_out[0] = beq_result;
@@ -945,12 +963,18 @@ module alu (
           end
         endcase
       end
+      5'h02 : begin
+        io_alu_out = io_op2;
+      end
+      5'h01 : begin
+        io_alu_out = add_result;
+      end
       default : begin
       end
     endcase
   end
 
-  assign alu_op_ctrl = {{io_alu_la_op,io_alu_mem_op},io_alu_br_op};
+  assign alu_op_ctrl = {{{{io_alu_la_op,io_alu_mem_op},io_alu_br_op},io_alu_lui_op},io_alu_auipc_op};
 
 endmodule
 
@@ -1035,6 +1059,8 @@ module instruction_decoder (
   output              io_alu_la_op,
   output              io_alu_mem_op,
   output              io_br_op,
+  output              io_lui_op,
+  output              io_auipc_op,
   output reg [31:0]   io_imm_value
 );
   wire       [11:0]   _zz_1;
@@ -1064,8 +1090,10 @@ module instruction_decoder (
   assign op_branch = (io_opcode == 7'h63);
   assign op_lui = (io_opcode == 7'h37);
   assign op_auipc = (io_opcode == 7'h17);
-  assign io_imm_sel = ((op_logic_arithm_imm || op_load) || op_store);
-  assign io_register_wen = ((op_logic_arithm || op_logic_arithm_imm) || op_load);
+  assign io_lui_op = op_lui;
+  assign io_auipc_op = op_auipc;
+  assign io_imm_sel = ((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc);
+  assign io_register_wen = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc);
   assign io_register_rs1_ren = (((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store);
   assign io_register_rs2_ren = (op_logic_arithm || op_store);
   assign io_data_ram_wen = op_store;
@@ -1077,7 +1105,6 @@ module instruction_decoder (
   assign io_alu_mem_op = (op_store || op_load);
   assign io_br_op = op_branch;
   always @ (*) begin
-    io_imm_value = 32'h0;
     if((op_logic_arithm_imm || op_load))begin
       io_imm_value = {{20{_zz_1[11]}}, _zz_1};
     end else begin
@@ -1086,6 +1113,8 @@ module instruction_decoder (
       end else begin
         if(op_store)begin
           io_imm_value = {{20{_zz_3[11]}}, _zz_3};
+        end else begin
+          io_imm_value = {io_inst[31 : 12],12'h0};
         end
       end
     end

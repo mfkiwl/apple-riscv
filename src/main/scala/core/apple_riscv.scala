@@ -150,6 +150,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id_ex_alu_mem_op = RegNextWhen(decoder_inst.io.alu_mem_op, ex_pipe_run)
     val id_ex_imm_sel = RegNextWhen(decoder_inst.io.imm_sel, ex_pipe_run)
     val id_ex_br_op = RegNextWhen(decoder_inst.io.br_op, ex_pipe_run)
+    val id_ex_lui_op = RegNextWhen(decoder_inst.io.lui_op, ex_pipe_run)
+    val id_ex_auipc_op = RegNextWhen(decoder_inst.io.auipc_op, ex_pipe_run)
     val id_ex_data_ram_access_byte = RegNextWhen(decoder_inst.io.data_ram_access_byte, ex_pipe_run)
     val id_ex_data_ram_access_halfword = RegNextWhen(decoder_inst.io.data_ram_access_halfword, ex_pipe_run)
     val id_ex_data_ram_load_unsigned = RegNextWhen(decoder_inst.io.data_ram_load_unsigned, ex_pipe_run)
@@ -175,7 +177,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // ALU instance
     val alu_inst = alu(param)
-    alu_inst.io.op1 := ex_rs1_value_forwarded
+    val alu_op1_mux_out = Mux(id_ex_auipc_op, id_ex_pc.asBits, ex_rs1_value_forwarded)
+    alu_inst.io.op1 := alu_op1_mux_out
     val alu_op2_mux_out = Mux(id_ex_imm_sel, imm_value.asBits, ex_rs2_value_forwarded)
     alu_inst.io.op2 := alu_op2_mux_out
     alu_inst.io.func3 := id_ex_func3
@@ -184,6 +187,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     alu_inst.io.alu_mem_op := id_ex_alu_mem_op
     alu_inst.io.alu_imm_sel := id_ex_imm_sel
     alu_inst.io.alu_br_op := id_ex_br_op
+    alu_inst.io.alu_lui_op := id_ex_lui_op
+    alu_inst.io.alu_auipc_op := id_ex_auipc_op
 
     // Branch unit instance
     val branch_unit_inst = branch_unit(param)

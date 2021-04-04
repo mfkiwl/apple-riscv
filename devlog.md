@@ -2,6 +2,10 @@
 
 ## Milestone 0
 
+- 04/04/2021
+  - Implemented lui/auipc Instruction
+    - SpinalHDL design and cocotb sanity_check code.
+
 - 04/03/2021
   - Change on immediate value logic
     - Moved the signed extension logic from the EX stage to ID stage

@@ -33,6 +33,8 @@ case class alu_io(param: CPU_PARAM) extends Bundle {
     val alu_mem_op  = in Bool       // ALU operation is calculating memory address.
     val alu_imm_sel = in Bool       // Immediate value is used
     val alu_br_op   = in Bool       // ALU operation is branch
+    val alu_lui_op  = in Bool       // ALU operation is for LUI
+    val alu_auipc_op = in Bool      // ALU operation is for AUIPC
 }
 
 case class alu(param: CPU_PARAM) extends Component {
@@ -63,13 +65,15 @@ case class alu(param: CPU_PARAM) extends Component {
     // this is because the mux before op2 has select the correct value based on the instruction type.
     // so here we just need to check the operation, no need to know if it's R-type or I-type (for most of the cases)
     io.alu_out := 0 // set the default output value for the switch
-    val alu_op_ctrl = io.alu_la_op ## io.alu_mem_op ## io.alu_br_op
+    val alu_op_ctrl = io.alu_la_op ## io.alu_mem_op ## io.alu_br_op ## io.alu_lui_op ## io.alu_auipc_op
 
+    // TODO: Optimize the logic if ALU is the critical path
     // TODO: Check the instruction again based on the RISC-V SPEC
     // TODO: Check if we can optimize the logic, remove redundant computation. => compute common logic first then select here
+    // TODO: Check if we can use a better encoding here. Maybe we can decode the logic at the ID stage and create another set of ctrl opcode for ALU
     switch(alu_op_ctrl) {
         // io.alu_la_op
-        is (B"100") {
+        is (B"10000") {
             switch(io.func3) {
                 // AND, ANDI
                 is(param.LA_F3_AND) {
@@ -118,11 +122,11 @@ case class alu(param: CPU_PARAM) extends Component {
             }
         }
         // io.alu_mem_op
-        is(B"010") {
+        is(B"01000") {
             io.alu_out := add_result.asBits
         }
         // io.alu_br_op
-        is(B"001") {
+        is(B"00100") {
             switch(io.func3) {
                 is(param.BR_F3_BEQ) {
                     io.alu_out(0) := beq_result
@@ -143,6 +147,14 @@ case class alu(param: CPU_PARAM) extends Component {
                     io.alu_out(0) := bgeu_result
                 }
             }
+        }
+        // io.alu_br_op
+        is(B"00010") {
+            io.alu_out := io.op2 // op2 is the immediate value
+        }
+        // io.alu_auipc_op
+        is(B"00001") {
+            io.alu_out := add_result.asBits
         }
     }
 }

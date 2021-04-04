@@ -142,3 +142,9 @@ import branch3
 async def test_branch3(dut):
     """ Test the bltu/bgeu logic """
     await run_test(dut, branch3.imem_data, branch3.expected_register, 400)
+
+import lui_auipc1
+@cocotb.test()
+async def test_lui_auipc1(dut):
+    """ Test the lui/auipc logic """
+    await run_test(dut, lui_auipc1.imem_data, lui_auipc1.expected_register, 400)

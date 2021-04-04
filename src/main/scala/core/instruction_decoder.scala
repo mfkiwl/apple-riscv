@@ -46,7 +46,9 @@ case class dec_io(param: CPU_PARAM) extends Bundle{
     val imm_sel = out Bool          // select immediate number as op2
     val alu_la_op = out Bool        // ALU operation is logic and arithmetic
     val alu_mem_op = out Bool       // ALU operation is store and load
-    val br_op = out Bool        // ALU operation is branch
+    val br_op = out Bool            // Instruction is branch
+    val lui_op = out Bool           // Instruction is lui
+    val auipc_op = out Bool         // Instruction is auipc
 
     // Other signal
     val imm_value = out SInt(param.DATA_WIDTH bits)   // Immediate value
@@ -76,8 +78,10 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     val op_lui = (io.opcode === param.OP_LUI)
     val op_auipc = (io.opcode === param.OP_AUIPC)
 
-    io.imm_sel := (op_logic_arithm_imm | op_load | op_store)
-    io.register_wen := (op_logic_arithm | op_logic_arithm_imm | op_load)     // TODO: Can we simplify this logic?
+    io.lui_op := op_lui
+    io.auipc_op := op_auipc
+    io.imm_sel := (op_logic_arithm_imm | op_load | op_store | op_lui | op_auipc)
+    io.register_wen := (op_logic_arithm | op_logic_arithm_imm | op_load | op_lui | op_auipc)     // TODO: Can we simplify this logic?
     io.register_rs1_ren := (op_logic_arithm | op_logic_arithm_imm | op_load | op_store)
     io.register_rs2_ren := op_logic_arithm | op_store
     io.data_ram_wen := op_store
@@ -93,7 +97,6 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
     io.br_op := op_branch
 
     // Immediate value
-    io.imm_value := 0
     when(op_logic_arithm_imm | op_load) {
         // Immediate value are signed extended to 32 bits for logic/arithmetic operation
         val imm_11_0 = io.inst(31 downto 20).asSInt
@@ -112,6 +115,10 @@ case class instruction_decoder(param: CPU_PARAM) extends Component {
         val imm_11_5 = io.inst(31 downto 25)
         val imm_11_0 = imm_11_5 ## imm_4_0
         io.imm_value := imm_11_0.asSInt.resized
+    }.otherwise { // LUI and AUIPC
+        val imm_11_0 = U"12'h0"
+        val imm_31_12 = io.inst(31 downto 12)
+        io.imm_value := (imm_31_12 ## imm_11_0).asSInt
     }
 
     // FIXME: Need additional logic to determine if the instruction is valid
