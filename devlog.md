@@ -1,6 +1,16 @@
 # Development Log
 
-## Milestone 0
+## Milestore 0.1
+
+- 04/06/2021
+  - Added some sample riscv-test code.
+    - The codes are mainly copied from riscv-tests repo.
+    - Made some modification to make it compatiable to my cpu design.
+    - Check the tests/riscv-tests-simple/README.md for more details.
+
+## Milestone 0.0
+
+Completed the basic RV32I instruction iplementation exception for FANCE, ECALL, EBREAK
 
 - 04/05/2021
   - Major updates on the existing code.
