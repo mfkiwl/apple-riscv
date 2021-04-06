@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : bc9a708f857dcb6ff2b6d8024a2b641a41cac8f0
+// Git hash  : 71aa3103300b5c91e3a8cec23f076ed5775260e4
 
 
 
@@ -172,6 +172,7 @@ module apple_riscv (
   wire       [4:0]    instr_dec_inst_io_rs2_idx;
   wire       [6:0]    instr_dec_inst_io_func7;
   wire       [31:0]   instr_dec_inst_io_imm_value;
+  wire       [20:0]   instr_dec_inst_io_brjp_imm_value;
   wire                instr_dec_inst_io_register_wr;
   wire                instr_dec_inst_io_register_rs1_rd;
   wire                instr_dec_inst_io_register_rs2_rd;
@@ -196,6 +197,8 @@ module apple_riscv (
   wire                instr_dec_inst_io_op1_sel_pc;
   wire                instr_dec_inst_io_op1_sel_zero;
   wire                instr_dec_inst_io_branch_op;
+  wire                instr_dec_inst_io_jal_op;
+  wire                instr_dec_inst_io_jalr_op;
   wire       [31:0]   regfile_inst_io_rs1_data_out;
   wire       [31:0]   regfile_inst_io_rs2_data_out;
   wire       [31:0]   alu_inst_io_alu_out;
@@ -208,8 +211,6 @@ module apple_riscv (
   wire       [19:0]   dram_ctrl_isnt_io_mc2mem_addr;
   wire       [31:0]   dram_ctrl_isnt_io_mc2mem_data;
   wire       [3:0]    dram_ctrl_isnt_io_mc2mem_byte_enable;
-  wire       [0:0]    _zz_4;
-  wire       [31:0]   _zz_5;
   wire                if_instr_valid;
   reg                 id_instr_valid;
   wire                ex_instr_valid;
@@ -236,6 +237,8 @@ module apple_riscv (
   reg                 id2ex_register_rs1_rd;
   reg                 id2ex_register_rs2_rd;
   reg                 id2ex_branch_op;
+  reg                 id2ex_jal_op;
+  reg                 id2ex_jalr_op;
   reg        [4:0]    id2ex_rd;
   reg        [2:0]    id2ex_func3;
   reg        [4:0]    id2ex_rs1;
@@ -259,6 +262,7 @@ module apple_riscv (
   reg        [31:0]   id2ex_rs1_value;
   reg        [31:0]   id2ex_rs2_value;
   reg        [31:0]   id2ex_imm_value;
+  reg        [20:0]   id2ex_brjp_imm_value;
   reg        [31:0]   id2ex_pc;
   reg                 id2ex_op2_sel_imm;
   reg                 id2ex_op1_sel_pc;
@@ -297,8 +301,6 @@ module apple_riscv (
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
 
-  assign _zz_4 = 1'b0;
-  assign _zz_5 = {31'd0, _zz_4};
   program_counter pc_inst (
     .io_pc_in     (target_pc[31:0]          ), //i
     .io_branch    (branch_taken             ), //i
@@ -308,37 +310,40 @@ module apple_riscv (
     .reset        (reset                    )  //i
   );
   instr_dec instr_dec_inst (
-    .io_instr                 (io_instr_ram_data_in[31:0]            ), //i
-    .io_rd_idx                (instr_dec_inst_io_rd_idx[4:0]         ), //o
-    .io_func3                 (instr_dec_inst_io_func3[2:0]          ), //o
-    .io_rs1_idx               (instr_dec_inst_io_rs1_idx[4:0]        ), //o
-    .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]        ), //o
-    .io_func7                 (instr_dec_inst_io_func7[6:0]          ), //o
-    .io_imm_value             (instr_dec_inst_io_imm_value[31:0]     ), //o
-    .io_register_wr           (instr_dec_inst_io_register_wr         ), //o
-    .io_register_rs1_rd       (instr_dec_inst_io_register_rs1_rd     ), //o
-    .io_register_rs2_rd       (instr_dec_inst_io_register_rs2_rd     ), //o
-    .io_data_ram_wr           (instr_dec_inst_io_data_ram_wr         ), //o
-    .io_data_ram_rd           (instr_dec_inst_io_data_ram_rd         ), //o
-    .io_data_ram_ld_byte      (instr_dec_inst_io_data_ram_ld_byte    ), //o
-    .io_data_ram_ld_hword     (instr_dec_inst_io_data_ram_ld_hword   ), //o
-    .io_data_ram_ld_unsign    (instr_dec_inst_io_data_ram_ld_unsign  ), //o
-    .io_alu_op_and            (instr_dec_inst_io_alu_op_and          ), //o
-    .io_alu_op_or             (instr_dec_inst_io_alu_op_or           ), //o
-    .io_alu_op_xor            (instr_dec_inst_io_alu_op_xor          ), //o
-    .io_alu_op_add            (instr_dec_inst_io_alu_op_add          ), //o
-    .io_alu_op_sub            (instr_dec_inst_io_alu_op_sub          ), //o
-    .io_alu_op_sra            (instr_dec_inst_io_alu_op_sra          ), //o
-    .io_alu_op_srl            (instr_dec_inst_io_alu_op_srl          ), //o
-    .io_alu_op_sll            (instr_dec_inst_io_alu_op_sll          ), //o
-    .io_alu_op_slt            (instr_dec_inst_io_alu_op_slt          ), //o
-    .io_alu_op_sltu           (instr_dec_inst_io_alu_op_sltu         ), //o
-    .io_alu_op_eqt            (instr_dec_inst_io_alu_op_eqt          ), //o
-    .io_alu_op_invb0          (instr_dec_inst_io_alu_op_invb0        ), //o
-    .io_op2_sel_imm           (instr_dec_inst_io_op2_sel_imm         ), //o
-    .io_op1_sel_pc            (instr_dec_inst_io_op1_sel_pc          ), //o
-    .io_op1_sel_zero          (instr_dec_inst_io_op1_sel_zero        ), //o
-    .io_branch_op             (instr_dec_inst_io_branch_op           )  //o
+    .io_instr                 (io_instr_ram_data_in[31:0]              ), //i
+    .io_rd_idx                (instr_dec_inst_io_rd_idx[4:0]           ), //o
+    .io_func3                 (instr_dec_inst_io_func3[2:0]            ), //o
+    .io_rs1_idx               (instr_dec_inst_io_rs1_idx[4:0]          ), //o
+    .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]          ), //o
+    .io_func7                 (instr_dec_inst_io_func7[6:0]            ), //o
+    .io_imm_value             (instr_dec_inst_io_imm_value[31:0]       ), //o
+    .io_brjp_imm_value        (instr_dec_inst_io_brjp_imm_value[20:0]  ), //o
+    .io_register_wr           (instr_dec_inst_io_register_wr           ), //o
+    .io_register_rs1_rd       (instr_dec_inst_io_register_rs1_rd       ), //o
+    .io_register_rs2_rd       (instr_dec_inst_io_register_rs2_rd       ), //o
+    .io_data_ram_wr           (instr_dec_inst_io_data_ram_wr           ), //o
+    .io_data_ram_rd           (instr_dec_inst_io_data_ram_rd           ), //o
+    .io_data_ram_ld_byte      (instr_dec_inst_io_data_ram_ld_byte      ), //o
+    .io_data_ram_ld_hword     (instr_dec_inst_io_data_ram_ld_hword     ), //o
+    .io_data_ram_ld_unsign    (instr_dec_inst_io_data_ram_ld_unsign    ), //o
+    .io_alu_op_and            (instr_dec_inst_io_alu_op_and            ), //o
+    .io_alu_op_or             (instr_dec_inst_io_alu_op_or             ), //o
+    .io_alu_op_xor            (instr_dec_inst_io_alu_op_xor            ), //o
+    .io_alu_op_add            (instr_dec_inst_io_alu_op_add            ), //o
+    .io_alu_op_sub            (instr_dec_inst_io_alu_op_sub            ), //o
+    .io_alu_op_sra            (instr_dec_inst_io_alu_op_sra            ), //o
+    .io_alu_op_srl            (instr_dec_inst_io_alu_op_srl            ), //o
+    .io_alu_op_sll            (instr_dec_inst_io_alu_op_sll            ), //o
+    .io_alu_op_slt            (instr_dec_inst_io_alu_op_slt            ), //o
+    .io_alu_op_sltu           (instr_dec_inst_io_alu_op_sltu           ), //o
+    .io_alu_op_eqt            (instr_dec_inst_io_alu_op_eqt            ), //o
+    .io_alu_op_invb0          (instr_dec_inst_io_alu_op_invb0          ), //o
+    .io_op2_sel_imm           (instr_dec_inst_io_op2_sel_imm           ), //o
+    .io_op1_sel_pc            (instr_dec_inst_io_op1_sel_pc            ), //o
+    .io_op1_sel_zero          (instr_dec_inst_io_op1_sel_zero          ), //o
+    .io_branch_op             (instr_dec_inst_io_branch_op             ), //o
+    .io_jal_op                (instr_dec_inst_io_jal_op                ), //o
+    .io_jalr_op               (instr_dec_inst_io_jalr_op               )  //o
   );
   regfile regfile_inst (
     .io_rs1_rd_addr         (instr_dec_inst_io_rs1_idx[4:0]      ), //i
@@ -371,8 +376,11 @@ module apple_riscv (
   branch_unit branch_unit_inst (
     .io_branch_result                               (_zz_1                                                         ), //i
     .io_current_pc                                  (id2ex_pc[31:0]                                                ), //i
-    .io_imm_value                                   (id2ex_imm_value[31:0]                                         ), //i
+    .io_imm_value                                   (id2ex_brjp_imm_value[20:0]                                    ), //i
+    .io_rs1_value                                   (ex_rs1_value_forwarded[31:0]                                  ), //i
     .io_br_op                                       (id2ex_branch_op                                               ), //i
+    .io_jal_op                                      (id2ex_jal_op                                                  ), //i
+    .io_jalr_op                                     (id2ex_jalr_op                                                 ), //i
     .io_target_pc                                   (branch_unit_inst_io_target_pc[31:0]                           ), //o
     .io_branch_taken                                (branch_unit_inst_io_branch_taken                              ), //o
     .io_instruction_address_misaligned_exception    (branch_unit_inst_io_instruction_address_misaligned_exception  )  //o
@@ -409,7 +417,7 @@ module apple_riscv (
   assign io_instr_ram_enable = if_pipe_run;
   assign io_instr_ram_addr = pc_inst_io_pc_out[9 : 0];
   assign io_instr_ram_data_out = 32'h0;
-  assign alu_operand1_muxout = (id2ex_op1_sel_zero ? _zz_5 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
+  assign alu_operand1_muxout = (id2ex_op1_sel_zero ? 32'h0 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
   assign alu_operand2_muxout = (id2ex_op2_sel_imm ? id2ex_imm_value : ex_rs2_value_forwarded);
   assign _zz_1 = alu_inst_io_alu_out[0];
   assign target_pc = branch_unit_inst_io_target_pc;
@@ -495,6 +503,8 @@ module apple_riscv (
       id2ex_register_rs1_rd <= 1'b0;
       id2ex_register_rs2_rd <= 1'b0;
       id2ex_branch_op <= 1'b0;
+      id2ex_jal_op <= 1'b0;
+      id2ex_jalr_op <= 1'b0;
       ex2mem_instr_valid <= 1'b0;
       ex2mem_register_wr <= 1'b0;
       ex2mem_data_ram_wr <= 1'b0;
@@ -529,6 +539,12 @@ module apple_riscv (
       end
       if(ex_pipe_run)begin
         id2ex_branch_op <= (instr_dec_inst_io_branch_op && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_jal_op <= (instr_dec_inst_io_jal_op && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_jalr_op <= (instr_dec_inst_io_jalr_op && id_instr_valid);
       end
       if(mem_pipe_run)begin
         ex2mem_instr_valid <= ex_instr_valid;
@@ -623,6 +639,9 @@ module apple_riscv (
     end
     if(ex_pipe_run)begin
       id2ex_imm_value <= instr_dec_inst_io_imm_value;
+    end
+    if(ex_pipe_run)begin
+      id2ex_brjp_imm_value <= instr_dec_inst_io_brjp_imm_value;
     end
     if(ex_pipe_run)begin
       id2ex_pc <= if2id_pc;
@@ -888,16 +907,27 @@ endmodule
 module branch_unit (
   input               io_branch_result,
   input      [31:0]   io_current_pc,
-  input      [31:0]   io_imm_value,
+  input      [20:0]   io_imm_value,
+  input      [31:0]   io_rs1_value,
   input               io_br_op,
-  output     [31:0]   io_target_pc,
+  input               io_jal_op,
+  input               io_jalr_op,
+  output reg [31:0]   io_target_pc,
   output              io_branch_taken,
   output              io_instruction_address_misaligned_exception
 );
+  wire       [31:0]   _zz_1;
+  wire       [31:0]   addr_in;
   wire       [1:0]    pc_1_0;
 
-  assign io_branch_taken = (io_br_op && io_branch_result);
-  assign io_target_pc = (io_current_pc + io_imm_value);
+  assign _zz_1 = {{11{io_imm_value[20]}}, io_imm_value};
+  assign io_branch_taken = ((io_jal_op || io_jalr_op) || (io_br_op && io_branch_result));
+  assign addr_in = (io_jalr_op ? io_rs1_value : io_current_pc);
+  always @ (*) begin
+    io_target_pc = (addr_in + _zz_1);
+    io_target_pc[0] = 1'b0;
+  end
+
   assign pc_1_0 = io_target_pc[1 : 0];
   assign io_instruction_address_misaligned_exception = (io_branch_taken && (pc_1_0 != 2'b00));
 
@@ -1066,6 +1096,7 @@ module instr_dec (
   output     [4:0]    io_rs2_idx,
   output     [6:0]    io_func7,
   output reg [31:0]   io_imm_value,
+  output reg [20:0]   io_brjp_imm_value,
   output              io_register_wr,
   output              io_register_rs1_rd,
   output              io_register_rs2_rd,
@@ -1089,11 +1120,14 @@ module instr_dec (
   output              io_op2_sel_imm,
   output              io_op1_sel_pc,
   output              io_op1_sel_zero,
-  output              io_branch_op
+  output              io_branch_op,
+  output              io_jal_op,
+  output              io_jalr_op
 );
   wire       [11:0]   _zz_1;
-  wire       [12:0]   _zz_2;
-  wire       [11:0]   _zz_3;
+  wire       [11:0]   _zz_2;
+  wire       [12:0]   _zz_3;
+  wire       [11:0]   _zz_4;
   wire       [6:0]    opcode;
   wire                op_logic_arithm;
   wire                op_logic_arithm_imm;
@@ -1102,6 +1136,8 @@ module instr_dec (
   wire                op_branch;
   wire                op_lui;
   wire                op_auipc;
+  wire                op_jal;
+  wire                op_jalr;
   wire                func7_shift_arithm;
   wire                func7_subtraction;
   wire                logic_slt;
@@ -1111,8 +1147,9 @@ module instr_dec (
   wire                logic_add_imm;
 
   assign _zz_1 = io_instr[31 : 20];
-  assign _zz_2 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
-  assign _zz_3 = {io_instr[31 : 25],io_instr[11 : 7]};
+  assign _zz_2 = {io_instr[31 : 25],io_instr[11 : 7]};
+  assign _zz_3 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
+  assign _zz_4 = io_instr[31 : 20];
   assign opcode = io_instr[6 : 0];
   assign io_rd_idx = io_instr[11 : 7];
   assign io_func3 = io_instr[14 : 12];
@@ -1126,6 +1163,8 @@ module instr_dec (
   assign op_branch = (opcode == 7'h63);
   assign op_lui = (opcode == 7'h37);
   assign op_auipc = (opcode == 7'h17);
+  assign op_jal = (opcode == 7'h6f);
+  assign op_jalr = (opcode == 7'h67);
   assign func7_shift_arithm = io_func7[5];
   assign func7_subtraction = io_func7[5];
   assign logic_slt = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b010));
@@ -1136,7 +1175,7 @@ module instr_dec (
   assign io_alu_op_and = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b111));
   assign io_alu_op_or = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b110));
   assign io_alu_op_xor = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b100));
-  assign io_alu_op_add = (((((logic_add || logic_add_imm) || op_auipc) || op_lui) || op_load) || op_store);
+  assign io_alu_op_add = (((((((logic_add || logic_add_imm) || op_auipc) || op_lui) || op_load) || op_store) || op_jal) || op_jalr);
   assign io_alu_op_sub = ((op_logic_arithm && (io_func3 == 3'b000)) && func7_subtraction);
   assign io_alu_op_sra = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && func7_shift_arithm);
   assign io_alu_op_srl = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && (! func7_shift_arithm));
@@ -1145,11 +1184,13 @@ module instr_dec (
   assign io_alu_op_sltu = (branch_sltu || ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b011)));
   assign io_alu_op_eqt = (op_branch && ((io_func3 == 3'b000) || (io_func3 == 3'b001)));
   assign io_alu_op_invb0 = (op_branch && (io_func3[0] == 1'b1));
-  assign io_op1_sel_pc = op_auipc;
-  assign io_op2_sel_imm = ((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc);
+  assign io_op1_sel_pc = ((op_auipc || op_jal) || op_jalr);
+  assign io_op2_sel_imm = ((((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc) || op_jal) || op_jalr);
   assign io_op1_sel_zero = op_lui;
   assign io_branch_op = op_branch;
-  assign io_register_wr = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc);
+  assign io_jal_op = op_jal;
+  assign io_jalr_op = op_jalr;
+  assign io_register_wr = ((((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc) || op_jal) || op_jalr);
   assign io_register_rs1_rd = (((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store);
   assign io_register_rs2_rd = (op_logic_arithm || op_store);
   assign io_data_ram_wr = op_store;
@@ -1161,14 +1202,26 @@ module instr_dec (
     if((op_logic_arithm_imm || op_load))begin
       io_imm_value = {{20{_zz_1[11]}}, _zz_1};
     end else begin
-      if(op_branch)begin
-        io_imm_value = {{19{_zz_2[12]}}, _zz_2};
+      if(op_store)begin
+        io_imm_value = {{20{_zz_2[11]}}, _zz_2};
       end else begin
-        if(op_store)begin
-          io_imm_value = {{20{_zz_3[11]}}, _zz_3};
+        if((op_jal || op_jalr))begin
+          io_imm_value = 32'h00000004;
         end else begin
           io_imm_value = {io_instr[31 : 12],12'h0};
         end
+      end
+    end
+  end
+
+  always @ (*) begin
+    if(op_branch)begin
+      io_brjp_imm_value = {{8{_zz_3[12]}}, _zz_3};
+    end else begin
+      if(op_jalr)begin
+        io_brjp_imm_value = {{9{_zz_4[11]}}, _zz_4};
+      end else begin
+        io_brjp_imm_value = {{{{io_instr[31],io_instr[19 : 12]},io_instr[20]},io_instr[30 : 21]},1'b0};
       end
     end
   end

@@ -131,6 +131,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id2ex_register_rs1_rd   = RegNextWhen(instr_dec_inst.io.register_rs1_rd   & id_instr_valid, ex_pipe_run) init False
     val id2ex_register_rs2_rd   = RegNextWhen(instr_dec_inst.io.register_rs2_rd   & id_instr_valid, ex_pipe_run) init False
     val id2ex_branch_op         = RegNextWhen(instr_dec_inst.io.branch_op         & id_instr_valid, ex_pipe_run) init False
+    val id2ex_jal_op            = RegNextWhen(instr_dec_inst.io.jal_op            & id_instr_valid, ex_pipe_run) init False
+    val id2ex_jalr_op           = RegNextWhen(instr_dec_inst.io.jalr_op           & id_instr_valid, ex_pipe_run) init False
 
     // == Other signal == //
 
@@ -163,7 +165,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // register file value and immediate value
     val id2ex_rs1_value = RegNextWhen(regfile_inst.io.rs1_data_out, ex_pipe_run)
     val id2ex_rs2_value = RegNextWhen(regfile_inst.io.rs2_data_out, ex_pipe_run)
-    val id2ex_imm_value = RegNextWhen(instr_dec_inst.io.imm_value         , ex_pipe_run)
+    val id2ex_imm_value = RegNextWhen(instr_dec_inst.io.imm_value , ex_pipe_run)
+    val id2ex_brjp_imm_value = RegNextWhen(instr_dec_inst.io.brjp_imm_value , ex_pipe_run)
 
     // Others
     val id2ex_pc            = RegNextWhen(if2id_pc, ex_pipe_run)
@@ -183,7 +186,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val alu_inst = alu(param)
 
     // Mux for the ALU operand
-    val alu_operand1_muxout  = Mux(id2ex_op1_sel_zero, B"0".resized, Mux(id2ex_op1_sel_pc, id2ex_pc.asBits, ex_rs1_value_forwarded))
+    val alu_operand1_muxout  = Mux(id2ex_op1_sel_zero, B"32'h0", Mux(id2ex_op1_sel_pc, id2ex_pc.asBits, ex_rs1_value_forwarded))
     val alu_operand2_muxout  = Mux(id2ex_op2_sel_imm, id2ex_imm_value.asBits, ex_rs2_value_forwarded)
 
     alu_inst.io.operand_1    := alu_operand1_muxout
@@ -204,11 +207,13 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Branch unit instance
     val branch_unit_inst = branch_unit(param)
 
-    // TODO: Potential optimization. Dedicated branch result calculation instead of using ALU
     branch_unit_inst.io.branch_result   := alu_inst.io.alu_out(0)
     branch_unit_inst.io.current_pc      := id2ex_pc
-    branch_unit_inst.io.imm_value       := id2ex_imm_value
+    branch_unit_inst.io.imm_value       := id2ex_brjp_imm_value
+    branch_unit_inst.io.rs1_value       := ex_rs1_value_forwarded
     branch_unit_inst.io.br_op           := id2ex_branch_op
+    branch_unit_inst.io.jal_op          := id2ex_jal_op
+    branch_unit_inst.io.jalr_op         := id2ex_jalr_op
     target_pc                           := branch_unit_inst.io.target_pc
     branch_taken                        := branch_unit_inst.io.branch_taken
     // FIXME: Exception Logic // = branch_unit_inst.io.instruction_address_misaligned_exception
@@ -221,8 +226,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // == control signal == //
     val ex2mem_instr_valid          = RegNextWhen(ex_instr_valid, mem_pipe_run) init False
     val ex2mem_register_wr          = RegNextWhen(id2ex_register_wr         & ex_instr_valid, mem_pipe_run) init False
-    val ex2mem_data_ram_wr         = RegNextWhen(id2ex_data_ram_wr        & ex_instr_valid, mem_pipe_run) init False
-    val ex2mem_data_ram_rd         = RegNextWhen(id2ex_data_ram_rd        & ex_instr_valid, mem_pipe_run) init False
+    val ex2mem_data_ram_wr          = RegNextWhen(id2ex_data_ram_wr         & ex_instr_valid, mem_pipe_run) init False
+    val ex2mem_data_ram_rd          = RegNextWhen(id2ex_data_ram_rd         & ex_instr_valid, mem_pipe_run) init False
     val ex2mem_data_ram_ld_byte     = RegNextWhen(id2ex_data_ram_ld_byte    & ex_instr_valid, mem_pipe_run)
     val ex2mem_data_ram_ld_hword    = RegNextWhen(id2ex_data_ram_ld_hword   & ex_instr_valid, mem_pipe_run)
     val ex2mem_data_ram_ld_unsign   = RegNextWhen(id2ex_data_ram_ld_unsign  & ex_instr_valid, mem_pipe_run)

@@ -148,3 +148,15 @@ import lui_auipc1
 async def test_lui_auipc1(dut):
     """ Test the lui/auipc logic """
     await run_test(dut, lui_auipc1.imem_data, lui_auipc1.expected_register, 400)
+
+import jal1
+@cocotb.test()
+async def test_jal1(dut):
+    """ Test the jal logic """
+    await run_test(dut, jal1.imem_data, jal1.expected_register, 400)
+
+import jalr1
+@cocotb.test()
+async def test_jalr1(dut):
+    """ Test the jalr logic """
+    await run_test(dut, jalr1.imem_data, jalr1.expected_register, 500)

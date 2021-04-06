@@ -61,6 +61,8 @@ class CPU_PARAM {
     val OP_BRANCH           = Integer.parseInt("1100011", 2)        // Branch and jump instruction
     val OP_AUIPC            = Integer.parseInt("0010111", 2)        // AUIPC instruction
     val OP_LUI              = Integer.parseInt("0110111", 2)        // LUI instruction
+    val OP_JAL              = Integer.parseInt("1101111", 2)        // JAL
+    val OP_JALR             = Integer.parseInt("1100111", 2)        // JALR
 
     // == func3 == //
     // Logic arithmetic func3 field

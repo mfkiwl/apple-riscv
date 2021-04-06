@@ -8,6 +8,8 @@
       if they require the same operation.
     - Re-designed the decode logic based on the new ALU logic.
     - Renamed some signals and modules
+  - Implemented jal/jalr instruction.
+    - SpinalHDL design and cocotb sanity_check code.
 
 - 04/04/2021
   - Implemented lui/auipc Instruction
