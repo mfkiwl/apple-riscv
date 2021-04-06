@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: Register File
+// Module Name: regfile
 //
 // Author: Heqing Huang
 // Date Created: 03/27/2021
@@ -25,7 +25,7 @@ package core
 
 import spinal.core._
 
-case class rf_io(param: CPU_PARAM) extends Bundle{
+case class regfile_io(param: CPU_PARAM) extends Bundle{
     // Parameter
     val ADDR_WIDTH = log2Up(param.RF_SIZE)
     // Read Port A
@@ -35,14 +35,14 @@ case class rf_io(param: CPU_PARAM) extends Bundle{
     val rs2_rd_addr = in UInt(ADDR_WIDTH bits)
     val rs2_data_out = out Bits(param.RF_WIDTH bits)
     // Write Port
-    val register_wen = in Bool
+    val register_wr = in Bool
     val register_wr_addr = in UInt(ADDR_WIDTH bits)
     val rd_in = in Bits(param.RF_WIDTH bits)
 }
 
-case class register_file(param: CPU_PARAM) extends Component {
+case class regfile(param: CPU_PARAM) extends Component {
     val SIZE = param.RF_SIZE
-    val io = rf_io(param)
+    val io = regfile_io(param)
 
     val rs1_data = Bits(param.RF_WIDTH bits)
     val rs2_data = Bits(param.RF_WIDTH bits)
@@ -55,7 +55,7 @@ case class register_file(param: CPU_PARAM) extends Component {
 
     // RAM A
     rs1_ram.write(
-        enable = io.register_wen,
+        enable = io.register_wr,
         address = io.register_wr_addr,
         data = io.rd_in
     )
@@ -65,7 +65,7 @@ case class register_file(param: CPU_PARAM) extends Component {
 
     // RAM B
     rs2_ram.write(
-        enable = io.register_wen,
+        enable = io.register_wr,
         address = io.register_wr_addr,
         data = io.rd_in
     )
@@ -79,7 +79,7 @@ case class register_file(param: CPU_PARAM) extends Component {
 
     when(io.rs1_rd_addr === 0) {
         io.rs1_data_out := 0
-    }.elsewhen((io.rs1_rd_addr === io.register_wr_addr) && (io.register_wen === True)) {
+    }.elsewhen((io.rs1_rd_addr === io.register_wr_addr) && (io.register_wr === True)) {
         io.rs1_data_out := io.rd_in
     }.otherwise {
         io.rs1_data_out := rs1_data
@@ -87,7 +87,7 @@ case class register_file(param: CPU_PARAM) extends Component {
 
     when(io.rs2_rd_addr === 0) {
         io.rs2_data_out := 0
-    }.elsewhen((io.rs2_rd_addr === io.register_wr_addr) && (io.register_wen === True)) {
+    }.elsewhen((io.rs2_rd_addr === io.register_wr_addr) && (io.register_wr === True)) {
         io.rs2_data_out := io.rd_in
     }.otherwise {
         io.rs2_data_out := rs2_data

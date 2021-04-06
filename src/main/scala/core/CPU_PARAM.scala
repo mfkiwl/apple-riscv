@@ -20,31 +20,40 @@ package core
 import spinal.core._
 
 class CPU_PARAM {
+
     val NAME = "apple-riscv32"
-    // ==========================
-    // Basic CPU config
-    // ==========================
-    val XLEN       = 32           // 32 bit cpu
+
+    // ========================== //
+    //  CPU config and Parameter  //
+    // ========================== //
+    val XLEN       = 32
     val DATA_WIDTH = XLEN
-    // PC WIDTH
+
+    // PC
     val PC_WIDTH   = DATA_WIDTH
-    // Register
-    val RF_WIDTH   = DATA_WIDTH        // Register File width
-    val RF_SIZE    = 32                // Register File size
-    val RF_ADDR_WDITH = log2Up(RF_SIZE)   // Register File address width
+
+    // Register File
+    val RF_WIDTH   = DATA_WIDTH             // Register File width
+    val RF_SIZE    = 32                     // Register File size
+    val RF_ADDR_WDITH = log2Up(RF_SIZE)     // Register File address width
+
     // Instruction RAM
-    val INST_RAM_DATA_WIDTH = DATA_WIDTH
-    val INST_RAM_ADDR_WIDTH = 10            // 4KB Instruction RAM
+    val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
+    val INSTR_RAM_ADDR_WIDTH = 10            // 4KB Instruction RAM for now
+
     // Data RAM
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH
-    val DATA_RAM_ADDR_WIDTH = 20            // 4MB Data RAM
+    val DATA_RAM_ADDR_WIDTH = 20            // 4MB Data RAM for now
 
-    // ==========================
-    // Instruction Format
-    // ==========================
-    // Defining parameter for instruction format
-    // will be used by decoder and ALU
-    // Opcode
+    // ALU
+    val ALU_OPCODE_WIDTH = 4
+
+    // ========================== //
+    //     Instruction Decode     //
+    // ========================== //
+
+    // == opcode == //
+    // TODO: Potential optimization. Remove the "11" bits
     val OP_LOGIC_ARITH      = Integer.parseInt("0110011", 2)        // Logic and arithmetic operation
     val OP_LOGIC_ARITH_IMM  = Integer.parseInt("0010011", 2)        // Logic and arithmetic with immediate number
     val OP_MEM_LOAD         = Integer.parseInt("0000011", 2)        // Load instruction
@@ -53,6 +62,7 @@ class CPU_PARAM {
     val OP_AUIPC            = Integer.parseInt("0010111", 2)        // AUIPC instruction
     val OP_LUI              = Integer.parseInt("0110111", 2)        // LUI instruction
 
+    // == func3 == //
     // Logic arithmetic func3 field
     val LA_F3_AND       = Integer.parseInt("111", 2) // AND
     val LA_F3_OR        = Integer.parseInt("110", 2) // OR
@@ -62,14 +72,12 @@ class CPU_PARAM {
     val LA_F3_SL        = Integer.parseInt("001", 2) // SLL, SLLI
     val LA_F3_SLT       = Integer.parseInt("010", 2) // SLT, SLTI
     val LA_F3_SLTU      = Integer.parseInt("011", 2) // SLTU, SLTIU
-
     // Load/Store func3 field
     val LS_F3_LB_SB = Integer.parseInt("000", 2) // SB, LB
     val LS_F3_LH_SH = Integer.parseInt("001", 2) // LH, SH
     val LS_F3_LW_SW = Integer.parseInt("010", 2) // LW, SW
     val LS_F3_LBU   = Integer.parseInt("100", 2) // LBU
     val LS_F3_LHU   = Integer.parseInt("101", 2) // LHU
-
     // Branch func3 field
     val BR_F3_BEQ   = Integer.parseInt("000", 2) // BEQ
     val BR_F3_BNE   = Integer.parseInt("001", 2) // BNE
@@ -77,4 +85,5 @@ class CPU_PARAM {
     val BR_F3_BGE   = Integer.parseInt("101", 2) // BGE
     val BR_F3_BLTU  = Integer.parseInt("110", 2) // BLTU
     val BR_F3_BGEU  = Integer.parseInt("111", 2) // BGEU
+
 }

@@ -2,6 +2,13 @@
 
 ## Milestone 0
 
+- 04/05/2021
+  - Major updates on the existing code.
+    - Re-designed the ALU logic. Now different operation will share the same operation resources
+      if they require the same operation.
+    - Re-designed the decode logic based on the new ALU logic.
+    - Renamed some signals and modules
+
 - 04/04/2021
   - Implemented lui/auipc Instruction
     - SpinalHDL design and cocotb sanity_check code.

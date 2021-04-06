@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 84ddde4c5b4bc1d465c61064db2d8cfa4e81b15b
+// Git hash  : bc9a708f857dcb6ff2b6d8024a2b641a41cac8f0
 
 
 
@@ -8,61 +8,61 @@ module apple_riscv_soc (
   input               clk,
   input               reset
 );
-  wire                cpu_core_io_inst_ram_wen;
-  wire                cpu_core_io_inst_ram_ren;
-  wire       [9:0]    cpu_core_io_inst_ram_addr;
-  wire                cpu_core_io_inst_ram_enable;
-  wire       [31:0]   cpu_core_io_inst_ram_data_out;
-  wire                cpu_core_io_data_ram_wen;
-  wire                cpu_core_io_data_ram_ren;
+  wire                cpu_core_io_instr_ram_wr;
+  wire                cpu_core_io_instr_ram_rd;
+  wire       [9:0]    cpu_core_io_instr_ram_addr;
+  wire                cpu_core_io_instr_ram_enable;
+  wire       [31:0]   cpu_core_io_instr_ram_data_out;
+  wire                cpu_core_io_data_ram_wr;
+  wire                cpu_core_io_data_ram_rd;
   wire       [19:0]   cpu_core_io_data_ram_addr;
   wire       [31:0]   cpu_core_io_data_ram_data_out;
-  wire       [3:0]    cpu_core_io_data_ram_byte_enable;
+  wire       [3:0]    cpu_core_io_data_ram_byte_en;
   wire       [31:0]   instruction_ram_io_data_out;
   wire       [31:0]   data_ram_io_data_out;
 
   apple_riscv cpu_core (
-    .io_inst_ram_wen            (cpu_core_io_inst_ram_wen               ), //o
-    .io_inst_ram_ren            (cpu_core_io_inst_ram_ren               ), //o
-    .io_inst_ram_addr           (cpu_core_io_inst_ram_addr[9:0]         ), //o
-    .io_inst_ram_enable         (cpu_core_io_inst_ram_enable            ), //o
-    .io_inst_ram_data_out       (cpu_core_io_inst_ram_data_out[31:0]    ), //o
-    .io_inst_ram_data_in        (instruction_ram_io_data_out[31:0]      ), //i
-    .io_data_ram_wen            (cpu_core_io_data_ram_wen               ), //o
-    .io_data_ram_ren            (cpu_core_io_data_ram_ren               ), //o
-    .io_data_ram_addr           (cpu_core_io_data_ram_addr[19:0]        ), //o
-    .io_data_ram_data_out       (cpu_core_io_data_ram_data_out[31:0]    ), //o
-    .io_data_ram_data_in        (data_ram_io_data_out[31:0]             ), //i
-    .io_data_ram_byte_enable    (cpu_core_io_data_ram_byte_enable[3:0]  ), //o
-    .clk                        (clk                                    ), //i
-    .reset                      (reset                                  )  //i
+    .io_instr_ram_wr          (cpu_core_io_instr_ram_wr              ), //o
+    .io_instr_ram_rd          (cpu_core_io_instr_ram_rd              ), //o
+    .io_instr_ram_addr        (cpu_core_io_instr_ram_addr[9:0]       ), //o
+    .io_instr_ram_enable      (cpu_core_io_instr_ram_enable          ), //o
+    .io_instr_ram_data_out    (cpu_core_io_instr_ram_data_out[31:0]  ), //o
+    .io_instr_ram_data_in     (instruction_ram_io_data_out[31:0]     ), //i
+    .io_data_ram_wr           (cpu_core_io_data_ram_wr               ), //o
+    .io_data_ram_rd           (cpu_core_io_data_ram_rd               ), //o
+    .io_data_ram_addr         (cpu_core_io_data_ram_addr[19:0]       ), //o
+    .io_data_ram_data_out     (cpu_core_io_data_ram_data_out[31:0]   ), //o
+    .io_data_ram_byte_en      (cpu_core_io_data_ram_byte_en[3:0]     ), //o
+    .io_data_ram_data_in      (data_ram_io_data_out[31:0]            ), //i
+    .clk                      (clk                                   ), //i
+    .reset                    (reset                                 )  //i
   );
   instruction_ram_model instruction_ram (
-    .io_wen         (cpu_core_io_inst_ram_wen             ), //i
-    .io_ren         (cpu_core_io_inst_ram_ren             ), //i
-    .io_enable      (cpu_core_io_inst_ram_enable          ), //i
-    .io_addr        (cpu_core_io_inst_ram_addr[9:0]       ), //i
-    .io_data_out    (instruction_ram_io_data_out[31:0]    ), //o
-    .io_data_in     (cpu_core_io_inst_ram_data_out[31:0]  ), //i
-    .clk            (clk                                  ), //i
-    .reset          (reset                                )  //i
+    .io_wr          (cpu_core_io_instr_ram_wr              ), //i
+    .io_rd          (cpu_core_io_instr_ram_rd              ), //i
+    .io_enable      (cpu_core_io_instr_ram_enable          ), //i
+    .io_addr        (cpu_core_io_instr_ram_addr[9:0]       ), //i
+    .io_data_out    (instruction_ram_io_data_out[31:0]     ), //o
+    .io_data_in     (cpu_core_io_instr_ram_data_out[31:0]  ), //i
+    .clk            (clk                                   ), //i
+    .reset          (reset                                 )  //i
   );
   data_ram_model data_ram (
-    .io_wen         (cpu_core_io_data_ram_wen               ), //i
-    .io_ren         (cpu_core_io_data_ram_ren               ), //i
-    .io_addr        (cpu_core_io_data_ram_addr[19:0]        ), //i
-    .io_byte_en     (cpu_core_io_data_ram_byte_enable[3:0]  ), //i
-    .io_data_out    (data_ram_io_data_out[31:0]             ), //o
-    .io_data_in     (cpu_core_io_data_ram_data_out[31:0]    ), //i
-    .clk            (clk                                    ), //i
-    .reset          (reset                                  )  //i
+    .io_wr          (cpu_core_io_data_ram_wr              ), //i
+    .io_rd          (cpu_core_io_data_ram_rd              ), //i
+    .io_addr        (cpu_core_io_data_ram_addr[19:0]      ), //i
+    .io_byte_en     (cpu_core_io_data_ram_byte_en[3:0]    ), //i
+    .io_data_out    (data_ram_io_data_out[31:0]           ), //o
+    .io_data_in     (cpu_core_io_data_ram_data_out[31:0]  ), //i
+    .clk            (clk                                  ), //i
+    .reset          (reset                                )  //i
   );
 
 endmodule
 
 module data_ram_model (
-  input               io_wen,
-  input               io_ren,
+  input               io_wr,
+  input               io_rd,
   input      [19:0]   io_addr,
   input      [3:0]    io_byte_en,
   output     [31:0]   io_data_out,
@@ -84,22 +84,22 @@ module data_ram_model (
     _zz_1 = {_zz_5, _zz_4, _zz_3, _zz_2};
   end
   always @ (posedge clk) begin
-    if(io_byte_en[0] && io_wen) begin
+    if(io_byte_en[0] && io_wr) begin
       ram_symbol0[io_addr] <= io_data_in[7 : 0];
     end
-    if(io_byte_en[1] && io_wen) begin
+    if(io_byte_en[1] && io_wr) begin
       ram_symbol1[io_addr] <= io_data_in[15 : 8];
     end
-    if(io_byte_en[2] && io_wen) begin
+    if(io_byte_en[2] && io_wr) begin
       ram_symbol2[io_addr] <= io_data_in[23 : 16];
     end
-    if(io_byte_en[3] && io_wen) begin
+    if(io_byte_en[3] && io_wr) begin
       ram_symbol3[io_addr] <= io_data_in[31 : 24];
     end
   end
 
   always @ (posedge clk) begin
-    if(io_ren) begin
+    if(io_rd) begin
       _zz_2 <= ram_symbol0[io_addr];
       _zz_3 <= ram_symbol1[io_addr];
       _zz_4 <= ram_symbol2[io_addr];
@@ -112,8 +112,8 @@ module data_ram_model (
 endmodule
 
 module instruction_ram_model (
-  input               io_wen,
-  input               io_ren,
+  input               io_wr,
+  input               io_rd,
   input               io_enable,
   input      [9:0]    io_addr,
   output     [31:0]   io_data_out,
@@ -127,7 +127,7 @@ module instruction_ram_model (
   wire                _zz_1;
   reg [31:0] ram [0:255];
 
-  assign _zz_3 = (io_wen && io_enable);
+  assign _zz_3 = (io_wr && io_enable);
   always @ (posedge clk) begin
     if(_zz_3) begin
       ram[ram_addr] <= io_data_in;
@@ -141,24 +141,24 @@ module instruction_ram_model (
   end
 
   assign ram_addr = io_addr[9 : 2];
-  assign _zz_1 = (io_ren && io_enable);
+  assign _zz_1 = (io_rd && io_enable);
   assign io_data_out = _zz_2;
 
 endmodule
 
 module apple_riscv (
-  output              io_inst_ram_wen,
-  output              io_inst_ram_ren,
-  output     [9:0]    io_inst_ram_addr,
-  output              io_inst_ram_enable,
-  output     [31:0]   io_inst_ram_data_out,
-  input      [31:0]   io_inst_ram_data_in,
-  output              io_data_ram_wen,
-  output              io_data_ram_ren,
+  output              io_instr_ram_wr,
+  output              io_instr_ram_rd,
+  output     [9:0]    io_instr_ram_addr,
+  output              io_instr_ram_enable,
+  output     [31:0]   io_instr_ram_data_out,
+  input      [31:0]   io_instr_ram_data_in,
+  output              io_data_ram_wr,
+  output              io_data_ram_rd,
   output     [19:0]   io_data_ram_addr,
   output     [31:0]   io_data_ram_data_out,
+  output     [3:0]    io_data_ram_byte_en,
   input      [31:0]   io_data_ram_data_in,
-  output     [3:0]    io_data_ram_byte_enable,
   input               clk,
   input               reset
 );
@@ -166,44 +166,55 @@ module apple_riscv (
   wire       [19:0]   _zz_2;
   wire                _zz_3;
   wire       [31:0]   pc_inst_io_pc_out;
-  wire       [6:0]    decoder_inst_io_opcode;
-  wire       [4:0]    decoder_inst_io_rd;
-  wire       [2:0]    decoder_inst_io_func3;
-  wire       [4:0]    decoder_inst_io_rs1;
-  wire       [4:0]    decoder_inst_io_rs2;
-  wire       [6:0]    decoder_inst_io_func7;
-  wire                decoder_inst_io_register_wen;
-  wire                decoder_inst_io_register_rs1_ren;
-  wire                decoder_inst_io_register_rs2_ren;
-  wire                decoder_inst_io_data_ram_wen;
-  wire                decoder_inst_io_data_ram_ren;
-  wire                decoder_inst_io_data_ram_access_byte;
-  wire                decoder_inst_io_data_ram_access_halfword;
-  wire                decoder_inst_io_data_ram_load_unsigned;
-  wire                decoder_inst_io_imm_sel;
-  wire                decoder_inst_io_alu_la_op;
-  wire                decoder_inst_io_alu_mem_op;
-  wire                decoder_inst_io_br_op;
-  wire                decoder_inst_io_lui_op;
-  wire                decoder_inst_io_auipc_op;
-  wire       [31:0]   decoder_inst_io_imm_value;
-  wire       [31:0]   register_file_inst_io_rs1_data_out;
-  wire       [31:0]   register_file_inst_io_rs2_data_out;
+  wire       [4:0]    instr_dec_inst_io_rd_idx;
+  wire       [2:0]    instr_dec_inst_io_func3;
+  wire       [4:0]    instr_dec_inst_io_rs1_idx;
+  wire       [4:0]    instr_dec_inst_io_rs2_idx;
+  wire       [6:0]    instr_dec_inst_io_func7;
+  wire       [31:0]   instr_dec_inst_io_imm_value;
+  wire                instr_dec_inst_io_register_wr;
+  wire                instr_dec_inst_io_register_rs1_rd;
+  wire                instr_dec_inst_io_register_rs2_rd;
+  wire                instr_dec_inst_io_data_ram_wr;
+  wire                instr_dec_inst_io_data_ram_rd;
+  wire                instr_dec_inst_io_data_ram_ld_byte;
+  wire                instr_dec_inst_io_data_ram_ld_hword;
+  wire                instr_dec_inst_io_data_ram_ld_unsign;
+  wire                instr_dec_inst_io_alu_op_and;
+  wire                instr_dec_inst_io_alu_op_or;
+  wire                instr_dec_inst_io_alu_op_xor;
+  wire                instr_dec_inst_io_alu_op_add;
+  wire                instr_dec_inst_io_alu_op_sub;
+  wire                instr_dec_inst_io_alu_op_sra;
+  wire                instr_dec_inst_io_alu_op_srl;
+  wire                instr_dec_inst_io_alu_op_sll;
+  wire                instr_dec_inst_io_alu_op_slt;
+  wire                instr_dec_inst_io_alu_op_sltu;
+  wire                instr_dec_inst_io_alu_op_eqt;
+  wire                instr_dec_inst_io_alu_op_invb0;
+  wire                instr_dec_inst_io_op2_sel_imm;
+  wire                instr_dec_inst_io_op1_sel_pc;
+  wire                instr_dec_inst_io_op1_sel_zero;
+  wire                instr_dec_inst_io_branch_op;
+  wire       [31:0]   regfile_inst_io_rs1_data_out;
+  wire       [31:0]   regfile_inst_io_rs2_data_out;
   wire       [31:0]   alu_inst_io_alu_out;
   wire       [31:0]   branch_unit_inst_io_target_pc;
   wire                branch_unit_inst_io_branch_taken;
   wire                branch_unit_inst_io_instruction_address_misaligned_exception;
-  wire       [31:0]   memory_controller_inst_io_mc2cpu_data;
-  wire                memory_controller_inst_io_mc2mem_wen;
-  wire                memory_controller_inst_io_mc2mem_ren;
-  wire       [19:0]   memory_controller_inst_io_mc2mem_addr;
-  wire       [31:0]   memory_controller_inst_io_mc2mem_data;
-  wire       [3:0]    memory_controller_inst_io_mc2mem_byte_enable;
-  wire                if_inst_valid;
-  reg                 id_inst_valid;
-  wire                ex_inst_valid;
-  wire                mem_inst_valid;
-  wire                wb_inst_valid;
+  wire       [31:0]   dram_ctrl_isnt_io_mc2cpu_data;
+  wire                dram_ctrl_isnt_io_mc2mem_wr;
+  wire                dram_ctrl_isnt_io_mc2mem_rd;
+  wire       [19:0]   dram_ctrl_isnt_io_mc2mem_addr;
+  wire       [31:0]   dram_ctrl_isnt_io_mc2mem_data;
+  wire       [3:0]    dram_ctrl_isnt_io_mc2mem_byte_enable;
+  wire       [0:0]    _zz_4;
+  wire       [31:0]   _zz_5;
+  wire                if_instr_valid;
+  reg                 id_instr_valid;
+  wire                ex_instr_valid;
+  wire                mem_instr_valid;
+  wire                wb_instr_valid;
   reg                 if_pipe_stall;
   reg                 id_pipe_stall;
   wire                ex_pipe_stall;
@@ -216,56 +227,63 @@ module apple_riscv (
   wire                wb_pipe_run;
   wire       [31:0]   target_pc;
   wire                branch_taken;
-  reg        [31:0]   if_id_pc;
-  reg                 if_id_inst_valid;
-  reg                 id_ex_inst_valid;
-  reg                 id_ex_register_wen;
-  reg                 id_ex_data_ram_wen;
-  reg                 id_ex_data_ram_ren;
-  reg                 id_ex_register_rs1_ren;
-  reg                 id_ex_register_rs2_ren;
-  reg        [4:0]    id_ex_rd;
-  reg        [2:0]    id_ex_func3;
-  reg        [4:0]    id_ex_rs1;
-  reg        [4:0]    id_ex_rs2;
-  reg        [6:0]    id_ex_func7;
-  reg                 id_ex_alu_la_op;
-  reg                 id_ex_alu_mem_op;
-  reg                 id_ex_imm_sel;
-  reg                 id_ex_br_op;
-  reg                 id_ex_lui_op;
-  reg                 id_ex_auipc_op;
-  reg                 id_ex_data_ram_access_byte;
-  reg                 id_ex_data_ram_access_halfword;
-  reg                 id_ex_data_ram_load_unsigned;
-  reg        [31:0]   id_ex_rs1_value;
-  reg        [31:0]   id_ex_rs2_value;
-  reg        [31:0]   id_ex_imm_value;
-  reg        [31:0]   id_ex_pc;
+  reg        [31:0]   if2id_pc;
+  reg                 if2id_instr_valid;
+  reg                 id2ex_instr_valid;
+  reg                 id2ex_register_wr;
+  reg                 id2ex_data_ram_wr;
+  reg                 id2ex_data_ram_rd;
+  reg                 id2ex_register_rs1_rd;
+  reg                 id2ex_register_rs2_rd;
+  reg                 id2ex_branch_op;
+  reg        [4:0]    id2ex_rd;
+  reg        [2:0]    id2ex_func3;
+  reg        [4:0]    id2ex_rs1;
+  reg        [4:0]    id2ex_rs2;
+  reg        [6:0]    id2ex_func7;
+  reg                 id2ex_alu_op_and;
+  reg                 id2ex_alu_op_or;
+  reg                 id2ex_alu_op_xor;
+  reg                 id2ex_alu_op_add;
+  reg                 id2ex_alu_op_sub;
+  reg                 id2ex_alu_op_sra;
+  reg                 id2ex_alu_op_srl;
+  reg                 id2ex_alu_op_sll;
+  reg                 id2ex_alu_op_slt;
+  reg                 id2ex_alu_op_sltu;
+  reg                 id2ex_alu_op_eqt;
+  reg                 id2ex_alu_op_invb0;
+  reg                 id2ex_data_ram_ld_byte;
+  reg                 id2ex_data_ram_ld_hword;
+  reg                 id2ex_data_ram_ld_unsign;
+  reg        [31:0]   id2ex_rs1_value;
+  reg        [31:0]   id2ex_rs2_value;
+  reg        [31:0]   id2ex_imm_value;
+  reg        [31:0]   id2ex_pc;
+  reg                 id2ex_op2_sel_imm;
+  reg                 id2ex_op1_sel_pc;
+  reg                 id2ex_op1_sel_zero;
   reg        [31:0]   ex_rs1_value_forwarded;
   reg        [31:0]   ex_rs2_value_forwarded;
-  wire       [31:0]   imm_value;
-  wire       [31:0]   alu_op1_mux_out;
-  wire       [31:0]   alu_op2_mux_out;
-  reg                 ex_mem_inst_valid;
-  reg                 ex_mem_register_wen;
-  reg                 ex_mem_data_ram_wen;
-  reg                 ex_mem_data_ram_ren;
-  reg                 ex_mem_data_ram_access_byte;
-  reg                 ex_mem_data_ram_access_halfword;
-  reg                 ex_mem_data_ram_load_unsigned;
-  reg        [31:0]   ex_mem_alu_out;
-  reg        [4:0]    ex_mem_rs1;
-  reg        [4:0]    ex_mem_rs2;
-  reg        [4:0]    ex_mem_rd;
-  reg        [31:0]   ex_mem_rs2_value;
-  reg                 mem_wb_inst_valid;
-  reg                 mem_wb_register_wen;
-  reg                 mem_wb_data_ram_ren;
-  reg        [31:0]   mem_wb_alu_out;
-  reg        [4:0]    mem_wb_rs1;
-  reg        [4:0]    mem_wb_rs2;
-  reg        [4:0]    mem_wb_rd;
+  wire       [31:0]   alu_operand1_muxout;
+  wire       [31:0]   alu_operand2_muxout;
+  reg                 ex2mem_instr_valid;
+  reg                 ex2mem_register_wr;
+  reg                 ex2mem_data_ram_wr;
+  reg                 ex2mem_data_ram_rd;
+  reg                 ex2mem_data_ram_ld_byte;
+  reg                 ex2mem_data_ram_ld_hword;
+  reg                 ex2mem_data_ram_ld_unsign;
+  reg        [31:0]   ex2mem_alu_out;
+  reg        [4:0]    ex2mem_rs1;
+  reg        [4:0]    ex2mem_rs2;
+  reg        [4:0]    ex2mem_rd;
+  reg        [31:0]   ex2mem_rs2_value;
+  reg                 mem2wb_instr_valid;
+  reg                 mem2wb_register_wr;
+  reg                 mem2wb_data_ram_rd;
+  reg        [31:0]   mem2wb_alu_out;
+  reg        [4:0]    mem2wb_rd;
   wire       [31:0]   wb_rd_wr_data;
   wire                rs1_match_mem;
   wire                rs1_match_wb;
@@ -279,6 +297,8 @@ module apple_riscv (
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
 
+  assign _zz_4 = 1'b0;
+  assign _zz_5 = {31'd0, _zz_4};
   program_counter pc_inst (
     .io_pc_in     (target_pc[31:0]          ), //i
     .io_branch    (branch_taken             ), //i
@@ -287,81 +307,94 @@ module apple_riscv (
     .clk          (clk                      ), //i
     .reset        (reset                    )  //i
   );
-  instruction_decoder decoder_inst (
-    .io_inst                        (io_inst_ram_data_in[31:0]                 ), //i
-    .io_opcode                      (decoder_inst_io_opcode[6:0]               ), //o
-    .io_rd                          (decoder_inst_io_rd[4:0]                   ), //o
-    .io_func3                       (decoder_inst_io_func3[2:0]                ), //o
-    .io_rs1                         (decoder_inst_io_rs1[4:0]                  ), //o
-    .io_rs2                         (decoder_inst_io_rs2[4:0]                  ), //o
-    .io_func7                       (decoder_inst_io_func7[6:0]                ), //o
-    .io_register_wen                (decoder_inst_io_register_wen              ), //o
-    .io_register_rs1_ren            (decoder_inst_io_register_rs1_ren          ), //o
-    .io_register_rs2_ren            (decoder_inst_io_register_rs2_ren          ), //o
-    .io_data_ram_wen                (decoder_inst_io_data_ram_wen              ), //o
-    .io_data_ram_ren                (decoder_inst_io_data_ram_ren              ), //o
-    .io_data_ram_access_byte        (decoder_inst_io_data_ram_access_byte      ), //o
-    .io_data_ram_access_halfword    (decoder_inst_io_data_ram_access_halfword  ), //o
-    .io_data_ram_load_unsigned      (decoder_inst_io_data_ram_load_unsigned    ), //o
-    .io_imm_sel                     (decoder_inst_io_imm_sel                   ), //o
-    .io_alu_la_op                   (decoder_inst_io_alu_la_op                 ), //o
-    .io_alu_mem_op                  (decoder_inst_io_alu_mem_op                ), //o
-    .io_br_op                       (decoder_inst_io_br_op                     ), //o
-    .io_lui_op                      (decoder_inst_io_lui_op                    ), //o
-    .io_auipc_op                    (decoder_inst_io_auipc_op                  ), //o
-    .io_imm_value                   (decoder_inst_io_imm_value[31:0]           )  //o
+  instr_dec instr_dec_inst (
+    .io_instr                 (io_instr_ram_data_in[31:0]            ), //i
+    .io_rd_idx                (instr_dec_inst_io_rd_idx[4:0]         ), //o
+    .io_func3                 (instr_dec_inst_io_func3[2:0]          ), //o
+    .io_rs1_idx               (instr_dec_inst_io_rs1_idx[4:0]        ), //o
+    .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]        ), //o
+    .io_func7                 (instr_dec_inst_io_func7[6:0]          ), //o
+    .io_imm_value             (instr_dec_inst_io_imm_value[31:0]     ), //o
+    .io_register_wr           (instr_dec_inst_io_register_wr         ), //o
+    .io_register_rs1_rd       (instr_dec_inst_io_register_rs1_rd     ), //o
+    .io_register_rs2_rd       (instr_dec_inst_io_register_rs2_rd     ), //o
+    .io_data_ram_wr           (instr_dec_inst_io_data_ram_wr         ), //o
+    .io_data_ram_rd           (instr_dec_inst_io_data_ram_rd         ), //o
+    .io_data_ram_ld_byte      (instr_dec_inst_io_data_ram_ld_byte    ), //o
+    .io_data_ram_ld_hword     (instr_dec_inst_io_data_ram_ld_hword   ), //o
+    .io_data_ram_ld_unsign    (instr_dec_inst_io_data_ram_ld_unsign  ), //o
+    .io_alu_op_and            (instr_dec_inst_io_alu_op_and          ), //o
+    .io_alu_op_or             (instr_dec_inst_io_alu_op_or           ), //o
+    .io_alu_op_xor            (instr_dec_inst_io_alu_op_xor          ), //o
+    .io_alu_op_add            (instr_dec_inst_io_alu_op_add          ), //o
+    .io_alu_op_sub            (instr_dec_inst_io_alu_op_sub          ), //o
+    .io_alu_op_sra            (instr_dec_inst_io_alu_op_sra          ), //o
+    .io_alu_op_srl            (instr_dec_inst_io_alu_op_srl          ), //o
+    .io_alu_op_sll            (instr_dec_inst_io_alu_op_sll          ), //o
+    .io_alu_op_slt            (instr_dec_inst_io_alu_op_slt          ), //o
+    .io_alu_op_sltu           (instr_dec_inst_io_alu_op_sltu         ), //o
+    .io_alu_op_eqt            (instr_dec_inst_io_alu_op_eqt          ), //o
+    .io_alu_op_invb0          (instr_dec_inst_io_alu_op_invb0        ), //o
+    .io_op2_sel_imm           (instr_dec_inst_io_op2_sel_imm         ), //o
+    .io_op1_sel_pc            (instr_dec_inst_io_op1_sel_pc          ), //o
+    .io_op1_sel_zero          (instr_dec_inst_io_op1_sel_zero        ), //o
+    .io_branch_op             (instr_dec_inst_io_branch_op           )  //o
   );
-  register_file register_file_inst (
-    .io_rs1_rd_addr         (decoder_inst_io_rs1[4:0]                  ), //i
-    .io_rs1_data_out        (register_file_inst_io_rs1_data_out[31:0]  ), //o
-    .io_rs2_rd_addr         (decoder_inst_io_rs2[4:0]                  ), //i
-    .io_rs2_data_out        (register_file_inst_io_rs2_data_out[31:0]  ), //o
-    .io_register_wen        (mem_wb_register_wen                       ), //i
-    .io_register_wr_addr    (mem_wb_rd[4:0]                            ), //i
-    .io_rd_in               (wb_rd_wr_data[31:0]                       ), //i
-    .clk                    (clk                                       ), //i
-    .reset                  (reset                                     )  //i
+  regfile regfile_inst (
+    .io_rs1_rd_addr         (instr_dec_inst_io_rs1_idx[4:0]      ), //i
+    .io_rs1_data_out        (regfile_inst_io_rs1_data_out[31:0]  ), //o
+    .io_rs2_rd_addr         (instr_dec_inst_io_rs2_idx[4:0]      ), //i
+    .io_rs2_data_out        (regfile_inst_io_rs2_data_out[31:0]  ), //o
+    .io_register_wr         (mem2wb_register_wr                  ), //i
+    .io_register_wr_addr    (mem2wb_rd[4:0]                      ), //i
+    .io_rd_in               (wb_rd_wr_data[31:0]                 ), //i
+    .clk                    (clk                                 ), //i
+    .reset                  (reset                               )  //i
   );
   alu alu_inst (
-    .io_op1             (alu_op1_mux_out[31:0]      ), //i
-    .io_op2             (alu_op2_mux_out[31:0]      ), //i
+    .io_operand_1       (alu_operand1_muxout[31:0]  ), //i
+    .io_operand_2       (alu_operand2_muxout[31:0]  ), //i
     .io_alu_out         (alu_inst_io_alu_out[31:0]  ), //o
-    .io_func3           (id_ex_func3[2:0]           ), //i
-    .io_func7           (id_ex_func7[6:0]           ), //i
-    .io_alu_la_op       (id_ex_alu_la_op            ), //i
-    .io_alu_mem_op      (id_ex_alu_mem_op           ), //i
-    .io_alu_imm_sel     (id_ex_imm_sel              ), //i
-    .io_alu_br_op       (id_ex_br_op                ), //i
-    .io_alu_lui_op      (id_ex_lui_op               ), //i
-    .io_alu_auipc_op    (id_ex_auipc_op             )  //i
+    .io_alu_op_and      (id2ex_alu_op_and           ), //i
+    .io_alu_op_or       (id2ex_alu_op_or            ), //i
+    .io_alu_op_xor      (id2ex_alu_op_xor           ), //i
+    .io_alu_op_add      (id2ex_alu_op_add           ), //i
+    .io_alu_op_sub      (id2ex_alu_op_sub           ), //i
+    .io_alu_op_sra      (id2ex_alu_op_sra           ), //i
+    .io_alu_op_srl      (id2ex_alu_op_srl           ), //i
+    .io_alu_op_sll      (id2ex_alu_op_sll           ), //i
+    .io_alu_op_slt      (id2ex_alu_op_slt           ), //i
+    .io_alu_op_sltu     (id2ex_alu_op_sltu          ), //i
+    .io_alu_op_eqt      (id2ex_alu_op_eqt           ), //i
+    .io_alu_op_invb0    (id2ex_alu_op_invb0         )  //i
   );
   branch_unit branch_unit_inst (
     .io_branch_result                               (_zz_1                                                         ), //i
-    .io_current_pc                                  (id_ex_pc[31:0]                                                ), //i
-    .io_imm_value                                   (id_ex_imm_value[31:0]                                         ), //i
-    .io_br_op                                       (id_ex_br_op                                                   ), //i
+    .io_current_pc                                  (id2ex_pc[31:0]                                                ), //i
+    .io_imm_value                                   (id2ex_imm_value[31:0]                                         ), //i
+    .io_br_op                                       (id2ex_branch_op                                               ), //i
     .io_target_pc                                   (branch_unit_inst_io_target_pc[31:0]                           ), //o
     .io_branch_taken                                (branch_unit_inst_io_branch_taken                              ), //o
     .io_instruction_address_misaligned_exception    (branch_unit_inst_io_instruction_address_misaligned_exception  )  //o
   );
-  memory_controller memory_controller_inst (
-    .io_cpu2mc_wen                (ex_mem_data_ram_wen                                ), //i
-    .io_cpu2mc_ren                (ex_mem_data_ram_ren                                ), //i
-    .io_cpu2mc_addr               (_zz_2[19:0]                                        ), //i
-    .io_cpu2mc_data               (ex_mem_rs2_value[31:0]                             ), //i
-    .io_mc2cpu_data               (memory_controller_inst_io_mc2cpu_data[31:0]        ), //o
-    .io_cpu2mc_mem_LS_byte        (ex_mem_data_ram_access_byte                        ), //i
-    .io_cpu2mc_mem_LS_halfword    (ex_mem_data_ram_access_halfword                    ), //i
-    .io_cpu2mc_mem_LW_unsigned    (ex_mem_data_ram_load_unsigned                      ), //i
-    .io_mc2mem_wen                (memory_controller_inst_io_mc2mem_wen               ), //o
-    .io_mc2mem_ren                (memory_controller_inst_io_mc2mem_ren               ), //o
-    .io_mc2mem_addr               (memory_controller_inst_io_mc2mem_addr[19:0]        ), //o
-    .io_mem2mc_data               (io_data_ram_data_in[31:0]                          ), //i
-    .io_mem2mc_data_vld           (_zz_3                                              ), //i
-    .io_mc2mem_data               (memory_controller_inst_io_mc2mem_data[31:0]        ), //o
-    .io_mc2mem_byte_enable        (memory_controller_inst_io_mc2mem_byte_enable[3:0]  ), //o
-    .clk                          (clk                                                ), //i
-    .reset                        (reset                                              )  //i
+  dram_ctrl dram_ctrl_isnt (
+    .io_cpu2mc_wr                 (ex2mem_data_ram_wr                         ), //i
+    .io_cpu2mc_rd                 (ex2mem_data_ram_rd                         ), //i
+    .io_cpu2mc_addr               (_zz_2[19:0]                                ), //i
+    .io_cpu2mc_data               (ex2mem_rs2_value[31:0]                     ), //i
+    .io_mc2cpu_data               (dram_ctrl_isnt_io_mc2cpu_data[31:0]        ), //o
+    .io_cpu2mc_mem_LS_byte        (ex2mem_data_ram_ld_byte                    ), //i
+    .io_cpu2mc_mem_LS_halfword    (ex2mem_data_ram_ld_hword                   ), //i
+    .io_cpu2mc_mem_LW_unsigned    (ex2mem_data_ram_ld_unsign                  ), //i
+    .io_mc2mem_wr                 (dram_ctrl_isnt_io_mc2mem_wr                ), //o
+    .io_mc2mem_rd                 (dram_ctrl_isnt_io_mc2mem_rd                ), //o
+    .io_mc2mem_addr               (dram_ctrl_isnt_io_mc2mem_addr[19:0]        ), //o
+    .io_mem2mc_data               (io_data_ram_data_in[31:0]                  ), //i
+    .io_mem2mc_data_vld           (_zz_3                                      ), //i
+    .io_mc2mem_data               (dram_ctrl_isnt_io_mc2mem_data[31:0]        ), //o
+    .io_mc2mem_byte_enable        (dram_ctrl_isnt_io_mc2mem_byte_enable[3:0]  ), //o
+    .clk                          (clk                                        ), //i
+    .reset                        (reset                                      )  //i
   );
   assign ex_pipe_stall = 1'b0;
   assign mem_pipe_stall = 1'b0;
@@ -371,63 +404,62 @@ module apple_riscv (
   assign ex_pipe_run = (! ex_pipe_stall);
   assign mem_pipe_run = (! mem_pipe_stall);
   assign wb_pipe_run = (! wb_pipe_stall);
-  assign io_inst_ram_wen = 1'b0;
-  assign io_inst_ram_ren = 1'b1;
-  assign io_inst_ram_enable = if_pipe_run;
-  assign io_inst_ram_addr = pc_inst_io_pc_out[9 : 0];
-  assign io_inst_ram_data_out = 32'h0;
-  assign imm_value = id_ex_imm_value;
-  assign alu_op1_mux_out = (id_ex_auipc_op ? id_ex_pc : ex_rs1_value_forwarded);
-  assign alu_op2_mux_out = (id_ex_imm_sel ? imm_value : ex_rs2_value_forwarded);
+  assign io_instr_ram_wr = 1'b0;
+  assign io_instr_ram_rd = 1'b1;
+  assign io_instr_ram_enable = if_pipe_run;
+  assign io_instr_ram_addr = pc_inst_io_pc_out[9 : 0];
+  assign io_instr_ram_data_out = 32'h0;
+  assign alu_operand1_muxout = (id2ex_op1_sel_zero ? _zz_5 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
+  assign alu_operand2_muxout = (id2ex_op2_sel_imm ? id2ex_imm_value : ex_rs2_value_forwarded);
   assign _zz_1 = alu_inst_io_alu_out[0];
   assign target_pc = branch_unit_inst_io_target_pc;
   assign branch_taken = branch_unit_inst_io_branch_taken;
-  assign _zz_2 = ex_mem_alu_out[19 : 0];
-  assign io_data_ram_wen = memory_controller_inst_io_mc2mem_wen;
-  assign io_data_ram_ren = memory_controller_inst_io_mc2mem_ren;
-  assign io_data_ram_addr = memory_controller_inst_io_mc2mem_addr;
-  assign io_data_ram_data_out = memory_controller_inst_io_mc2mem_data;
-  assign io_data_ram_byte_enable = memory_controller_inst_io_mc2mem_byte_enable;
-  assign wb_rd_wr_data = (mem_wb_data_ram_ren ? memory_controller_inst_io_mc2cpu_data : mem_wb_alu_out);
-  assign rs1_match_mem = (id_ex_rs1 == ex_mem_rd);
-  assign rs1_match_wb = (id_ex_rs1 == mem_wb_rd);
-  assign forward_rs1_from_mem = ((id_ex_register_rs1_ren && rs1_match_mem) && ex_mem_register_wen);
-  assign forward_rs1_from_wb = ((id_ex_register_rs1_ren && rs1_match_wb) && mem_wb_register_wen);
+  assign _zz_2 = ex2mem_alu_out[19 : 0];
+  assign io_data_ram_wr = dram_ctrl_isnt_io_mc2mem_wr;
+  assign io_data_ram_rd = dram_ctrl_isnt_io_mc2mem_rd;
+  assign io_data_ram_addr = dram_ctrl_isnt_io_mc2mem_addr;
+  assign io_data_ram_data_out = dram_ctrl_isnt_io_mc2mem_data;
+  assign io_data_ram_byte_en = dram_ctrl_isnt_io_mc2mem_byte_enable;
+  assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dram_ctrl_isnt_io_mc2cpu_data : mem2wb_alu_out);
+  assign rs1_match_mem = (id2ex_rs1 == ex2mem_rd);
+  assign rs1_match_wb = (id2ex_rs1 == mem2wb_rd);
+  assign forward_rs1_from_mem = ((id2ex_register_rs1_rd && rs1_match_mem) && ex2mem_register_wr);
+  assign forward_rs1_from_wb = ((id2ex_register_rs1_rd && rs1_match_wb) && mem2wb_register_wr);
   always @ (*) begin
     if(forward_rs1_from_mem)begin
-      ex_rs1_value_forwarded = ex_mem_alu_out;
+      ex_rs1_value_forwarded = ex2mem_alu_out;
     end else begin
       if(forward_rs1_from_wb)begin
         ex_rs1_value_forwarded = wb_rd_wr_data;
       end else begin
-        ex_rs1_value_forwarded = id_ex_rs1_value;
+        ex_rs1_value_forwarded = id2ex_rs1_value;
       end
     end
   end
 
-  assign rs2_match_mem = (id_ex_rs2 == ex_mem_rd);
-  assign rs2_match_wb = (id_ex_rs2 == mem_wb_rd);
-  assign forward_rs2_from_mem = ((id_ex_register_rs2_ren && rs2_match_mem) && ex_mem_register_wen);
-  assign forward_rs2_from_wb = ((id_ex_register_rs2_ren && rs2_match_wb) && mem_wb_register_wen);
+  assign rs2_match_mem = (id2ex_rs2 == ex2mem_rd);
+  assign rs2_match_wb = (id2ex_rs2 == mem2wb_rd);
+  assign forward_rs2_from_mem = ((id2ex_register_rs2_rd && rs2_match_mem) && ex2mem_register_wr);
+  assign forward_rs2_from_wb = ((id2ex_register_rs2_rd && rs2_match_wb) && mem2wb_register_wr);
   always @ (*) begin
     if(forward_rs2_from_mem)begin
-      ex_rs2_value_forwarded = ex_mem_alu_out;
+      ex_rs2_value_forwarded = ex2mem_alu_out;
     end else begin
       if(forward_rs2_from_wb)begin
         ex_rs2_value_forwarded = wb_rd_wr_data;
       end else begin
-        ex_rs2_value_forwarded = id_ex_rs2_value;
+        ex_rs2_value_forwarded = id2ex_rs2_value;
       end
     end
   end
 
-  assign if_inst_valid = (! branch_taken);
-  assign ex_inst_valid = id_ex_inst_valid;
-  assign mem_inst_valid = ex_mem_inst_valid;
-  assign wb_inst_valid = mem_wb_inst_valid;
-  assign id_rs1_depends_on_ex_rd = ((decoder_inst_io_rs1 == id_ex_rd) && decoder_inst_io_register_rs1_ren);
-  assign id_rs2_depends_on_ex_rd = ((decoder_inst_io_rs2 == id_ex_rd) && decoder_inst_io_register_rs2_ren);
-  assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && id_ex_data_ram_ren);
+  assign if_instr_valid = (! branch_taken);
+  assign ex_instr_valid = id2ex_instr_valid;
+  assign mem_instr_valid = ex2mem_instr_valid;
+  assign wb_instr_valid = mem2wb_instr_valid;
+  assign id_rs1_depends_on_ex_rd = ((instr_dec_inst_io_rs1_idx == id2ex_rd) && instr_dec_inst_io_register_rs1_rd);
+  assign id_rs2_depends_on_ex_rd = ((instr_dec_inst_io_rs2_idx == id2ex_rd) && instr_dec_inst_io_register_rs2_rd);
+  assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && id2ex_data_ram_rd);
   always @ (*) begin
     if(stall_on_load_dependence)begin
       if_pipe_stall = 1'b1;
@@ -446,185 +478,210 @@ module apple_riscv (
 
   always @ (*) begin
     if(stall_on_load_dependence)begin
-      id_inst_valid = 1'b0;
+      id_instr_valid = 1'b0;
     end else begin
-      id_inst_valid = (if_id_inst_valid && (! branch_taken));
+      id_instr_valid = (if2id_instr_valid && (! branch_taken));
     end
   end
 
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
-      if_id_pc <= 32'h0;
-      if_id_inst_valid <= 1'b0;
-      id_ex_inst_valid <= 1'b0;
-      id_ex_register_wen <= 1'b0;
-      id_ex_data_ram_wen <= 1'b0;
-      id_ex_data_ram_ren <= 1'b0;
-      id_ex_register_rs1_ren <= 1'b0;
-      id_ex_register_rs2_ren <= 1'b0;
-      ex_mem_inst_valid <= 1'b0;
-      ex_mem_register_wen <= 1'b0;
-      ex_mem_data_ram_wen <= 1'b0;
-      ex_mem_data_ram_ren <= 1'b0;
-      mem_wb_inst_valid <= 1'b0;
-      mem_wb_register_wen <= 1'b0;
-      mem_wb_data_ram_ren <= 1'b0;
+      if2id_pc <= 32'h0;
+      if2id_instr_valid <= 1'b0;
+      id2ex_instr_valid <= 1'b0;
+      id2ex_register_wr <= 1'b0;
+      id2ex_data_ram_wr <= 1'b0;
+      id2ex_data_ram_rd <= 1'b0;
+      id2ex_register_rs1_rd <= 1'b0;
+      id2ex_register_rs2_rd <= 1'b0;
+      id2ex_branch_op <= 1'b0;
+      ex2mem_instr_valid <= 1'b0;
+      ex2mem_register_wr <= 1'b0;
+      ex2mem_data_ram_wr <= 1'b0;
+      ex2mem_data_ram_rd <= 1'b0;
+      mem2wb_instr_valid <= 1'b0;
+      mem2wb_register_wr <= 1'b0;
+      mem2wb_data_ram_rd <= 1'b0;
     end else begin
       if(id_pipe_run)begin
-        if_id_pc <= pc_inst_io_pc_out;
+        if2id_pc <= pc_inst_io_pc_out;
       end
       if(id_pipe_run)begin
-        if_id_inst_valid <= if_inst_valid;
+        if2id_instr_valid <= if_instr_valid;
       end
       if(ex_pipe_run)begin
-        id_ex_inst_valid <= id_inst_valid;
+        id2ex_instr_valid <= id_instr_valid;
       end
       if(ex_pipe_run)begin
-        id_ex_register_wen <= (decoder_inst_io_register_wen && id_inst_valid);
+        id2ex_register_wr <= (instr_dec_inst_io_register_wr && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id_ex_data_ram_wen <= (decoder_inst_io_data_ram_wen && id_inst_valid);
+        id2ex_data_ram_wr <= (instr_dec_inst_io_data_ram_wr && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id_ex_data_ram_ren <= (decoder_inst_io_data_ram_ren && id_inst_valid);
+        id2ex_data_ram_rd <= (instr_dec_inst_io_data_ram_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id_ex_register_rs1_ren <= (decoder_inst_io_register_rs1_ren && id_inst_valid);
+        id2ex_register_rs1_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id_ex_register_rs2_ren <= (decoder_inst_io_register_rs2_ren && id_inst_valid);
+        id2ex_register_rs2_rd <= (instr_dec_inst_io_register_rs2_rd && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_branch_op <= (instr_dec_inst_io_branch_op && id_instr_valid);
       end
       if(mem_pipe_run)begin
-        ex_mem_inst_valid <= ex_inst_valid;
+        ex2mem_instr_valid <= ex_instr_valid;
       end
       if(mem_pipe_run)begin
-        ex_mem_register_wen <= (id_ex_register_wen && ex_inst_valid);
+        ex2mem_register_wr <= (id2ex_register_wr && ex_instr_valid);
       end
       if(mem_pipe_run)begin
-        ex_mem_data_ram_wen <= (id_ex_data_ram_wen && ex_inst_valid);
+        ex2mem_data_ram_wr <= (id2ex_data_ram_wr && ex_instr_valid);
       end
       if(mem_pipe_run)begin
-        ex_mem_data_ram_ren <= (id_ex_data_ram_ren && ex_inst_valid);
+        ex2mem_data_ram_rd <= (id2ex_data_ram_rd && ex_instr_valid);
       end
       if(wb_pipe_run)begin
-        mem_wb_inst_valid <= mem_inst_valid;
+        mem2wb_instr_valid <= mem_instr_valid;
       end
       if(wb_pipe_run)begin
-        mem_wb_register_wen <= (ex_mem_register_wen && mem_inst_valid);
+        mem2wb_register_wr <= (ex2mem_register_wr && mem_instr_valid);
       end
       if(wb_pipe_run)begin
-        mem_wb_data_ram_ren <= (ex_mem_data_ram_ren && mem_inst_valid);
+        mem2wb_data_ram_rd <= (ex2mem_data_ram_rd && mem_instr_valid);
       end
     end
   end
 
   always @ (posedge clk) begin
     if(ex_pipe_run)begin
-      id_ex_rd <= decoder_inst_io_rd;
+      id2ex_rd <= instr_dec_inst_io_rd_idx;
     end
     if(ex_pipe_run)begin
-      id_ex_func3 <= decoder_inst_io_func3;
+      id2ex_func3 <= instr_dec_inst_io_func3;
     end
     if(ex_pipe_run)begin
-      id_ex_rs1 <= decoder_inst_io_rs1;
+      id2ex_rs1 <= instr_dec_inst_io_rs1_idx;
     end
     if(ex_pipe_run)begin
-      id_ex_rs2 <= decoder_inst_io_rs2;
+      id2ex_rs2 <= instr_dec_inst_io_rs2_idx;
     end
     if(ex_pipe_run)begin
-      id_ex_func7 <= decoder_inst_io_func7;
+      id2ex_func7 <= instr_dec_inst_io_func7;
     end
     if(ex_pipe_run)begin
-      id_ex_alu_la_op <= decoder_inst_io_alu_la_op;
+      id2ex_alu_op_and <= instr_dec_inst_io_alu_op_and;
     end
     if(ex_pipe_run)begin
-      id_ex_alu_mem_op <= decoder_inst_io_alu_mem_op;
+      id2ex_alu_op_or <= instr_dec_inst_io_alu_op_or;
     end
     if(ex_pipe_run)begin
-      id_ex_imm_sel <= decoder_inst_io_imm_sel;
+      id2ex_alu_op_xor <= instr_dec_inst_io_alu_op_xor;
     end
     if(ex_pipe_run)begin
-      id_ex_br_op <= decoder_inst_io_br_op;
+      id2ex_alu_op_add <= instr_dec_inst_io_alu_op_add;
     end
     if(ex_pipe_run)begin
-      id_ex_lui_op <= decoder_inst_io_lui_op;
+      id2ex_alu_op_sub <= instr_dec_inst_io_alu_op_sub;
     end
     if(ex_pipe_run)begin
-      id_ex_auipc_op <= decoder_inst_io_auipc_op;
+      id2ex_alu_op_sra <= instr_dec_inst_io_alu_op_sra;
     end
     if(ex_pipe_run)begin
-      id_ex_data_ram_access_byte <= decoder_inst_io_data_ram_access_byte;
+      id2ex_alu_op_srl <= instr_dec_inst_io_alu_op_srl;
     end
     if(ex_pipe_run)begin
-      id_ex_data_ram_access_halfword <= decoder_inst_io_data_ram_access_halfword;
+      id2ex_alu_op_sll <= instr_dec_inst_io_alu_op_sll;
     end
     if(ex_pipe_run)begin
-      id_ex_data_ram_load_unsigned <= decoder_inst_io_data_ram_load_unsigned;
+      id2ex_alu_op_slt <= instr_dec_inst_io_alu_op_slt;
     end
     if(ex_pipe_run)begin
-      id_ex_rs1_value <= register_file_inst_io_rs1_data_out;
+      id2ex_alu_op_sltu <= instr_dec_inst_io_alu_op_sltu;
     end
     if(ex_pipe_run)begin
-      id_ex_rs2_value <= register_file_inst_io_rs2_data_out;
+      id2ex_alu_op_eqt <= instr_dec_inst_io_alu_op_eqt;
     end
     if(ex_pipe_run)begin
-      id_ex_imm_value <= decoder_inst_io_imm_value;
+      id2ex_alu_op_invb0 <= instr_dec_inst_io_alu_op_invb0;
     end
     if(ex_pipe_run)begin
-      id_ex_pc <= if_id_pc;
+      id2ex_data_ram_ld_byte <= instr_dec_inst_io_data_ram_ld_byte;
+    end
+    if(ex_pipe_run)begin
+      id2ex_data_ram_ld_hword <= instr_dec_inst_io_data_ram_ld_hword;
+    end
+    if(ex_pipe_run)begin
+      id2ex_data_ram_ld_unsign <= instr_dec_inst_io_data_ram_ld_unsign;
+    end
+    if(ex_pipe_run)begin
+      id2ex_rs1_value <= regfile_inst_io_rs1_data_out;
+    end
+    if(ex_pipe_run)begin
+      id2ex_rs2_value <= regfile_inst_io_rs2_data_out;
+    end
+    if(ex_pipe_run)begin
+      id2ex_imm_value <= instr_dec_inst_io_imm_value;
+    end
+    if(ex_pipe_run)begin
+      id2ex_pc <= if2id_pc;
+    end
+    if(ex_pipe_run)begin
+      id2ex_op2_sel_imm <= instr_dec_inst_io_op2_sel_imm;
+    end
+    if(ex_pipe_run)begin
+      id2ex_op1_sel_pc <= instr_dec_inst_io_op1_sel_pc;
+    end
+    if(ex_pipe_run)begin
+      id2ex_op1_sel_zero <= instr_dec_inst_io_op1_sel_zero;
     end
     if(mem_pipe_run)begin
-      ex_mem_data_ram_access_byte <= (id_ex_data_ram_access_byte && ex_inst_valid);
+      ex2mem_data_ram_ld_byte <= (id2ex_data_ram_ld_byte && ex_instr_valid);
     end
     if(mem_pipe_run)begin
-      ex_mem_data_ram_access_halfword <= (id_ex_data_ram_access_halfword && ex_inst_valid);
+      ex2mem_data_ram_ld_hword <= (id2ex_data_ram_ld_hword && ex_instr_valid);
     end
     if(mem_pipe_run)begin
-      ex_mem_data_ram_load_unsigned <= (id_ex_data_ram_load_unsigned && ex_inst_valid);
+      ex2mem_data_ram_ld_unsign <= (id2ex_data_ram_ld_unsign && ex_instr_valid);
     end
     if(mem_pipe_run)begin
-      ex_mem_alu_out <= alu_inst_io_alu_out;
+      ex2mem_alu_out <= alu_inst_io_alu_out;
     end
     if(mem_pipe_run)begin
-      ex_mem_rs1 <= id_ex_rs1;
+      ex2mem_rs1 <= id2ex_rs1;
     end
     if(mem_pipe_run)begin
-      ex_mem_rs2 <= id_ex_rs2;
+      ex2mem_rs2 <= id2ex_rs2;
     end
     if(mem_pipe_run)begin
-      ex_mem_rd <= id_ex_rd;
+      ex2mem_rd <= id2ex_rd;
     end
     if(mem_pipe_run)begin
-      ex_mem_rs2_value <= ex_rs2_value_forwarded;
+      ex2mem_rs2_value <= ex_rs2_value_forwarded;
     end
     if(wb_pipe_run)begin
-      mem_wb_alu_out <= ex_mem_alu_out;
+      mem2wb_alu_out <= ex2mem_alu_out;
     end
     if(wb_pipe_run)begin
-      mem_wb_rs1 <= ex_mem_rs1;
-    end
-    if(wb_pipe_run)begin
-      mem_wb_rs2 <= ex_mem_rs2;
-    end
-    if(wb_pipe_run)begin
-      mem_wb_rd <= ex_mem_rd;
+      mem2wb_rd <= ex2mem_rd;
     end
   end
 
 
 endmodule
 
-module memory_controller (
-  input               io_cpu2mc_wen,
-  input               io_cpu2mc_ren,
+module dram_ctrl (
+  input               io_cpu2mc_wr,
+  input               io_cpu2mc_rd,
   input      [19:0]   io_cpu2mc_addr,
   input      [31:0]   io_cpu2mc_data,
   output reg [31:0]   io_mc2cpu_data,
   input               io_cpu2mc_mem_LS_byte,
   input               io_cpu2mc_mem_LS_halfword,
   input               io_cpu2mc_mem_LW_unsigned,
-  output              io_mc2mem_wen,
-  output              io_mc2mem_ren,
+  output              io_mc2mem_wr,
+  output              io_mc2mem_rd,
   output reg [19:0]   io_mc2mem_addr,
   input      [31:0]   io_mem2mc_data,
   input               io_mem2mc_data_vld,
@@ -808,19 +865,19 @@ module memory_controller (
     io_mc2mem_addr[1 : 0] = 2'b00;
   end
 
-  assign io_mc2mem_ren = io_cpu2mc_ren;
-  assign io_mc2mem_wen = io_cpu2mc_wen;
+  assign io_mc2mem_rd = io_cpu2mc_rd;
+  assign io_mc2mem_wr = io_cpu2mc_wr;
   always @ (posedge clk) begin
-    if(io_cpu2mc_ren)begin
+    if(io_cpu2mc_rd)begin
       LW_unsigned_s1 <= io_cpu2mc_mem_LW_unsigned;
     end
-    if(io_cpu2mc_ren)begin
+    if(io_cpu2mc_rd)begin
       LS_byte_s1 <= io_cpu2mc_mem_LS_byte;
     end
-    if(io_cpu2mc_ren)begin
+    if(io_cpu2mc_rd)begin
       LS_halfword_s1 <= io_cpu2mc_mem_LS_halfword;
     end
-    if(io_cpu2mc_ren)begin
+    if(io_cpu2mc_rd)begin
       mem_byte_addr_s1 <= mem_byte_addr;
     end
   end
@@ -847,143 +904,105 @@ module branch_unit (
 endmodule
 
 module alu (
-  input      [31:0]   io_op1,
-  input      [31:0]   io_op2,
-  output reg [31:0]   io_alu_out,
-  input      [2:0]    io_func3,
-  input      [6:0]    io_func7,
-  input               io_alu_la_op,
-  input               io_alu_mem_op,
-  input               io_alu_imm_sel,
-  input               io_alu_br_op,
-  input               io_alu_lui_op,
-  input               io_alu_auipc_op
+  input      [31:0]   io_operand_1,
+  input      [31:0]   io_operand_2,
+  output     [31:0]   io_alu_out,
+  input               io_alu_op_and,
+  input               io_alu_op_or,
+  input               io_alu_op_xor,
+  input               io_alu_op_add,
+  input               io_alu_op_sub,
+  input               io_alu_op_sra,
+  input               io_alu_op_srl,
+  input               io_alu_op_sll,
+  input               io_alu_op_slt,
+  input               io_alu_op_sltu,
+  input               io_alu_op_eqt,
+  input               io_alu_op_invb0
 );
-  wire       [31:0]   _zz_1;
-  wire       [31:0]   _zz_2;
-  wire       [31:0]   _zz_3;
   wire       [31:0]   op1_signed;
   wire       [31:0]   op2_signed;
   wire       [31:0]   op1_unsigned;
   wire       [31:0]   op2_unsigned;
+  wire       [4:0]    shift_value;
   wire       [31:0]   add_result;
   wire       [31:0]   sub_result;
-  wire                isAddOp;
-  wire                beq_result;
-  wire                bne_result;
-  wire                blt_result;
-  wire                bge_result;
-  wire                bltu_result;
-  wire                bgeu_result;
-  wire       [4:0]    shift_value;
-  wire       [4:0]    alu_op_ctrl;
+  wire       [31:0]   and_result;
+  wire       [31:0]   or_result;
+  wire       [31:0]   xor_result;
+  wire       [31:0]   sra_result_tmp;
+  wire       [31:0]   sra_result;
+  wire       [31:0]   srl_result;
+  wire       [31:0]   sll_result;
+  reg        [31:0]   slt_result;
+  reg        [31:0]   sltu_result;
+  reg        [31:0]   eqt_result;
+  wire       [31:0]   alu_op_and_mask;
+  wire       [31:0]   alu_op_or_mask;
+  wire       [31:0]   alu_op_xor_mask;
+  wire       [31:0]   alu_op_add_mask;
+  wire       [31:0]   alu_op_sub_mask;
+  wire       [31:0]   alu_op_sra_mask;
+  wire       [31:0]   alu_op_srl_mask;
+  wire       [31:0]   alu_op_sll_mask;
+  wire       [31:0]   alu_op_slt_mask;
+  wire       [31:0]   alu_op_sltu_mask;
+  wire       [31:0]   alu_op_eqt_mask;
+  wire       [31:0]   alu_out_1;
+  wire       [31:0]   alu_out_2;
 
-  assign _zz_1 = io_op2;
-  assign _zz_2 = ($signed(_zz_3) >>> shift_value);
-  assign _zz_3 = io_op1;
-  assign op1_signed = io_op1;
-  assign op2_signed = io_op2;
-  assign op1_unsigned = io_op1;
-  assign op2_unsigned = io_op2;
+  assign op1_signed = io_operand_1;
+  assign op2_signed = io_operand_2;
+  assign op1_unsigned = io_operand_1;
+  assign op2_unsigned = io_operand_2;
+  assign shift_value = op2_unsigned[4 : 0];
   assign add_result = ($signed(op1_signed) + $signed(op2_signed));
   assign sub_result = ($signed(op1_signed) - $signed(op2_signed));
-  assign isAddOp = (io_alu_imm_sel || ((! io_alu_imm_sel) && (io_func7[5] == 1'b0)));
-  assign beq_result = (io_op1 == io_op2);
-  assign bne_result = (! beq_result);
-  assign blt_result = ($signed(op1_signed) < $signed(op2_signed));
-  assign bge_result = (! blt_result);
-  assign bltu_result = (op1_unsigned < op2_unsigned);
-  assign bgeu_result = (! bltu_result);
-  assign shift_value = _zz_1[4 : 0];
+  assign and_result = (io_operand_1 & io_operand_2);
+  assign or_result = (io_operand_1 | io_operand_2);
+  assign xor_result = (io_operand_1 ^ io_operand_2);
+  assign sra_result_tmp = ($signed(op1_signed) >>> shift_value);
+  assign sra_result = sra_result_tmp;
+  assign srl_result = (io_operand_1 >>> shift_value);
+  assign sll_result = (io_operand_1 <<< shift_value);
   always @ (*) begin
-    io_alu_out = 32'h0;
-    case(alu_op_ctrl)
-      5'h10 : begin
-        case(io_func3)
-          3'b111 : begin
-            io_alu_out = (io_op1 & io_op2);
-          end
-          3'b110 : begin
-            io_alu_out = (io_op1 | io_op2);
-          end
-          3'b100 : begin
-            io_alu_out = (io_op1 ^ io_op2);
-          end
-          3'b000 : begin
-            if((isAddOp == 1'b1))begin
-              io_alu_out = add_result;
-            end else begin
-              io_alu_out = sub_result;
-            end
-          end
-          3'b101 : begin
-            if((io_func7[5] == 1'b1))begin
-              io_alu_out = _zz_2;
-            end else begin
-              io_alu_out = (io_op1 >>> shift_value);
-            end
-          end
-          3'b001 : begin
-            io_alu_out = (io_op1 <<< shift_value);
-          end
-          3'b010 : begin
-            io_alu_out = 32'h0;
-            io_alu_out[0] = ($signed(op1_signed) < $signed(op2_signed));
-          end
-          default : begin
-            io_alu_out = 32'h0;
-            io_alu_out[0] = (io_op1 < io_op2);
-          end
-        endcase
-      end
-      5'h08 : begin
-        io_alu_out = add_result;
-      end
-      5'h04 : begin
-        case(io_func3)
-          3'b000 : begin
-            io_alu_out[0] = beq_result;
-          end
-          3'b001 : begin
-            io_alu_out[0] = bne_result;
-          end
-          3'b100 : begin
-            io_alu_out[0] = blt_result;
-          end
-          3'b101 : begin
-            io_alu_out[0] = bge_result;
-          end
-          3'b110 : begin
-            io_alu_out[0] = bltu_result;
-          end
-          3'b111 : begin
-            io_alu_out[0] = bgeu_result;
-          end
-          default : begin
-          end
-        endcase
-      end
-      5'h02 : begin
-        io_alu_out = io_op2;
-      end
-      5'h01 : begin
-        io_alu_out = add_result;
-      end
-      default : begin
-      end
-    endcase
+    slt_result[31 : 1] = 31'h0;
+    slt_result[0] = (($signed(op1_signed) < $signed(op2_signed)) ^ io_alu_op_invb0);
   end
 
-  assign alu_op_ctrl = {{{{io_alu_la_op,io_alu_mem_op},io_alu_br_op},io_alu_lui_op},io_alu_auipc_op};
+  always @ (*) begin
+    sltu_result[31 : 1] = 31'h0;
+    sltu_result[0] = ((op1_unsigned < op2_unsigned) ^ io_alu_op_invb0);
+  end
+
+  always @ (*) begin
+    eqt_result[31 : 1] = 31'h0;
+    eqt_result[0] = ((io_operand_1 == io_operand_2) ^ io_alu_op_invb0);
+  end
+
+  assign alu_op_and_mask = (io_alu_op_and ? 32'hffffffff : 32'h0);
+  assign alu_op_or_mask = (io_alu_op_or ? 32'hffffffff : 32'h0);
+  assign alu_op_xor_mask = (io_alu_op_xor ? 32'hffffffff : 32'h0);
+  assign alu_op_add_mask = (io_alu_op_add ? 32'hffffffff : 32'h0);
+  assign alu_op_sub_mask = (io_alu_op_sub ? 32'hffffffff : 32'h0);
+  assign alu_op_sra_mask = (io_alu_op_sra ? 32'hffffffff : 32'h0);
+  assign alu_op_srl_mask = (io_alu_op_srl ? 32'hffffffff : 32'h0);
+  assign alu_op_sll_mask = (io_alu_op_sll ? 32'hffffffff : 32'h0);
+  assign alu_op_slt_mask = (io_alu_op_slt ? 32'hffffffff : 32'h0);
+  assign alu_op_sltu_mask = (io_alu_op_sltu ? 32'hffffffff : 32'h0);
+  assign alu_op_eqt_mask = (io_alu_op_eqt ? 32'hffffffff : 32'h0);
+  assign alu_out_1 = ((((((alu_op_and_mask & and_result) | (alu_op_or_mask & or_result)) | (alu_op_xor_mask & xor_result)) | (alu_op_add_mask & add_result)) | (alu_op_sub_mask & sub_result)) | (alu_op_sra_mask & sra_result));
+  assign alu_out_2 = (((((alu_op_srl_mask & srl_result) | (alu_op_sll_mask & sll_result)) | (alu_op_slt_mask & slt_result)) | (alu_op_sltu_mask & sltu_result)) | (alu_op_eqt_mask & eqt_result));
+  assign io_alu_out = (alu_out_1 | alu_out_2);
 
 endmodule
 
-module register_file (
+module regfile (
   input      [4:0]    io_rs1_rd_addr,
   output reg [31:0]   io_rs1_data_out,
   input      [4:0]    io_rs2_rd_addr,
   output reg [31:0]   io_rs2_data_out,
-  input               io_register_wen,
+  input               io_register_wr,
   input      [4:0]    io_register_wr_addr,
   input      [31:0]   io_rd_in,
   input               clk,
@@ -997,14 +1016,14 @@ module register_file (
   (* ram_style = "distributed" *) reg [31:0] rs2_ram [0:31];
 
   always @ (posedge clk) begin
-    if(io_register_wen) begin
+    if(io_register_wr) begin
       rs1_ram[io_register_wr_addr] <= io_rd_in;
     end
   end
 
   assign _zz_1 = rs1_ram[io_rs1_rd_addr];
   always @ (posedge clk) begin
-    if(io_register_wen) begin
+    if(io_register_wr) begin
       rs2_ram[io_register_wr_addr] <= io_rd_in;
     end
   end
@@ -1016,7 +1035,7 @@ module register_file (
     if((io_rs1_rd_addr == 5'h0))begin
       io_rs1_data_out = 32'h0;
     end else begin
-      if(((io_rs1_rd_addr == io_register_wr_addr) && (io_register_wen == 1'b1)))begin
+      if(((io_rs1_rd_addr == io_register_wr_addr) && (io_register_wr == 1'b1)))begin
         io_rs1_data_out = io_rd_in;
       end else begin
         io_rs1_data_out = rs1_data;
@@ -1028,7 +1047,7 @@ module register_file (
     if((io_rs2_rd_addr == 5'h0))begin
       io_rs2_data_out = 32'h0;
     end else begin
-      if(((io_rs2_rd_addr == io_register_wr_addr) && (io_register_wen == 1'b1)))begin
+      if(((io_rs2_rd_addr == io_register_wr_addr) && (io_register_wr == 1'b1)))begin
         io_rs2_data_out = io_rd_in;
       end else begin
         io_rs2_data_out = rs2_data;
@@ -1039,33 +1058,43 @@ module register_file (
 
 endmodule
 
-module instruction_decoder (
-  input      [31:0]   io_inst,
-  output     [6:0]    io_opcode,
-  output     [4:0]    io_rd,
+module instr_dec (
+  input      [31:0]   io_instr,
+  output     [4:0]    io_rd_idx,
   output     [2:0]    io_func3,
-  output     [4:0]    io_rs1,
-  output     [4:0]    io_rs2,
+  output     [4:0]    io_rs1_idx,
+  output     [4:0]    io_rs2_idx,
   output     [6:0]    io_func7,
-  output              io_register_wen,
-  output              io_register_rs1_ren,
-  output              io_register_rs2_ren,
-  output              io_data_ram_wen,
-  output              io_data_ram_ren,
-  output              io_data_ram_access_byte,
-  output              io_data_ram_access_halfword,
-  output              io_data_ram_load_unsigned,
-  output              io_imm_sel,
-  output              io_alu_la_op,
-  output              io_alu_mem_op,
-  output              io_br_op,
-  output              io_lui_op,
-  output              io_auipc_op,
-  output reg [31:0]   io_imm_value
+  output reg [31:0]   io_imm_value,
+  output              io_register_wr,
+  output              io_register_rs1_rd,
+  output              io_register_rs2_rd,
+  output              io_data_ram_wr,
+  output              io_data_ram_rd,
+  output              io_data_ram_ld_byte,
+  output              io_data_ram_ld_hword,
+  output              io_data_ram_ld_unsign,
+  output              io_alu_op_and,
+  output              io_alu_op_or,
+  output              io_alu_op_xor,
+  output              io_alu_op_add,
+  output              io_alu_op_sub,
+  output              io_alu_op_sra,
+  output              io_alu_op_srl,
+  output              io_alu_op_sll,
+  output              io_alu_op_slt,
+  output              io_alu_op_sltu,
+  output              io_alu_op_eqt,
+  output              io_alu_op_invb0,
+  output              io_op2_sel_imm,
+  output              io_op1_sel_pc,
+  output              io_op1_sel_zero,
+  output              io_branch_op
 );
   wire       [11:0]   _zz_1;
   wire       [12:0]   _zz_2;
   wire       [11:0]   _zz_3;
+  wire       [6:0]    opcode;
   wire                op_logic_arithm;
   wire                op_logic_arithm_imm;
   wire                op_store;
@@ -1073,37 +1102,61 @@ module instruction_decoder (
   wire                op_branch;
   wire                op_lui;
   wire                op_auipc;
+  wire                func7_shift_arithm;
+  wire                func7_subtraction;
+  wire                logic_slt;
+  wire                branch_slt;
+  wire                branch_sltu;
+  wire                logic_add;
+  wire                logic_add_imm;
 
-  assign _zz_1 = io_inst[31 : 20];
-  assign _zz_2 = {{{{io_inst[31],io_inst[7]},io_inst[30 : 25]},io_inst[11 : 8]},1'b0};
-  assign _zz_3 = {io_inst[31 : 25],io_inst[11 : 7]};
-  assign io_opcode = io_inst[6 : 0];
-  assign io_rd = io_inst[11 : 7];
-  assign io_func3 = io_inst[14 : 12];
-  assign io_rs1 = io_inst[19 : 15];
-  assign io_rs2 = io_inst[24 : 20];
-  assign io_func7 = io_inst[31 : 25];
-  assign op_logic_arithm = (io_opcode == 7'h33);
-  assign op_logic_arithm_imm = (io_opcode == 7'h13);
-  assign op_store = (io_opcode == 7'h23);
-  assign op_load = (io_opcode == 7'h03);
-  assign op_branch = (io_opcode == 7'h63);
-  assign op_lui = (io_opcode == 7'h37);
-  assign op_auipc = (io_opcode == 7'h17);
-  assign io_lui_op = op_lui;
-  assign io_auipc_op = op_auipc;
-  assign io_imm_sel = ((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc);
-  assign io_register_wen = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc);
-  assign io_register_rs1_ren = (((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store);
-  assign io_register_rs2_ren = (op_logic_arithm || op_store);
-  assign io_data_ram_wen = op_store;
-  assign io_data_ram_ren = op_load;
-  assign io_data_ram_access_byte = ((io_func3 == 3'b000) || (io_func3 == 3'b100));
-  assign io_data_ram_access_halfword = ((io_func3 == 3'b001) || (io_func3 == 3'b101));
-  assign io_data_ram_load_unsigned = ((io_func3 == 3'b100) || (io_func3 == 3'b101));
-  assign io_alu_la_op = (op_logic_arithm || op_logic_arithm_imm);
-  assign io_alu_mem_op = (op_store || op_load);
-  assign io_br_op = op_branch;
+  assign _zz_1 = io_instr[31 : 20];
+  assign _zz_2 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
+  assign _zz_3 = {io_instr[31 : 25],io_instr[11 : 7]};
+  assign opcode = io_instr[6 : 0];
+  assign io_rd_idx = io_instr[11 : 7];
+  assign io_func3 = io_instr[14 : 12];
+  assign io_rs1_idx = io_instr[19 : 15];
+  assign io_rs2_idx = io_instr[24 : 20];
+  assign io_func7 = io_instr[31 : 25];
+  assign op_logic_arithm = (opcode == 7'h33);
+  assign op_logic_arithm_imm = (opcode == 7'h13);
+  assign op_store = (opcode == 7'h23);
+  assign op_load = (opcode == 7'h03);
+  assign op_branch = (opcode == 7'h63);
+  assign op_lui = (opcode == 7'h37);
+  assign op_auipc = (opcode == 7'h17);
+  assign func7_shift_arithm = io_func7[5];
+  assign func7_subtraction = io_func7[5];
+  assign logic_slt = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b010));
+  assign branch_slt = (op_branch && (io_func3[2 : 1] == 2'b10));
+  assign branch_sltu = (op_branch && (io_func3[2 : 1] == 2'b11));
+  assign logic_add = ((op_logic_arithm && (io_func3 == 3'b000)) && (! func7_subtraction));
+  assign logic_add_imm = (op_logic_arithm_imm && (io_func3 == 3'b000));
+  assign io_alu_op_and = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b111));
+  assign io_alu_op_or = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b110));
+  assign io_alu_op_xor = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b100));
+  assign io_alu_op_add = (((((logic_add || logic_add_imm) || op_auipc) || op_lui) || op_load) || op_store);
+  assign io_alu_op_sub = ((op_logic_arithm && (io_func3 == 3'b000)) && func7_subtraction);
+  assign io_alu_op_sra = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && func7_shift_arithm);
+  assign io_alu_op_srl = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && (! func7_shift_arithm));
+  assign io_alu_op_sll = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b001));
+  assign io_alu_op_slt = (logic_slt || branch_slt);
+  assign io_alu_op_sltu = (branch_sltu || ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b011)));
+  assign io_alu_op_eqt = (op_branch && ((io_func3 == 3'b000) || (io_func3 == 3'b001)));
+  assign io_alu_op_invb0 = (op_branch && (io_func3[0] == 1'b1));
+  assign io_op1_sel_pc = op_auipc;
+  assign io_op2_sel_imm = ((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc);
+  assign io_op1_sel_zero = op_lui;
+  assign io_branch_op = op_branch;
+  assign io_register_wr = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc);
+  assign io_register_rs1_rd = (((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store);
+  assign io_register_rs2_rd = (op_logic_arithm || op_store);
+  assign io_data_ram_wr = op_store;
+  assign io_data_ram_rd = op_load;
+  assign io_data_ram_ld_byte = ((io_func3 == 3'b000) || (io_func3 == 3'b100));
+  assign io_data_ram_ld_hword = ((io_func3 == 3'b001) || (io_func3 == 3'b101));
+  assign io_data_ram_ld_unsign = ((io_func3 == 3'b100) || (io_func3 == 3'b101));
   always @ (*) begin
     if((op_logic_arithm_imm || op_load))begin
       io_imm_value = {{20{_zz_1[11]}}, _zz_1};
@@ -1114,7 +1167,7 @@ module instruction_decoder (
         if(op_store)begin
           io_imm_value = {{20{_zz_3[11]}}, _zz_3};
         end else begin
-          io_imm_value = {io_inst[31 : 12],12'h0};
+          io_imm_value = {io_instr[31 : 12],12'h0};
         end
       end
     end

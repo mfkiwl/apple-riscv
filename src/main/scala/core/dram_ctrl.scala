@@ -11,7 +11,7 @@
 //
 // ================== Description ==================
 //
-// Memory Controller
+// Data Memory Controller
 //
 // - Logic to handle byte and half word access to memory
 // - We always read/write the whole word from/to memory so the address to the memory is aligned
@@ -25,11 +25,11 @@ package core
 
 import spinal.core._
 
-case class memory_controller_io(param: CPU_PARAM) extends Bundle {
+case class dram_ctrl_io(param: CPU_PARAM) extends Bundle {
 
   // CPU side
-  val cpu2mc_wen  = in Bool
-  val cpu2mc_ren  = in Bool
+  val cpu2mc_wr   = in Bool
+  val cpu2mc_rd   = in Bool
   val cpu2mc_addr = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
   val cpu2mc_data = in Bits(param.DATA_RAM_DATA_WIDTH bits)
   val mc2cpu_data = out Bits(param.DATA_RAM_DATA_WIDTH bits)
@@ -38,8 +38,8 @@ case class memory_controller_io(param: CPU_PARAM) extends Bundle {
   val cpu2mc_mem_LW_unsigned = in Bool
 
   // MEM side
-  val mc2mem_wen  = out Bool
-  val mc2mem_ren  = out Bool
+  val mc2mem_wr  = out Bool
+  val mc2mem_rd  = out Bool
   val mc2mem_addr = out UInt(param.DATA_RAM_ADDR_WIDTH bits)
   val mem2mc_data = in Bits(param.DATA_RAM_DATA_WIDTH bits)
   val mem2mc_data_vld = in Bool
@@ -47,16 +47,16 @@ case class memory_controller_io(param: CPU_PARAM) extends Bundle {
   val mc2mem_byte_enable = out Bits(param.DATA_RAM_DATA_WIDTH / 8 bits)
 }
 
-case class memory_controller(param: CPU_PARAM) extends Component {
+case class dram_ctrl(param: CPU_PARAM) extends Component {
 
-  val io = memory_controller_io(param)
+  val io = dram_ctrl_io(param)
 
   // == Store the information for read data process == //
-  val mem_byte_addr = io.cpu2mc_addr(1 downto 0)
-  val LW_unsigned_s1 = RegNextWhen(io.cpu2mc_mem_LW_unsigned, io.cpu2mc_ren)
-  val LS_byte_s1 = RegNextWhen(io.cpu2mc_mem_LS_byte, io.cpu2mc_ren)
-  val LS_halfword_s1 = RegNextWhen(io.cpu2mc_mem_LS_halfword, io.cpu2mc_ren)
-  val mem_byte_addr_s1 = RegNextWhen(mem_byte_addr, io.cpu2mc_ren)
+  val mem_byte_addr   = io.cpu2mc_addr(1 downto 0)
+  val LW_unsigned_s1  = RegNextWhen(io.cpu2mc_mem_LW_unsigned, io.cpu2mc_rd)
+  val LS_byte_s1      = RegNextWhen(io.cpu2mc_mem_LS_byte, io.cpu2mc_rd)
+  val LS_halfword_s1  = RegNextWhen(io.cpu2mc_mem_LS_halfword, io.cpu2mc_rd)
+  val mem_byte_addr_s1 = RegNextWhen(mem_byte_addr, io.cpu2mc_rd)
 
   // == Extract the data field == //
   val cpu2mc_data_7_0  = io.cpu2mc_data(7 downto 0)
@@ -178,6 +178,6 @@ case class memory_controller(param: CPU_PARAM) extends Component {
   }
 
   // == Other Logic == //
-  io.mc2mem_ren := io.cpu2mc_ren
-  io.mc2mem_wen := io.cpu2mc_wen
+  io.mc2mem_rd := io.cpu2mc_rd
+  io.mc2mem_wr := io.cpu2mc_wr
 }

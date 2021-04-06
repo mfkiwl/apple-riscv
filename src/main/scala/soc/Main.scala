@@ -27,6 +27,6 @@ object Main{
     val param = new CPU_PARAM()
     SpinalConfig(
       targetDirectory = "rtl/soc"
-    ).generateVerilog(new apple_riscv_soc(param)).printPruned()
+    ).generateVerilog(new apple_riscv_soc(param))
   }
 }
