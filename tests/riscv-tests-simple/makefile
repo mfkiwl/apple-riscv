@@ -48,10 +48,15 @@ tests_dump = $(addsuffix .dump, $(tests))
 
 all: $(tests_dump) generated
 
-
+#
+# --verilog-data-width 4:
+# Since our instruction ram is defined as 4 bytes wide, need to set the output verilog data size to be 4 bytes
+# --reverse-bytes 4:
+# Need to reverse the byte order so the lower byte is at the right of the 4 bytes data
+#
 %.dump: %
 	$(RISCV_OBJDUMP) generated/$< > generated/$@
-	$(RISCV_OBJCOPY) -O verilog --verilog-data-width 4 generated/$< generated/$<.verilog
+	$(RISCV_OBJCOPY) -O verilog --verilog-data-width 4 --reverse-bytes 4 generated/$< generated/$<.verilog
 	rm -r generated/$<
 
 generated:
