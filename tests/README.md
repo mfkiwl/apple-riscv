@@ -29,28 +29,7 @@ The modified source code from the riscv-test repo. See `README.md` in it for mor
 
 Testbench related verilog files
 
-## How to run tests in cocotb
+## How to run tests in cocotb framework
 
-### sanity_check
+See README.md under cocotb folder
 
-```bash
-# To run all the sanity tests:
-make
-
-# To run individual test, using the following command
-# make TESTCASE=<test_name>
-# Note: <test_name>  is the tests function name defined in sanity_check.py
-# For example:
-make TESTCASE=test_logic_arithmetic1
-```
-
-### riscv-test-simple
-
-```bash
-# Here each `make` command can only run one tests.
-# Otherwise it will only run the first test and pass the results to the remaining tests
-# To run a specific test, use:
-# make TESTCASE=<test_name>
-# For example:
-make TESTCASE=xori
-```

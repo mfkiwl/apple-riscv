@@ -71,7 +71,19 @@ async def reset(dut, time=20):
     await FallingEdge(dut.clk)
     dut.reset = 0
 
-async def run_test(dut, runtime=1000):
+
+
+
+###############################
+# Test suites
+###############################
+
+@cocotb.test()
+async def run_test(dut):
+    runtime = int(os.getenv('RUN_TIME'))
+    test = os.getenv('RISCV_ARCH') + '-' + os.getenv('TEST_NAME')
+    link_instr_rom_file(test)
+
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
@@ -84,33 +96,4 @@ async def run_test(dut, runtime=1000):
     }
     print_register(dut, 32)
     check_register(dut, expected_register)
-
-
-
-###############################
-# Test suites
-###############################
-#
-# The test cases here has to be launched separately. They can't be launched together at the same run
-# use the following command to select a specific test to run
-#
-@cocotb.test()
-async def simple(dut):
-    test = 'rv32ui-simple'
-    link_instr_rom_file(test)
-    await run_test(dut, 2000)
-    rm_instr_rom_file()
-
-@cocotb.test()
-async def xor(dut):
-    test = 'rv32ui-xor'
-    link_instr_rom_file(test)
-    await run_test(dut, 10000)
-    rm_instr_rom_file()
-
-@cocotb.test()
-async def xori(dut):
-    test = 'rv32ui-xori'
-    link_instr_rom_file(test)
-    await run_test(dut, 3000)
     rm_instr_rom_file()

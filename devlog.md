@@ -5,6 +5,9 @@
 - 04/07/2021
   - Fixed bugs found in the tests.
     - Fixed bug in forwarding logic
+  - Enhanced the test framework for riscv-test
+    - Update the cocotb run.py and makefile flow
+    - Added a python script to run all the tests and gather result
 
 - 04/06/2021
   - Added some sample riscv-test code.

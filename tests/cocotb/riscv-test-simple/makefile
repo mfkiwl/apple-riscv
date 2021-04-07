@@ -25,9 +25,8 @@ RTL_FILES     	= $(RTL_SOC_PATH)/apple_riscv_soc.v
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-TOPLEVEL = apple_riscv_soc_tb
-MODULE   = run
-TESTCASE ?= simple
+TOPLEVEL 	= apple_riscv_soc_tb
+MODULE   	= run
 
 # -----------------------------------------
 # Simulator config
@@ -41,9 +40,23 @@ ifeq ($(SIM),icarus)
 	PLUSARGS 	 += +"$(IMEM_ROM_FILE)"
 endif
 
+# -----------------------------------------
+# Test config
+# -----------------------------------------
+TESTNAME 	?=
+RISCVARCH 	?= rv32ui
+RUNTIME 	?= 2000
+
+export TEST_NAME 	= $(TESTNAME)
+export RISCV_ARCH 	= $(RISCVARCH)
+export RUN_TIME 	= $(RUNTIME)
+
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 .PONY: clean_all
+
+clean_run:
+	rm -rf instr_ram.rom
 
 clean_all: clean
 	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build instr_ram.rom
