@@ -37,7 +37,7 @@ PLUSARGS 	 =
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -DLOAD_INSTR_RAM
-	PLUSARGS 	 += +"$(IMEM_ROM_FILE)"
+	COMPILE_ARGS += -DLOAD_DATA_RAM
 endif
 
 # -----------------------------------------
@@ -45,7 +45,7 @@ endif
 # -----------------------------------------
 TESTNAME 	?=
 RISCVARCH 	?= rv32ui
-RUNTIME 	?= 2000
+RUNTIME 	?= 10000
 
 export TEST_NAME 	= $(TESTNAME)
 export RISCV_ARCH 	= $(RISCVARCH)
@@ -55,9 +55,9 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 
 .PONY: clean_all
 
-clean_run:
-	rm -rf instr_ram.rom
+clean_rom:
+	rm -rf *.rom
 
-clean_all: clean
+clean_all: clean clean_rom
 	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build instr_ram.rom
 

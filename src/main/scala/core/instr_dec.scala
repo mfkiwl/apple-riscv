@@ -137,7 +137,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     io.jal_op := op_jal
     io.jalr_op := op_jalr
     io.register_wr := (op_logic_arithm | op_logic_arithm_imm | op_load | op_lui | op_auipc | op_jal | op_jalr)
-    io.register_rs1_rd := (op_logic_arithm | op_logic_arithm_imm | op_load | op_store | op_branch)
+    io.register_rs1_rd := (op_logic_arithm | op_logic_arithm_imm | op_load | op_store | op_branch | op_jalr)
     io.register_rs2_rd := op_logic_arithm | op_store | op_branch
     io.data_ram_wr := op_store
     io.data_ram_rd := op_load

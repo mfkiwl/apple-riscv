@@ -28,19 +28,17 @@ REPO_ROOT = subprocess_return.decode().rstrip()
 # Common function
 ###############################
 
-def link_instr_rom_file(name):
+def link_rom_file(name):
     """ Link the instruction rom file to the tb directory """
-
     SRC_FILE = REPO_ROOT + '/tests/riscv-tests-simple/generated/' + name + ".verilog"
-    TGT_FILE = os.getcwd() + '/instr_ram.rom' # need to link the instruction ram file the the current directory
-    if os.path.isfile(TGT_FILE):
-        os.remove(TGT_FILE)
-    os.symlink(SRC_FILE, TGT_FILE)
-
-def rm_instr_rom_file():
-    TGT_FILE = os.getcwd() + '/instr_ram.rom' # need to link the instruction ram file the the current directory
-    if os.path.isfile(TGT_FILE):
-        os.remove(TGT_FILE)
+    INSTR_ROM_FILE = os.getcwd() + '/instr_ram.rom' # need to link the instruction ram file the the current directory
+    if os.path.isfile(INSTR_ROM_FILE):
+        os.remove(INSTR_ROM_FILE)
+    os.symlink(SRC_FILE, INSTR_ROM_FILE)
+    DATA_ROM_FILE = os.getcwd() + '/data_ram.rom' # need to link the instruction ram file the the current directory
+    if os.path.isfile(DATA_ROM_FILE):
+        os.remove(DATA_ROM_FILE)
+    os.symlink(SRC_FILE, DATA_ROM_FILE)
 
 def print_register(dut, size=32):
     """ Print the register value """
@@ -82,8 +80,7 @@ async def reset(dut, time=20):
 async def run_test(dut):
     runtime = int(os.getenv('RUN_TIME'))
     test = os.getenv('RISCV_ARCH') + '-' + os.getenv('TEST_NAME')
-    link_instr_rom_file(test)
-
+    link_rom_file(test)
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
@@ -96,4 +93,3 @@ async def run_test(dut):
     }
     print_register(dut, 32)
     check_register(dut, expected_register)
-    rm_instr_rom_file()

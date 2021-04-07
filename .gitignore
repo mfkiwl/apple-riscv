@@ -45,6 +45,7 @@ null
 tests/cocotb/*/*.xml
 tests/cocotb/*/sim_build/*
 tests/cocotb/*/output
+tests/cocotb/*/*rom
 *.gtkw
 *.vvp
 

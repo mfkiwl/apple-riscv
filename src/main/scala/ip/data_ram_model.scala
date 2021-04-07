@@ -34,18 +34,19 @@ case class data_ram_io(param: CPU_PARAM) extends Bundle {
 case class data_ram_model(param: CPU_PARAM) extends Component {
   val io = data_ram_io(param)
 
-  val SIZE = 1 << param.DATA_RAM_ADDR_WIDTH
+  val SIZE = 1 << (param.DATA_RAM_ADDR_WIDTH - 2)
   val ram = new Mem(Bits(param.DATA_RAM_DATA_WIDTH bits), SIZE)
+  val ram_addr = io.addr(param.DATA_RAM_ADDR_WIDTH -1 downto 2)
 
   ram.write(
-    address = io.addr,
+    address = ram_addr,
     data = io.data_in,
     enable = io.wr,
     mask = io.byte_en
   )
 
   io.data_out := ram.readSync(
-    address = io.addr,
+    address = ram_addr,
     enable = io.rd
   )
 }

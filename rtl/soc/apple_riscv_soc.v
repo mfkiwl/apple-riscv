@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : cc459801e855544f61cb808dacb8ab5dfa029ec9
+// Git hash  : 9dddf5c8472c83861e8e36ebf9cc304d8d0e0e4a
 
 
 
@@ -71,10 +71,11 @@ module data_ram_model (
   input               reset
 );
   reg        [31:0]   _zz_1;
-  reg [7:0] ram_symbol0 [0:1048575];
-  reg [7:0] ram_symbol1 [0:1048575];
-  reg [7:0] ram_symbol2 [0:1048575];
-  reg [7:0] ram_symbol3 [0:1048575];
+  wire       [17:0]   ram_addr;
+  reg [7:0] ram_symbol0 [0:262143];
+  reg [7:0] ram_symbol1 [0:262143];
+  reg [7:0] ram_symbol2 [0:262143];
+  reg [7:0] ram_symbol3 [0:262143];
   reg [7:0] _zz_2;
   reg [7:0] _zz_3;
   reg [7:0] _zz_4;
@@ -85,28 +86,29 @@ module data_ram_model (
   end
   always @ (posedge clk) begin
     if(io_byte_en[0] && io_wr) begin
-      ram_symbol0[io_addr] <= io_data_in[7 : 0];
+      ram_symbol0[ram_addr] <= io_data_in[7 : 0];
     end
     if(io_byte_en[1] && io_wr) begin
-      ram_symbol1[io_addr] <= io_data_in[15 : 8];
+      ram_symbol1[ram_addr] <= io_data_in[15 : 8];
     end
     if(io_byte_en[2] && io_wr) begin
-      ram_symbol2[io_addr] <= io_data_in[23 : 16];
+      ram_symbol2[ram_addr] <= io_data_in[23 : 16];
     end
     if(io_byte_en[3] && io_wr) begin
-      ram_symbol3[io_addr] <= io_data_in[31 : 24];
+      ram_symbol3[ram_addr] <= io_data_in[31 : 24];
     end
   end
 
   always @ (posedge clk) begin
     if(io_rd) begin
-      _zz_2 <= ram_symbol0[io_addr];
-      _zz_3 <= ram_symbol1[io_addr];
-      _zz_4 <= ram_symbol2[io_addr];
-      _zz_5 <= ram_symbol3[io_addr];
+      _zz_2 <= ram_symbol0[ram_addr];
+      _zz_3 <= ram_symbol1[ram_addr];
+      _zz_4 <= ram_symbol2[ram_addr];
+      _zz_5 <= ram_symbol3[ram_addr];
     end
   end
 
+  assign ram_addr = io_addr[19 : 2];
   assign io_data_out = _zz_1;
 
 endmodule
@@ -1195,7 +1197,7 @@ module instr_dec (
   assign io_jal_op = op_jal;
   assign io_jalr_op = op_jalr;
   assign io_register_wr = ((((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc) || op_jal) || op_jalr);
-  assign io_register_rs1_rd = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store) || op_branch);
+  assign io_register_rs1_rd = (((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store) || op_branch) || op_jalr);
   assign io_register_rs2_rd = ((op_logic_arithm || op_store) || op_branch);
   assign io_data_ram_wr = op_store;
   assign io_data_ram_rd = op_load;
