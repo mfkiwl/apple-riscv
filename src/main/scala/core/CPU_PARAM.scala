@@ -39,7 +39,7 @@ class CPU_PARAM {
 
     // Instruction RAM
     val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
-    val INSTR_RAM_ADDR_WIDTH = 10            // 4KB Instruction RAM for now
+    val INSTR_RAM_ADDR_WIDTH = 20            // 4MB Instruction RAM for now
 
     // Data RAM
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH

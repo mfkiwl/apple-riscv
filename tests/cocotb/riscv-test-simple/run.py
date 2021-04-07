@@ -53,7 +53,7 @@ def print_register(dut, size=32):
             val2 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs2_ram[i].value.integer
         except ValueError:
             val2 = 'X'
-        print(f"Register {i}, {val1}, {val2}")
+        print(f"Register {i}, {hex(val1)}, {hex(val2)}")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
@@ -82,8 +82,9 @@ async def run_test(dut, runtime=1000):
         2 : 2,
         3 : 3,
     }
+    print_register(dut, 32)
     check_register(dut, expected_register)
-    #print_register(dut, 32)
+
 
 
 ###############################
@@ -104,12 +105,12 @@ async def simple(dut):
 async def xor(dut):
     test = 'rv32ui-xor'
     link_instr_rom_file(test)
-    await run_test(dut, 2000)
+    await run_test(dut, 10000)
     rm_instr_rom_file()
 
 @cocotb.test()
 async def xori(dut):
     test = 'rv32ui-xori'
     link_instr_rom_file(test)
-    await run_test(dut, 2000)
+    await run_test(dut, 3000)
     rm_instr_rom_file()

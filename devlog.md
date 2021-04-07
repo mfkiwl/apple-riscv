@@ -2,6 +2,10 @@
 
 ## Milestone 0.1
 
+- 04/07/2021
+  - Fixed bugs found in the tests.
+    - Fixed bug in forwarding logic
+
 - 04/06/2021
   - Added some sample riscv-test code.
     - The codes are mainly copied from riscv-tests repo.

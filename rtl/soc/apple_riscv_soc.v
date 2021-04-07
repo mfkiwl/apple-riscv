@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 71aa3103300b5c91e3a8cec23f076ed5775260e4
+// Git hash  : cc459801e855544f61cb808dacb8ab5dfa029ec9
 
 
 
@@ -10,7 +10,7 @@ module apple_riscv_soc (
 );
   wire                cpu_core_io_instr_ram_wr;
   wire                cpu_core_io_instr_ram_rd;
-  wire       [9:0]    cpu_core_io_instr_ram_addr;
+  wire       [19:0]   cpu_core_io_instr_ram_addr;
   wire                cpu_core_io_instr_ram_enable;
   wire       [31:0]   cpu_core_io_instr_ram_data_out;
   wire                cpu_core_io_data_ram_wr;
@@ -24,7 +24,7 @@ module apple_riscv_soc (
   apple_riscv cpu_core (
     .io_instr_ram_wr          (cpu_core_io_instr_ram_wr              ), //o
     .io_instr_ram_rd          (cpu_core_io_instr_ram_rd              ), //o
-    .io_instr_ram_addr        (cpu_core_io_instr_ram_addr[9:0]       ), //o
+    .io_instr_ram_addr        (cpu_core_io_instr_ram_addr[19:0]      ), //o
     .io_instr_ram_enable      (cpu_core_io_instr_ram_enable          ), //o
     .io_instr_ram_data_out    (cpu_core_io_instr_ram_data_out[31:0]  ), //o
     .io_instr_ram_data_in     (instruction_ram_io_data_out[31:0]     ), //i
@@ -41,7 +41,7 @@ module apple_riscv_soc (
     .io_wr          (cpu_core_io_instr_ram_wr              ), //i
     .io_rd          (cpu_core_io_instr_ram_rd              ), //i
     .io_enable      (cpu_core_io_instr_ram_enable          ), //i
-    .io_addr        (cpu_core_io_instr_ram_addr[9:0]       ), //i
+    .io_addr        (cpu_core_io_instr_ram_addr[19:0]      ), //i
     .io_data_out    (instruction_ram_io_data_out[31:0]     ), //o
     .io_data_in     (cpu_core_io_instr_ram_data_out[31:0]  ), //i
     .clk            (clk                                   ), //i
@@ -115,7 +115,7 @@ module instruction_ram_model (
   input               io_wr,
   input               io_rd,
   input               io_enable,
-  input      [9:0]    io_addr,
+  input      [19:0]   io_addr,
   output     [31:0]   io_data_out,
   input      [31:0]   io_data_in,
   input               clk,
@@ -123,9 +123,9 @@ module instruction_ram_model (
 );
   reg        [31:0]   _zz_2;
   wire                _zz_3;
-  wire       [7:0]    ram_addr;
+  wire       [17:0]   ram_addr;
   wire                _zz_1;
-  reg [31:0] ram [0:255];
+  reg [31:0] ram [0:262143];
 
   assign _zz_3 = (io_wr && io_enable);
   always @ (posedge clk) begin
@@ -140,7 +140,7 @@ module instruction_ram_model (
     end
   end
 
-  assign ram_addr = io_addr[9 : 2];
+  assign ram_addr = io_addr[19 : 2];
   assign _zz_1 = (io_rd && io_enable);
   assign io_data_out = _zz_2;
 
@@ -149,7 +149,7 @@ endmodule
 module apple_riscv (
   output              io_instr_ram_wr,
   output              io_instr_ram_rd,
-  output     [9:0]    io_instr_ram_addr,
+  output     [19:0]   io_instr_ram_addr,
   output              io_instr_ram_enable,
   output     [31:0]   io_instr_ram_data_out,
   input      [31:0]   io_instr_ram_data_in,
@@ -289,10 +289,12 @@ module apple_riscv (
   reg        [31:0]   mem2wb_alu_out;
   reg        [4:0]    mem2wb_rd;
   wire       [31:0]   wb_rd_wr_data;
+  wire                rs1_nonzero;
   wire                rs1_match_mem;
   wire                rs1_match_wb;
   wire                forward_rs1_from_mem;
   wire                forward_rs1_from_wb;
+  wire                rs2_nonzero;
   wire                rs2_match_mem;
   wire                rs2_match_wb;
   wire                forward_rs2_from_mem;
@@ -415,7 +417,7 @@ module apple_riscv (
   assign io_instr_ram_wr = 1'b0;
   assign io_instr_ram_rd = 1'b1;
   assign io_instr_ram_enable = if_pipe_run;
-  assign io_instr_ram_addr = pc_inst_io_pc_out[9 : 0];
+  assign io_instr_ram_addr = pc_inst_io_pc_out[19 : 0];
   assign io_instr_ram_data_out = 32'h0;
   assign alu_operand1_muxout = (id2ex_op1_sel_zero ? 32'h0 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
   assign alu_operand2_muxout = (id2ex_op2_sel_imm ? id2ex_imm_value : ex_rs2_value_forwarded);
@@ -429,8 +431,9 @@ module apple_riscv (
   assign io_data_ram_data_out = dram_ctrl_isnt_io_mc2mem_data;
   assign io_data_ram_byte_en = dram_ctrl_isnt_io_mc2mem_byte_enable;
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dram_ctrl_isnt_io_mc2cpu_data : mem2wb_alu_out);
-  assign rs1_match_mem = (id2ex_rs1 == ex2mem_rd);
-  assign rs1_match_wb = (id2ex_rs1 == mem2wb_rd);
+  assign rs1_nonzero = (id2ex_rs1 != 5'h0);
+  assign rs1_match_mem = ((id2ex_rs1 == ex2mem_rd) && rs1_nonzero);
+  assign rs1_match_wb = ((id2ex_rs1 == mem2wb_rd) && rs1_nonzero);
   assign forward_rs1_from_mem = ((id2ex_register_rs1_rd && rs1_match_mem) && ex2mem_register_wr);
   assign forward_rs1_from_wb = ((id2ex_register_rs1_rd && rs1_match_wb) && mem2wb_register_wr);
   always @ (*) begin
@@ -445,8 +448,9 @@ module apple_riscv (
     end
   end
 
-  assign rs2_match_mem = (id2ex_rs2 == ex2mem_rd);
-  assign rs2_match_wb = (id2ex_rs2 == mem2wb_rd);
+  assign rs2_nonzero = (id2ex_rs2 != 5'h0);
+  assign rs2_match_mem = ((id2ex_rs2 == ex2mem_rd) && rs2_nonzero);
+  assign rs2_match_wb = ((id2ex_rs2 == mem2wb_rd) && rs2_nonzero);
   assign forward_rs2_from_mem = ((id2ex_register_rs2_rd && rs2_match_mem) && ex2mem_register_wr);
   assign forward_rs2_from_wb = ((id2ex_register_rs2_rd && rs2_match_wb) && mem2wb_register_wr);
   always @ (*) begin
@@ -1191,8 +1195,8 @@ module instr_dec (
   assign io_jal_op = op_jal;
   assign io_jalr_op = op_jalr;
   assign io_register_wr = ((((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc) || op_jal) || op_jalr);
-  assign io_register_rs1_rd = (((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store);
-  assign io_register_rs2_rd = (op_logic_arithm || op_store);
+  assign io_register_rs1_rd = ((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store) || op_branch);
+  assign io_register_rs2_rd = ((op_logic_arithm || op_store) || op_branch);
   assign io_data_ram_wr = op_store;
   assign io_data_ram_rd = op_load;
   assign io_data_ram_ld_byte = ((io_func3 == 3'b000) || (io_func3 == 3'b100));

@@ -292,10 +292,14 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
     // FU - Forwarding Unit
     // =========================
+    // Note:
+    // Need to check if the register is x0 or not. If it is x0, we don't want to forward.
+    // since x0 always hold ZERO and but some instruction write to x0 which should be ignored.
 
     // == EX stage == //
-    val rs1_match_mem = (id2ex_rs1 === ex2mem_rd)
-    val rs1_match_wb = (id2ex_rs1 === mem2wb_rd)
+    val rs1_nonzero = (id2ex_rs1 =/= 0)
+    val rs1_match_mem = (id2ex_rs1 === ex2mem_rd) & rs1_nonzero
+    val rs1_match_wb = (id2ex_rs1 === mem2wb_rd) & rs1_nonzero
     val forward_rs1_from_mem = id2ex_register_rs1_rd & rs1_match_mem & ex2mem_register_wr
     val forward_rs1_from_wb = id2ex_register_rs1_rd & rs1_match_wb & mem2wb_register_wr
     when(forward_rs1_from_mem) {
@@ -306,8 +310,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
         ex_rs1_value_forwarded := id2ex_rs1_value
     }
 
-    val rs2_match_mem = (id2ex_rs2 === ex2mem_rd)
-    val rs2_match_wb = (id2ex_rs2 === mem2wb_rd)
+    val rs2_nonzero = (id2ex_rs2 =/= 0)
+    val rs2_match_mem = (id2ex_rs2 === ex2mem_rd) & rs2_nonzero
+    val rs2_match_wb = (id2ex_rs2 === mem2wb_rd) & rs2_nonzero
     val forward_rs2_from_mem = id2ex_register_rs2_rd & rs2_match_mem & ex2mem_register_wr
     val forward_rs2_from_wb = id2ex_register_rs2_rd & rs2_match_wb & mem2wb_register_wr
     when(forward_rs2_from_mem) {
