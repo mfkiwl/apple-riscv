@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: memory controller
+// Module Name: data memory controller
 //
 // Author: Heqing Huang
 // Date Created: 03/31/2021
@@ -24,32 +24,42 @@
 package core
 
 import spinal.core._
+import spinal.lib.bus.amba3.ahblite.AhbLite3
+import spinal.lib.master
 
-case class dram_ctrl_io(param: CPU_PARAM) extends Bundle {
+case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
 
   // CPU side
-  val cpu2mc_wr   = in Bool
-  val cpu2mc_rd   = in Bool
-  val cpu2mc_addr = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
-  val cpu2mc_data = in Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val mc2cpu_data = out Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val cpu2mc_mem_LS_byte = in Bool
+  val cpu2mc_wr              = in Bool
+  val cpu2mc_rd              = in Bool
+  val cpu2mc_addr            = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
+  val cpu2mc_data            = in Bits(param.DATA_RAM_DATA_WIDTH bits)
+  val mc2cpu_data            = out Bits(param.DATA_RAM_DATA_WIDTH bits)
+  val cpu2mc_mem_LS_byte     = in Bool
   val cpu2mc_mem_LS_halfword = in Bool
   val cpu2mc_mem_LW_unsigned = in Bool
-
-  // MEM side
-  val mc2mem_wr  = out Bool
-  val mc2mem_rd  = out Bool
-  val mc2mem_addr = out UInt(param.DATA_RAM_ADDR_WIDTH bits)
-  val mem2mc_data = in Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val mem2mc_data_vld = in Bool
-  val mc2mem_data = out Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val mc2mem_byte_enable = out Bits(param.DATA_RAM_DATA_WIDTH / 8 bits)
 }
 
-case class dram_ctrl(param: CPU_PARAM) extends Component {
+case class dmem_ctrl(param: CPU_PARAM) extends Component {
 
-  val io = dram_ctrl_io(param)
+  val io = dmem_ctrl_io(param)
+  val dmem_ahb = master(AhbLite3(param.dmem_ahbCfg))
+
+  // == Control Signal == //
+  dmem_ahb.HSEL       := io.cpu2mc_wr | io.cpu2mc_rd
+  dmem_ahb.HADDR      := io.cpu2mc_addr
+  dmem_ahb.HBURST     := B"000"   // Single burst
+  dmem_ahb.HMASTLOCK  := False
+  dmem_ahb.HPROT      := B"0011"  // Set to 0011 as recommended by the AHB-lite SPEC:
+                                  // the master sets HPROT to b0011 to correspond to a non-cacheable,
+                                  // non-bufferable, privileged, data access
+  dmem_ahb.HSIZE      := Mux(io.cpu2mc_mem_LS_byte, B"000", Mux(io.cpu2mc_mem_LS_halfword, B"001", B"010"))
+  dmem_ahb.HTRANS     := B"10"    // Set to NONSEQ
+  dmem_ahb.HWRITE     := io.cpu2mc_wr
+
+  val imem_hready     = dmem_ahb.HREADY    // This should always be 1
+  val imem_hresp      = dmem_ahb.HRESP     // This should always be 0
+  val imem_data_vld   = imem_hready & ~imem_hresp
 
   // == Store the information for read data process == //
   val mem_byte_addr   = io.cpu2mc_addr(1 downto 0)
@@ -62,12 +72,12 @@ case class dram_ctrl(param: CPU_PARAM) extends Component {
   val cpu2mc_data_7_0  = io.cpu2mc_data(7 downto 0)
   val cpu2mc_data_15_0 = io.cpu2mc_data(15 downto 0)
 
-  val mem2mc_data_byte0 = io.mem2mc_data(7 downto 0)
-  val mem2mc_data_byte1 = io.mem2mc_data(15 downto 8)
-  val mem2mc_data_byte2 = io.mem2mc_data(23 downto 16)
-  val mem2mc_data_byte3 = io.mem2mc_data(31 downto 24)
-  val mem2mc_data_hw0   = io.mem2mc_data(15 downto 0)
-  val mem2mc_data_hw1   = io.mem2mc_data(31 downto 16)
+  val mem2mc_data_byte0 = dmem_ahb.HRDATA(7 downto 0)
+  val mem2mc_data_byte1 = dmem_ahb.HRDATA(15 downto 8)
+  val mem2mc_data_byte2 = dmem_ahb.HRDATA(23 downto 16)
+  val mem2mc_data_byte3 = dmem_ahb.HRDATA(31 downto 24)
+  val mem2mc_data_hw0   = dmem_ahb.HRDATA(15 downto 0)
+  val mem2mc_data_hw1   = dmem_ahb.HRDATA(31 downto 16)
 
   // == extend the data in advance == //
   val mem2mc_data_byte0_unsign_ext = mem2mc_data_byte0.resize(param.DATA_RAM_DATA_WIDTH)
@@ -97,54 +107,50 @@ case class dram_ctrl(param: CPU_PARAM) extends Component {
   // READ: Since we always access the entire word in the memory, the data returned from the memory
   //       is the entire word, we need to extract the corresponding byte from the word and extends it.
 
-  io.mc2mem_data := io.cpu2mc_data
-  io.mc2cpu_data := io.mem2mc_data
-  io.mc2mem_byte_enable := B"1111"  // Default byte enable
-  io.mc2mem_addr := io.cpu2mc_addr  // Default address mapping
-  io.mc2mem_addr(1 downto 0) := 0   // Align the address to word boundary
-
-
-
-  // Write
+  // Write Data
+  dmem_ahb.HWDATA := io.cpu2mc_data
   when(io.cpu2mc_mem_LS_byte) {
+    // For simplicity, just set all the byte to the same data
+    dmem_ahb.HWDATA := cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0
+    /* TODO: Not sure if using the select logic is faster? Can we run synthesis in Quartus to test out?
     switch(mem_byte_addr) {
       // Byte 0
       is(0) {
-        io.mc2mem_data(7 downto 0) := cpu2mc_data_7_0
-        io.mc2mem_byte_enable :=  B"0001"
+        dmem_ahb.HWDATA(7 downto 0) := cpu2mc_data_7_0
       }
       // Byte 1
       is(1) {
-        io.mc2mem_data(15 downto 8) := cpu2mc_data_7_0
-        io.mc2mem_byte_enable :=  B"0010"
+        dmem_ahb.HWDATA(15 downto 8) := cpu2mc_data_7_0
       }
       // Byte 2
       is(2) {
-        io.mc2mem_data(23 downto 16) := cpu2mc_data_7_0
-        io.mc2mem_byte_enable :=  B"0100"
+        dmem_ahb.HWDATA(23 downto 16) := cpu2mc_data_7_0
       }
       // Byte 3
       is(3) {
-        io.mc2mem_data(31 downto 24) := cpu2mc_data_7_0
-        io.mc2mem_byte_enable :=  B"1000"
+        dmem_ahb.HWDATA(31 downto 24) := cpu2mc_data_7_0
       }
     }
+     */
   }.elsewhen(io.cpu2mc_mem_LS_halfword) {
+    // For simplicity, just set all the byte to the same data
+    dmem_ahb.HWDATA := cpu2mc_data_15_0 ## cpu2mc_data_15_0
+    /*
     switch(mem_byte_addr) {
       // HW 0
       is(0) {
-        io.mc2mem_data(15 downto 0) := cpu2mc_data_15_0
-        io.mc2mem_byte_enable :=  B"0011"
+        dmem_ahb.HWDATA(15 downto 0) := cpu2mc_data_15_0
       }
       // HW 1
       is(2) {
-        io.mc2mem_data(31 downto 16) := cpu2mc_data_15_0
-        io.mc2mem_byte_enable :=  B"1100"
+        dmem_ahb.HWDATA(31 downto 16) := cpu2mc_data_15_0
       }
     }
+     */
   }
 
-  // Read
+  // Read Data
+  io.mc2cpu_data := dmem_ahb.HRDATA // Default value
   when(LS_byte_s1) {
     switch(mem_byte_addr_s1) {
       // Byte 0
@@ -176,8 +182,4 @@ case class dram_ctrl(param: CPU_PARAM) extends Component {
       }
     }
   }
-
-  // == Other Logic == //
-  io.mc2mem_rd := io.cpu2mc_rd
-  io.mc2mem_wr := io.cpu2mc_wr
 }

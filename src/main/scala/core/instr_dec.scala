@@ -64,7 +64,7 @@ case class instr_dec_io(param: CPU_PARAM) extends Bundle{
     val branch_op    = out Bool
     val jal_op       = out Bool
     val jalr_op      = out Bool
-
+    val invalid_instr = out Bool
 }
 
 case class instr_dec(param: CPU_PARAM) extends Component {
@@ -94,6 +94,13 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     val op_auipc = (opcode === param.OP_AUIPC)
     val op_jal = (opcode === param.OP_JAL)
     val op_jalr = (opcode === param.OP_JALR)
+    val op_fence = (opcode === param.OP_FEANCE)
+    /*
+    Note on fence instruction
+    Since we are doing in order access, so the memory access order is already satisfied.
+    Just treat it as nop instruction.
+    */
+
 
     // == ALU opcode == //
     /*
@@ -186,5 +193,14 @@ case class instr_dec(param: CPU_PARAM) extends Component {
         io.brjp_imm_value   := imm_20_0.asSInt
     }
 
-    // FIXME: Logic to detect wrong instruction -> TBD
+    // detect invalid instruction
+    val invalid_opcode  = ~(op_logic_arithm | op_logic_arithm_imm | op_store | op_load | op_branch |
+                           op_lui  | op_auipc | op_jal  | op_jalr | op_fence)
+    val invalid_load    = op_load & (io.func3(2 downto 1) === B"11" | io.func3(1 downto 0) === B"11")
+    val invalid_store   = op_store & (io.func3(2) === True | io.func3(1 downto 0) === B"11")
+    val invalid_branch  = op_branch & (io.func3(2 downto 1) === B"01")
+    val invalid_jalr    = op_jalr & (io.func3 =/= B"000")
+    val invalid_fence   = op_fence & (io.func3(2 downto 1) =/= B"00")
+    // FIXME: logic and immediate type needs more detection
+    io.invalid_instr    :=  invalid_opcode | invalid_load | invalid_store | invalid_branch | invalid_jalr | invalid_fence
 }

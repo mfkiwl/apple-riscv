@@ -13,7 +13,7 @@
 //
 // Instruction RAM
 //
-// - Instruction RAM simulation model
+// - Instruction RAM model for simulation
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,31 +21,32 @@ package ip
 
 import core.CPU_PARAM
 import spinal.core._
-
-case class instruction_ram_io(param: CPU_PARAM) extends Bundle {
-    val wr    = in Bool
-    val rd    = in Bool
-    val enable = in Bool
-    val addr   = in UInt(param.INSTR_RAM_ADDR_WIDTH bits)
-    val data_out = out Bits(param.INSTR_RAM_DATA_WIDTH bits)
-    val data_in = in Bits(param.INSTR_RAM_DATA_WIDTH bits)    // data come 1 cycle after rd
-}
+import spinal.lib.bus.amba3.ahblite.AhbLite3
+import spinal.lib.slave
 
 case class instruction_ram_model(param: CPU_PARAM) extends Component {
-    val io = instruction_ram_io(param)
 
-    val SIZE = 1 << (param.INSTR_RAM_ADDR_WIDTH - 2) // We fetch 4 bytes at a time
+    val imem_ahb = slave(AhbLite3(param.imem_ahbCfg))
+
+    // We fetch  a word (4 bytes) at a time so reduce the size by 4
+    val SIZE = 1 << (param.INSTR_RAM_ADDR_WIDTH - 2)
     val ram = new Mem(Bits(param.INSTR_RAM_DATA_WIDTH bits), SIZE)
-    val ram_addr = io.addr(param.INSTR_RAM_ADDR_WIDTH -1 downto 2)
+
+    val word_addr = imem_ahb.HADDR(param.INSTR_RAM_ADDR_WIDTH -1 downto 2)
+    // Here we use HSEL to indicate we want to stall the data
+    val read_en = imem_ahb.HSEL
+
+    imem_ahb.HREADYOUT  := True
+    imem_ahb.HRESP      := False    // Low indicate OKAY
 
     ram.write(
-        address = ram_addr,
-        data = io.data_in,
-        enable = io.wr & io.enable
+        address = word_addr,
+        data = imem_ahb.HWDATA,
+        enable = imem_ahb.HWRITE
     )
 
-    io.data_out := ram.readSync(
-        address = ram_addr,
-        enable = io.rd & io.enable
+    imem_ahb.HRDATA := ram.readSync(
+        address = word_addr,
+        enable = read_en
     )
 }

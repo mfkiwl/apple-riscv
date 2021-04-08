@@ -22,16 +22,10 @@
 package core
 
 import spinal.core._
+import spinal.lib.bus.amba3.ahblite._
+import spinal.lib.master
 
 case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
-
-    // instruction ram
-    val instr_ram_wr        = out Bool
-    val instr_ram_rd        = out Bool
-    val instr_ram_addr      = out UInt(param.INSTR_RAM_ADDR_WIDTH bits)
-    val instr_ram_enable    = out Bool
-    val instr_ram_data_out  = out Bits(param.INSTR_RAM_DATA_WIDTH bits)
-    val instr_ram_data_in   = in  Bits(param.INSTR_RAM_DATA_WIDTH bits)
 
     // data ram
     val data_ram_wr         = out Bool
@@ -45,6 +39,8 @@ case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
 case class apple_riscv (param: CPU_PARAM) extends Component {
 
     val io = apple_riscv_io(param)
+    val imem_ahb = master(AhbLite3(param.imem_ahbCfg))
+    val dmem_ahb = master(AhbLite3(param.dmem_ahbCfg))
 
     //////////////////////////////////////////////////////
     //     Pipeline Stage and Component Instantiation   //
@@ -90,12 +86,12 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     pc_inst.io.stall  := if_pipe_stall
     pc_inst.io.pc_in  := target_pc
 
-    // == instruction RAM == //
-    io.instr_ram_wr         := False
-    io.instr_ram_rd         := True
-    io.instr_ram_enable     := if_pipe_run
-    io.instr_ram_addr       := pc_inst.io.pc_out(param.INSTR_RAM_ADDR_WIDTH - 1 downto 0)
-    io.instr_ram_data_out   := 0
+    // == instruction RAM Controller == //
+    val imem_ctrl_inst = imem_ctrl(param)
+    imem_ahb <> imem_ctrl_inst.imem_ahb
+    imem_ctrl_inst.io.cpu2mc_addr   := pc_inst.io.pc_out(param.INSTR_RAM_ADDR_WIDTH-1 downto 0)
+    imem_ctrl_inst.io.cpu2mc_en     := if_pipe_run
+
 
     // =========================
     // IF/ID Pipeline
@@ -110,7 +106,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // == instruction decoder == //
     val instr_dec_inst = instr_dec(param)
-    instr_dec_inst.io.instr := io.instr_ram_data_in
+    instr_dec_inst.io.instr := imem_ctrl_inst.io.mc2cpu_data
 
     // == register file == //
     val regfile_inst = regfile(param)
@@ -218,7 +214,6 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     branch_taken                        := branch_unit_inst.io.branch_taken
     // FIXME: Exception Logic // = branch_unit_inst.io.instruction_address_misaligned_exception
 
-
     // =========================
     // EX/Mem Pipeline
     // =========================
@@ -244,22 +239,18 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
 
     // == Memory Controller == //
-    val dram_ctrl_isnt = dram_ctrl(param)
+    val dmem_ctrl_isnt = dmem_ctrl(param)
+
+    dmem_ctrl_isnt.dmem_ahb <> dmem_ahb
     // CPU side
-    dram_ctrl_isnt.io.cpu2mc_wr                 := ex2mem_data_ram_wr
-    dram_ctrl_isnt.io.cpu2mc_rd                 := ex2mem_data_ram_rd
-    dram_ctrl_isnt.io.cpu2mc_addr               := ex2mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt   // ALU output is the address
-    dram_ctrl_isnt.io.cpu2mc_data               := ex2mem_rs2_value        // Write data is in rs2
-    dram_ctrl_isnt.io.cpu2mc_mem_LS_byte        := ex2mem_data_ram_ld_byte
-    dram_ctrl_isnt.io.cpu2mc_mem_LS_halfword    := ex2mem_data_ram_ld_hword
-    dram_ctrl_isnt.io.cpu2mc_mem_LW_unsigned    := ex2mem_data_ram_ld_unsign
-    // MEM side
-    io.data_ram_wr      := dram_ctrl_isnt.io.mc2mem_wr
-    io.data_ram_rd      := dram_ctrl_isnt.io.mc2mem_rd
-    io.data_ram_addr    := dram_ctrl_isnt.io.mc2mem_addr
-    dram_ctrl_isnt.io.mem2mc_data := io.data_ram_data_in
-    io.data_ram_data_out    := dram_ctrl_isnt.io.mc2mem_data
-    io.data_ram_byte_en     := dram_ctrl_isnt.io.mc2mem_byte_enable
+    dmem_ctrl_isnt.io.cpu2mc_wr                 := ex2mem_data_ram_wr
+    dmem_ctrl_isnt.io.cpu2mc_rd                 := ex2mem_data_ram_rd
+    dmem_ctrl_isnt.io.cpu2mc_addr               := ex2mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt   // ALU output is the address
+    dmem_ctrl_isnt.io.cpu2mc_data               := ex2mem_rs2_value        // Write data is in rs2
+    dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte        := ex2mem_data_ram_ld_byte
+    dmem_ctrl_isnt.io.cpu2mc_mem_LS_halfword    := ex2mem_data_ram_ld_hword
+    dmem_ctrl_isnt.io.cpu2mc_mem_LW_unsigned    := ex2mem_data_ram_ld_unsign
+
 
     // =========================
     // Mem/WB stage
@@ -282,7 +273,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     regfile_inst.io.register_wr := mem2wb_register_wr
     regfile_inst.io.register_wr_addr := mem2wb_rd
     // Select data between memory output and alu output
-    val wb_rd_wr_data = Mux(mem2wb_data_ram_rd, dram_ctrl_isnt.io.mc2cpu_data, mem2wb_alu_out)
+    val wb_rd_wr_data = Mux(mem2wb_data_ram_rd, dmem_ctrl_isnt.io.mc2cpu_data, mem2wb_alu_out)
     regfile_inst.io.rd_in := wb_rd_wr_data
 
     //////////////////////////////////////////////////////

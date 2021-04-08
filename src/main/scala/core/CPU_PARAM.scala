@@ -18,35 +18,51 @@
 package core
 
 import spinal.core._
+import spinal.lib.bus.amba3.ahblite._
 
 class CPU_PARAM {
 
     val NAME = "apple-riscv32"
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //                              CPU Core Parameter                              //
+    //////////////////////////////////////////////////////////////////////////////////
 
     // ========================== //
     //  CPU config and Parameter  //
     // ========================== //
     val XLEN       = 32
     val DATA_WIDTH = XLEN
-
     // PC
     val PC_WIDTH   = DATA_WIDTH
-
     // Register File
-    val RF_WIDTH   = DATA_WIDTH             // Register File width
-    val RF_SIZE    = 32                     // Register File size
-    val RF_ADDR_WDITH = log2Up(RF_SIZE)     // Register File address width
-
+    val RF_WIDTH        = DATA_WIDTH             // Register File width
+    val RF_SIZE         = 32                     // Register File size
+    val RF_ADDR_WDITH   = log2Up(RF_SIZE)     // Register File address width
     // Instruction RAM
     val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
-    val INSTR_RAM_ADDR_WIDTH = 20            // 4MB Instruction RAM for now
-
+    val INSTR_RAM_ADDR_WIDTH = 20            // 1MB Instruction RAM for now
     // Data RAM
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH
-    val DATA_RAM_ADDR_WIDTH = 20            // 4MB Data RAM for now
-
+    val DATA_RAM_ADDR_WIDTH = 20             // 1MB Data RAM for now
     // ALU
     val ALU_OPCODE_WIDTH = 4
+
+    // ========================== //
+    //       AHB Bus Config       //
+    // ========================== //
+    val imem_ahbCfg = AhbLite3Config(
+        addressWidth = INSTR_RAM_ADDR_WIDTH,
+        dataWidth    = INSTR_RAM_DATA_WIDTH
+    )
+    val dmem_ahbCfg = AhbLite3Config(
+        addressWidth = DATA_RAM_ADDR_WIDTH,
+        dataWidth    = DATA_RAM_DATA_WIDTH
+    )
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //                           Constant Definition                                //
+    //////////////////////////////////////////////////////////////////////////////////
 
     // ========================== //
     //     Instruction Decode     //
@@ -63,6 +79,7 @@ class CPU_PARAM {
     val OP_LUI              = Integer.parseInt("0110111", 2)        // LUI instruction
     val OP_JAL              = Integer.parseInt("1101111", 2)        // JAL
     val OP_JALR             = Integer.parseInt("1100111", 2)        // JALR
+    val OP_FEANCE           = Integer.parseInt("0001111", 2)        // FANCE
 
     // == func3 == //
     // Logic arithmetic func3 field
@@ -87,5 +104,7 @@ class CPU_PARAM {
     val BR_F3_BGE   = Integer.parseInt("101", 2) // BGE
     val BR_F3_BLTU  = Integer.parseInt("110", 2) // BLTU
     val BR_F3_BGEU  = Integer.parseInt("111", 2) // BGEU
-
+    // Fence func3 field
+    val FE_F3_FENCE =  Integer.parseInt("000", 2) // FENCE
+    val FE_F3_FENCEI =  Integer.parseInt("001", 2) // FENCE.I
 }

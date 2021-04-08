@@ -3,15 +3,16 @@
 ## Milestone 0.1
 
 - 04/07/2021
-  - [RTL Bug Fix] Fixed bugs found in the tests.
+  - **[RTL Bug Fix]** Fixed bugs found in the tests.
     - Fixed bug in forwarding logic: need to check whether the write dest is x0 or not. If it is x0 then do not forward the data
     - Fixed bug in forwarding logic: jalr also read rs1
   - Enhanced the test framework for riscv-test
     - Update the cocotb run.py and makefile flow
     - Added a python script to run all the tests and gather result
-  - [TB Bug Fix] Updated the tb file on how to load instruction rom. Added the ability to load data rom (for testing load instruction)
+  - **[TB Bug Fix]** Updated the tb file on how to load instruction rom. Added the ability to load data rom (for testing load instruction)
     - Now the data in the `.verilog` file is represented by 1 byte (rather than by word).
     - We need it to be byte because the .verilog file specify the address as the absolute byte address (such as @10 (in hex)) but verilog $readmemh treat the address as the index of the defined memory register. For example, if we define reg [31:0] mem[0:1023] then @10 will write the data into mem[10] instead of mem[4] even though each memory block is 4 bytes.
+  - Updated the bus system. Using AHB-lite as I-mem and D-mem bus.
 
 - 04/06/2021
   - Added some sample riscv-test code.
