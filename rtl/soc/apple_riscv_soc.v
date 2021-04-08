@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 6efe0be1cf2347daf722088a4ba937a967998a07
+// Git hash  : 37def541955c5f59ca9032388ce49d187f92b4bf
 
 
 
@@ -338,13 +338,27 @@ module apple_riscv (
   wire       [31:0]   dmem_ctrl_isnt_dmem_ahb_HWDATA;
   wire                dmem_ctrl_isnt_dmem_ahb_HREADY;
   wire                dmem_ctrl_isnt_dmem_ahb_HSEL;
+  wire                fu_inst_io_forward_rs1_from_mem;
+  wire                fu_inst_io_forward_rs1_from_wb;
+  wire                fu_inst_io_forward_rs2_from_mem;
+  wire                fu_inst_io_forward_rs2_from_wb;
+  wire                hdu_inst_io_if_valid;
+  wire                hdu_inst_io_id_valid;
+  wire                hdu_inst_io_ex_valid;
+  wire                hdu_inst_io_mem_valid;
+  wire                hdu_inst_io_wb_valid;
+  wire                hdu_inst_io_if_pipe_stall;
+  wire                hdu_inst_io_id_pipe_stall;
+  wire                hdu_inst_io_ex_pipe_stall;
+  wire                hdu_inst_io_mem_pipe_stall;
+  wire                hdu_inst_io_wb_pipe_stall;
   wire                if_instr_valid;
-  reg                 id_instr_valid;
+  wire                id_instr_valid;
   wire                ex_instr_valid;
   wire                mem_instr_valid;
   wire                wb_instr_valid;
-  reg                 if_pipe_stall;
-  reg                 id_pipe_stall;
+  wire                if_pipe_stall;
+  wire                id_pipe_stall;
   wire                ex_pipe_stall;
   wire                mem_pipe_stall;
   wire                wb_pipe_stall;
@@ -361,15 +375,15 @@ module apple_riscv (
   reg                 id2ex_register_wr;
   reg                 id2ex_data_ram_wr;
   reg                 id2ex_data_ram_rd;
-  reg                 id2ex_register_rs1_rd;
-  reg                 id2ex_register_rs2_rd;
+  reg                 id2ex_rs1_rd;
+  reg                 id2ex_rs2_rd;
   reg                 id2ex_branch_op;
   reg                 id2ex_jal_op;
   reg                 id2ex_jalr_op;
-  reg        [4:0]    id2ex_rd;
+  reg        [4:0]    id2ex_rd_idx;
   reg        [2:0]    id2ex_func3;
-  reg        [4:0]    id2ex_rs1;
-  reg        [4:0]    id2ex_rs2;
+  reg        [4:0]    id2ex_rs1_idx;
+  reg        [4:0]    id2ex_rs2_idx;
   reg        [6:0]    id2ex_func7;
   reg                 id2ex_alu_op_and;
   reg                 id2ex_alu_op_or;
@@ -399,36 +413,23 @@ module apple_riscv (
   wire       [31:0]   alu_operand1_muxout;
   wire       [31:0]   alu_operand2_muxout;
   reg                 ex2mem_instr_valid;
-  reg                 ex2mem_register_wr;
+  reg                 ex2mem_rd_wr;
   reg                 ex2mem_data_ram_wr;
   reg                 ex2mem_data_ram_rd;
   reg                 ex2mem_data_ram_ld_byte;
   reg                 ex2mem_data_ram_ld_hword;
   reg                 ex2mem_data_ram_ld_unsign;
   reg        [31:0]   ex2mem_alu_out;
-  reg        [4:0]    ex2mem_rs1;
-  reg        [4:0]    ex2mem_rs2;
-  reg        [4:0]    ex2mem_rd;
+  reg        [4:0]    ex2mem_rs1_idx;
+  reg        [4:0]    ex2mem_rs2_idx;
+  reg        [4:0]    ex2mem_rd_idx;
   reg        [31:0]   ex2mem_rs2_value;
   reg                 mem2wb_instr_valid;
-  reg                 mem2wb_register_wr;
+  reg                 mem2wb_rd_wr;
   reg                 mem2wb_data_ram_rd;
   reg        [31:0]   mem2wb_alu_out;
-  reg        [4:0]    mem2wb_rd;
+  reg        [4:0]    mem2wb_rd_idx;
   wire       [31:0]   wb_rd_wr_data;
-  wire                rs1_nonzero;
-  wire                rs1_match_mem;
-  wire                rs1_match_wb;
-  wire                forward_rs1_from_mem;
-  wire                forward_rs1_from_wb;
-  wire                rs2_nonzero;
-  wire                rs2_match_mem;
-  wire                rs2_match_wb;
-  wire                forward_rs2_from_mem;
-  wire                forward_rs2_from_wb;
-  wire                id_rs1_depends_on_ex_rd;
-  wire                id_rs2_depends_on_ex_rd;
-  wire                stall_on_load_dependence;
 
   program_counter pc_inst (
     .io_pc_in     (target_pc[31:0]          ), //i
@@ -498,8 +499,8 @@ module apple_riscv (
     .io_rs1_data_out        (regfile_inst_io_rs1_data_out[31:0]  ), //o
     .io_rs2_rd_addr         (instr_dec_inst_io_rs2_idx[4:0]      ), //i
     .io_rs2_data_out        (regfile_inst_io_rs2_data_out[31:0]  ), //o
-    .io_register_wr         (mem2wb_register_wr                  ), //i
-    .io_register_wr_addr    (mem2wb_rd[4:0]                      ), //i
+    .io_register_wr         (mem2wb_rd_wr                        ), //i
+    .io_register_wr_addr    (mem2wb_rd_idx[4:0]                  ), //i
     .io_rd_in               (wb_rd_wr_data[31:0]                 ), //i
     .clk                    (clk                                 ), //i
     .reset                  (reset                               )  //i
@@ -558,9 +559,39 @@ module apple_riscv (
     .clk                          (clk                                   ), //i
     .reset                        (reset                                 )  //i
   );
-  assign ex_pipe_stall = 1'b0;
-  assign mem_pipe_stall = 1'b0;
-  assign wb_pipe_stall = 1'b0;
+  fu fu_inst (
+    .io_ex_rs1_idx              (id2ex_rs1_idx[4:0]               ), //i
+    .io_ex_rs2_idx              (id2ex_rs2_idx[4:0]               ), //i
+    .io_mem_rd_idx              (ex2mem_rd_idx[4:0]               ), //i
+    .io_wb_rd_idx               (mem2wb_rd_idx[4:0]               ), //i
+    .io_ex_rs1_rd               (id2ex_rs1_rd                     ), //i
+    .io_ex_rs2_rd               (id2ex_rs2_rd                     ), //i
+    .io_mem_rd_wr               (ex2mem_rd_wr                     ), //i
+    .io_wb_rd_wr                (mem2wb_rd_wr                     ), //i
+    .io_forward_rs1_from_mem    (fu_inst_io_forward_rs1_from_mem  ), //o
+    .io_forward_rs1_from_wb     (fu_inst_io_forward_rs1_from_wb   ), //o
+    .io_forward_rs2_from_mem    (fu_inst_io_forward_rs2_from_mem  ), //o
+    .io_forward_rs2_from_wb     (fu_inst_io_forward_rs2_from_wb   )  //o
+  );
+  hdu hdu_inst (
+    .io_if_valid          (hdu_inst_io_if_valid               ), //o
+    .io_id_valid          (hdu_inst_io_id_valid               ), //o
+    .io_ex_valid          (hdu_inst_io_ex_valid               ), //o
+    .io_mem_valid         (hdu_inst_io_mem_valid              ), //o
+    .io_wb_valid          (hdu_inst_io_wb_valid               ), //o
+    .io_if_pipe_stall     (hdu_inst_io_if_pipe_stall          ), //o
+    .io_id_pipe_stall     (hdu_inst_io_id_pipe_stall          ), //o
+    .io_ex_pipe_stall     (hdu_inst_io_ex_pipe_stall          ), //o
+    .io_mem_pipe_stall    (hdu_inst_io_mem_pipe_stall         ), //o
+    .io_wb_pipe_stall     (hdu_inst_io_wb_pipe_stall          ), //o
+    .io_branch_taken      (branch_taken                       ), //i
+    .io_id_rs1_rd         (instr_dec_inst_io_register_rs1_rd  ), //i
+    .io_id_rs2_rd         (instr_dec_inst_io_register_rs2_rd  ), //i
+    .io_ex_dmem_rd        (id2ex_data_ram_rd                  ), //i
+    .io_id_rs1_idx        (instr_dec_inst_io_rs1_idx[4:0]     ), //i
+    .io_id_rs2_idx        (instr_dec_inst_io_rs2_idx[4:0]     ), //i
+    .io_ex_rd_idx         (id2ex_rd_idx[4:0]                  )  //i
+  );
   assign if_pipe_run = (! if_pipe_stall);
   assign id_pipe_run = (! id_pipe_stall);
   assign ex_pipe_run = (! ex_pipe_stall);
@@ -594,16 +625,11 @@ module apple_riscv (
   assign dmem_ahb_HWDATA = dmem_ctrl_isnt_dmem_ahb_HWDATA;
   assign _zz_3 = ex2mem_alu_out[19 : 0];
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dmem_ctrl_isnt_io_mc2cpu_data : mem2wb_alu_out);
-  assign rs1_nonzero = (id2ex_rs1 != 5'h0);
-  assign rs1_match_mem = ((id2ex_rs1 == ex2mem_rd) && rs1_nonzero);
-  assign rs1_match_wb = ((id2ex_rs1 == mem2wb_rd) && rs1_nonzero);
-  assign forward_rs1_from_mem = ((id2ex_register_rs1_rd && rs1_match_mem) && ex2mem_register_wr);
-  assign forward_rs1_from_wb = ((id2ex_register_rs1_rd && rs1_match_wb) && mem2wb_register_wr);
   always @ (*) begin
-    if(forward_rs1_from_mem)begin
+    if(fu_inst_io_forward_rs1_from_mem)begin
       ex_rs1_value_forwarded = ex2mem_alu_out;
     end else begin
-      if(forward_rs1_from_wb)begin
+      if(fu_inst_io_forward_rs1_from_wb)begin
         ex_rs1_value_forwarded = wb_rd_wr_data;
       end else begin
         ex_rs1_value_forwarded = id2ex_rs1_value;
@@ -611,16 +637,11 @@ module apple_riscv (
     end
   end
 
-  assign rs2_nonzero = (id2ex_rs2 != 5'h0);
-  assign rs2_match_mem = ((id2ex_rs2 == ex2mem_rd) && rs2_nonzero);
-  assign rs2_match_wb = ((id2ex_rs2 == mem2wb_rd) && rs2_nonzero);
-  assign forward_rs2_from_mem = ((id2ex_register_rs2_rd && rs2_match_mem) && ex2mem_register_wr);
-  assign forward_rs2_from_wb = ((id2ex_register_rs2_rd && rs2_match_wb) && mem2wb_register_wr);
   always @ (*) begin
-    if(forward_rs2_from_mem)begin
+    if(fu_inst_io_forward_rs2_from_mem)begin
       ex_rs2_value_forwarded = ex2mem_alu_out;
     end else begin
-      if(forward_rs2_from_wb)begin
+      if(fu_inst_io_forward_rs2_from_wb)begin
         ex_rs2_value_forwarded = wb_rd_wr_data;
       end else begin
         ex_rs2_value_forwarded = id2ex_rs2_value;
@@ -628,37 +649,16 @@ module apple_riscv (
     end
   end
 
-  assign if_instr_valid = (! branch_taken);
-  assign ex_instr_valid = id2ex_instr_valid;
-  assign mem_instr_valid = ex2mem_instr_valid;
-  assign wb_instr_valid = mem2wb_instr_valid;
-  assign id_rs1_depends_on_ex_rd = ((instr_dec_inst_io_rs1_idx == id2ex_rd) && instr_dec_inst_io_register_rs1_rd);
-  assign id_rs2_depends_on_ex_rd = ((instr_dec_inst_io_rs2_idx == id2ex_rd) && instr_dec_inst_io_register_rs2_rd);
-  assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && id2ex_data_ram_rd);
-  always @ (*) begin
-    if(stall_on_load_dependence)begin
-      if_pipe_stall = 1'b1;
-    end else begin
-      if_pipe_stall = 1'b0;
-    end
-  end
-
-  always @ (*) begin
-    if(stall_on_load_dependence)begin
-      id_pipe_stall = 1'b1;
-    end else begin
-      id_pipe_stall = 1'b0;
-    end
-  end
-
-  always @ (*) begin
-    if(stall_on_load_dependence)begin
-      id_instr_valid = 1'b0;
-    end else begin
-      id_instr_valid = (if2id_instr_valid && (! branch_taken));
-    end
-  end
-
+  assign if_instr_valid = hdu_inst_io_if_valid;
+  assign id_instr_valid = (if2id_instr_valid && hdu_inst_io_id_valid);
+  assign ex_instr_valid = (id2ex_instr_valid && hdu_inst_io_ex_valid);
+  assign mem_instr_valid = (ex2mem_instr_valid && hdu_inst_io_mem_valid);
+  assign wb_instr_valid = (mem2wb_instr_valid && hdu_inst_io_wb_valid);
+  assign if_pipe_stall = hdu_inst_io_if_pipe_stall;
+  assign id_pipe_stall = hdu_inst_io_id_pipe_stall;
+  assign ex_pipe_stall = hdu_inst_io_ex_pipe_stall;
+  assign mem_pipe_stall = hdu_inst_io_mem_pipe_stall;
+  assign wb_pipe_stall = hdu_inst_io_wb_pipe_stall;
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
       if2id_pc <= 32'h0;
@@ -667,17 +667,17 @@ module apple_riscv (
       id2ex_register_wr <= 1'b0;
       id2ex_data_ram_wr <= 1'b0;
       id2ex_data_ram_rd <= 1'b0;
-      id2ex_register_rs1_rd <= 1'b0;
-      id2ex_register_rs2_rd <= 1'b0;
+      id2ex_rs1_rd <= 1'b0;
+      id2ex_rs2_rd <= 1'b0;
       id2ex_branch_op <= 1'b0;
       id2ex_jal_op <= 1'b0;
       id2ex_jalr_op <= 1'b0;
       ex2mem_instr_valid <= 1'b0;
-      ex2mem_register_wr <= 1'b0;
+      ex2mem_rd_wr <= 1'b0;
       ex2mem_data_ram_wr <= 1'b0;
       ex2mem_data_ram_rd <= 1'b0;
       mem2wb_instr_valid <= 1'b0;
-      mem2wb_register_wr <= 1'b0;
+      mem2wb_rd_wr <= 1'b0;
       mem2wb_data_ram_rd <= 1'b0;
     end else begin
       if(id_pipe_run)begin
@@ -699,10 +699,10 @@ module apple_riscv (
         id2ex_data_ram_rd <= (instr_dec_inst_io_data_ram_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id2ex_register_rs1_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
+        id2ex_rs1_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id2ex_register_rs2_rd <= (instr_dec_inst_io_register_rs2_rd && id_instr_valid);
+        id2ex_rs2_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
         id2ex_branch_op <= (instr_dec_inst_io_branch_op && id_instr_valid);
@@ -717,7 +717,7 @@ module apple_riscv (
         ex2mem_instr_valid <= ex_instr_valid;
       end
       if(mem_pipe_run)begin
-        ex2mem_register_wr <= (id2ex_register_wr && ex_instr_valid);
+        ex2mem_rd_wr <= (id2ex_register_wr && ex_instr_valid);
       end
       if(mem_pipe_run)begin
         ex2mem_data_ram_wr <= (id2ex_data_ram_wr && ex_instr_valid);
@@ -729,7 +729,7 @@ module apple_riscv (
         mem2wb_instr_valid <= mem_instr_valid;
       end
       if(wb_pipe_run)begin
-        mem2wb_register_wr <= (ex2mem_register_wr && mem_instr_valid);
+        mem2wb_rd_wr <= (ex2mem_rd_wr && mem_instr_valid);
       end
       if(wb_pipe_run)begin
         mem2wb_data_ram_rd <= (ex2mem_data_ram_rd && mem_instr_valid);
@@ -739,16 +739,16 @@ module apple_riscv (
 
   always @ (posedge clk) begin
     if(ex_pipe_run)begin
-      id2ex_rd <= instr_dec_inst_io_rd_idx;
+      id2ex_rd_idx <= instr_dec_inst_io_rd_idx;
     end
     if(ex_pipe_run)begin
       id2ex_func3 <= instr_dec_inst_io_func3;
     end
     if(ex_pipe_run)begin
-      id2ex_rs1 <= instr_dec_inst_io_rs1_idx;
+      id2ex_rs1_idx <= instr_dec_inst_io_rs1_idx;
     end
     if(ex_pipe_run)begin
-      id2ex_rs2 <= instr_dec_inst_io_rs2_idx;
+      id2ex_rs2_idx <= instr_dec_inst_io_rs2_idx;
     end
     if(ex_pipe_run)begin
       id2ex_func7 <= instr_dec_inst_io_func7;
@@ -835,13 +835,13 @@ module apple_riscv (
       ex2mem_alu_out <= alu_inst_io_alu_out;
     end
     if(mem_pipe_run)begin
-      ex2mem_rs1 <= id2ex_rs1;
+      ex2mem_rs1_idx <= id2ex_rs1_idx;
     end
     if(mem_pipe_run)begin
-      ex2mem_rs2 <= id2ex_rs2;
+      ex2mem_rs2_idx <= id2ex_rs2_idx;
     end
     if(mem_pipe_run)begin
-      ex2mem_rd <= id2ex_rd;
+      ex2mem_rd_idx <= id2ex_rd_idx;
     end
     if(mem_pipe_run)begin
       ex2mem_rs2_value <= ex_rs2_value_forwarded;
@@ -850,10 +850,83 @@ module apple_riscv (
       mem2wb_alu_out <= ex2mem_alu_out;
     end
     if(wb_pipe_run)begin
-      mem2wb_rd <= ex2mem_rd;
+      mem2wb_rd_idx <= ex2mem_rd_idx;
     end
   end
 
+
+endmodule
+
+module hdu (
+  output              io_if_valid,
+  output              io_id_valid,
+  output              io_ex_valid,
+  output              io_mem_valid,
+  output              io_wb_valid,
+  output              io_if_pipe_stall,
+  output              io_id_pipe_stall,
+  output              io_ex_pipe_stall,
+  output              io_mem_pipe_stall,
+  output              io_wb_pipe_stall,
+  input               io_branch_taken,
+  input               io_id_rs1_rd,
+  input               io_id_rs2_rd,
+  input               io_ex_dmem_rd,
+  input      [4:0]    io_id_rs1_idx,
+  input      [4:0]    io_id_rs2_idx,
+  input      [4:0]    io_ex_rd_idx
+);
+  wire                id_rs1_depends_on_ex_rd;
+  wire                id_rs2_depends_on_ex_rd;
+  wire                stall_on_load_dependence;
+
+  assign id_rs1_depends_on_ex_rd = ((io_id_rs1_idx == io_ex_rd_idx) && io_id_rs1_rd);
+  assign id_rs2_depends_on_ex_rd = ((io_id_rs2_idx == io_ex_rd_idx) && io_id_rs2_rd);
+  assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && io_ex_dmem_rd);
+  assign io_if_pipe_stall = stall_on_load_dependence;
+  assign io_id_pipe_stall = stall_on_load_dependence;
+  assign io_ex_pipe_stall = 1'b0;
+  assign io_mem_pipe_stall = 1'b0;
+  assign io_wb_pipe_stall = 1'b0;
+  assign io_if_valid = (! io_branch_taken);
+  assign io_id_valid = ((! io_branch_taken) && (! stall_on_load_dependence));
+  assign io_ex_valid = 1'b1;
+  assign io_mem_valid = 1'b1;
+  assign io_wb_valid = 1'b1;
+
+endmodule
+
+module fu (
+  input      [4:0]    io_ex_rs1_idx,
+  input      [4:0]    io_ex_rs2_idx,
+  input      [4:0]    io_mem_rd_idx,
+  input      [4:0]    io_wb_rd_idx,
+  input               io_ex_rs1_rd,
+  input               io_ex_rs2_rd,
+  input               io_mem_rd_wr,
+  input               io_wb_rd_wr,
+  output              io_forward_rs1_from_mem,
+  output              io_forward_rs1_from_wb,
+  output              io_forward_rs2_from_mem,
+  output              io_forward_rs2_from_wb
+);
+  wire                rs1_nonzero;
+  wire                rs1_match_mem;
+  wire                rs1_match_wb;
+  wire                rs2_nonzero;
+  wire                rs2_match_mem;
+  wire                rs2_match_wb;
+
+  assign rs1_nonzero = (io_ex_rs1_idx != 5'h0);
+  assign rs1_match_mem = ((io_ex_rs1_idx == io_mem_rd_idx) && rs1_nonzero);
+  assign rs1_match_wb = ((io_ex_rs1_idx == io_wb_rd_idx) && rs1_nonzero);
+  assign io_forward_rs1_from_mem = ((io_ex_rs1_rd && rs1_match_mem) && io_mem_rd_wr);
+  assign io_forward_rs1_from_wb = ((io_ex_rs1_rd && rs1_match_wb) && io_wb_rd_wr);
+  assign rs2_nonzero = (io_ex_rs2_idx != 5'h0);
+  assign rs2_match_mem = ((io_ex_rs2_idx == io_mem_rd_idx) && rs2_nonzero);
+  assign rs2_match_wb = ((io_ex_rs2_idx == io_wb_rd_idx) && rs2_nonzero);
+  assign io_forward_rs2_from_mem = ((io_ex_rs2_rd && rs2_match_mem) && io_mem_rd_wr);
+  assign io_forward_rs2_from_wb = ((io_ex_rs2_rd && rs2_match_wb) && io_wb_rd_wr);
 
 endmodule
 

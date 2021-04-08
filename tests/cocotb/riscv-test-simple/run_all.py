@@ -144,6 +144,7 @@ def print_result(results):
         True: "PASS",
         False: "FAIL"
     }
+    final_pass = True
     print("=======================================")
     print("              Tests Result             ")
     print("=======================================")
@@ -152,12 +153,16 @@ def print_result(results):
         tests = results[arch]
         for test in tests.keys():
             rst = translate[tests[test]]
+            final_pass = final_pass & tests[test]
             print(test + ": " + str(rst), end='')
             if rst == 'PASS':
                 print()
             else:
                 print('    <---- ' + test + ' ---->')
-
+    if final_pass:
+        print("Congratulation!! All tests PASS")
+    else:
+        print("Some tests FAILED")
 
 def main():
     """ Run all the test """

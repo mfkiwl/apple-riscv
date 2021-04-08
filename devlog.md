@@ -2,6 +2,9 @@
 
 ## Milestone 0.1
 
+- 04/08/2021
+  - Moved hazard detection logic and forwarding logic into its own module.
+
 - 04/07/2021
   - **[RTL Bug Fix]** Fixed bugs found in the tests.
     - Fixed bug in forwarding logic: need to check whether the write dest is x0 or not. If it is x0 then do not forward the data

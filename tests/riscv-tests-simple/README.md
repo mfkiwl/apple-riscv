@@ -1,6 +1,6 @@
 # RISC-V Test Simple
 
-The tests code use here here are mainly copied from the [riscv-tests](https://github.com/riscv/riscv-tests) repo from riscv organization. See LICENSE for the original license requirement.
+The tests code use used here are copied from the [riscv-tests](https://github.com/riscv/riscv-tests) repo from riscv organization. See LICENSE for the original license requirement.
 
 I modified the code for my CPU design verification.
 
