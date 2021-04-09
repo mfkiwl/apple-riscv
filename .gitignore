@@ -1,6 +1,7 @@
 *.class
 *.log
 *.bak
+*.swp
 
 # sbt specific
 .cache/
@@ -49,3 +50,13 @@ tests/cocotb/*/*rom
 *.gtkw
 *.vvp
 
+
+# xilinx
+*.Xil
+*.jou
+fpga/xilinx/.Xil
+fpga/xilinx/.jou
+fpga/xilinx/.str
+fpga/xilinx/*/output
+fpga/intel/soc
+fpga/intel/core
