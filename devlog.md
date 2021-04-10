@@ -3,6 +3,8 @@
 ## Milestone 0.1
 
 - 04/09/2021
+  - Updated register file
+    - Using single ram instead of two.
   - Updated memory
     - Reduced the size so it can be synthesis in Arty A7 FPGA board
     - Renamed the memory name.

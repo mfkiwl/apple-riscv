@@ -44,23 +44,17 @@ def print_register(dut, size=32):
     """ Print the register value """
     for i in range(size):
         try:
-            val1 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs1_ram[i].value.integer
+            val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[i].value.integer
         except ValueError:
-            val1 = 'X'
-        try:
-            val2 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs2_ram[i].value.integer
-        except ValueError:
-            val2 = 'X'
-        print(f"Register {i}, {hex(val1)}, {hex(val2)}")
+            val = 'X'
+        print(f"Register {i}, {hex(val)}")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
-        val1 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs1_ram[key].value.integer
-        val2 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs2_ram[key].value.integer
-        assert value == val1, f"RAM1: Register {key}, Expected: {value}, Actual: {val1}"
-        assert value == val2, f"RAM2: Register {key}, Expected: {value}, Actual: {val2}"
-        print(f"RAM1: Register {key}, Expected: {value}, Actual: {val1}")
+        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[key].value.integer
+        assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
+        print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 
 async def reset(dut, time=20):
     """ Reset the design """

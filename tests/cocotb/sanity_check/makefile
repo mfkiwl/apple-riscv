@@ -37,3 +37,9 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 
 clean_all: clean
 	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc
+
+# -----------------------------------------
+# Verilator Lint
+# -----------------------------------------
+lint:
+	verilator --lint-only -Wall $(RTL_FILES)

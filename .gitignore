@@ -56,7 +56,10 @@ tests/cocotb/*/*rom
 *.jou
 fpga/xilinx/.Xil
 fpga/xilinx/.jou
-fpga/xilinx/.str
+fpga/xilinx/*.str
 fpga/xilinx/*/output
+fpga/xilinx/*.str
+fpga/xilinx/core
+fpga/xilinx/soc
 fpga/intel/soc
 fpga/intel/core

@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 0fb184ed3bb9eb926b12495bbca8910b058a8080
+// Git hash  : eea8f2ebda4ccd9ceda5c16a790c31719cc8fa66
 
 
 
@@ -1259,23 +1259,16 @@ module regfile (
   wire       [31:0]   _zz_2;
   wire       [31:0]   rs1_data;
   wire       [31:0]   rs2_data;
-  (* ram_style = "distributed" *) reg [31:0] rs1_ram [0:31];
-  (* ram_style = "distributed" *) reg [31:0] rs2_ram [0:31];
+  (* ram_style = "distributed" *) reg [31:0] ram [0:31];
 
   always @ (posedge clk) begin
     if(io_register_wr) begin
-      rs1_ram[io_register_wr_addr] <= io_rd_in;
+      ram[io_register_wr_addr] <= io_rd_in;
     end
   end
 
-  assign _zz_1 = rs1_ram[io_rs1_rd_addr];
-  always @ (posedge clk) begin
-    if(io_register_wr) begin
-      rs2_ram[io_register_wr_addr] <= io_rd_in;
-    end
-  end
-
-  assign _zz_2 = rs2_ram[io_rs2_rd_addr];
+  assign _zz_1 = ram[io_rs1_rd_addr];
+  assign _zz_2 = ram[io_rs2_rd_addr];
   assign rs1_data = _zz_1;
   assign rs2_data = _zz_2;
   always @ (*) begin

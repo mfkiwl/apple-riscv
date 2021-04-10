@@ -46,18 +46,15 @@ def load_imem(dut, imem):
 def print_register(dut, size=32):
     """ Print the register value """
     for i in range(size):
-        val1 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs1_ram[i].value.integer
-        val2 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs2_ram[i].value.integer
-        print(f"Register {i}, {val1}, {val2}")
+        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[i].value.integer
+        print(f"Register {i}, {val}")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
-        val1 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs1_ram[key].value.integer
-        val2 = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.rs2_ram[key].value.integer
-        assert value == val1, f"RAM1: Register {key}, Expected: {value}, Actual: {val1}"
-        assert value == val2, f"RAM2: Register {key}, Expected: {value}, Actual: {val2}"
-        print(f"RAM1: Register {key}, Expected: {value}, Actual: {val1}")
+        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[key].value.integer
+        assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
+        print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 
 async def run_test(dut, imm_data, expected_register, runtime=400, imem_size_to_clear=100):
     clear_imem(dut, imem_size_to_clear)
