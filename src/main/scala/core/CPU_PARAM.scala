@@ -33,20 +33,14 @@ class CPU_PARAM {
     // ========================== //
     val XLEN       = 32
     val DATA_WIDTH = XLEN
-    // PC
     val PC_WIDTH   = DATA_WIDTH
-    // Register File
-    val RF_WIDTH        = DATA_WIDTH             // Register File width
-    val RF_SIZE         = 32                     // Register File size
-    val RF_ADDR_WDITH   = log2Up(RF_SIZE)     // Register File address width
-    // Instruction RAM
+    val RF_WIDTH   = DATA_WIDTH                 // Register File width
+    val RF_SIZE    = 32                         // Register File size
+    val RF_ADDR_WDITH   = log2Up(RF_SIZE)       // Register File address width
     val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
-    val INSTR_RAM_ADDR_WIDTH = 20            // 1MB Instruction RAM for now
-    // Data RAM
+    val INSTR_RAM_ADDR_WIDTH = 16               // 64KB Instruction RAM for now
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH
-    val DATA_RAM_ADDR_WIDTH = 20             // 1MB Data RAM for now
-    // ALU
-    val ALU_OPCODE_WIDTH = 4
+    val DATA_RAM_ADDR_WIDTH = 16                // 64KB Data RAM for now
 
     // ========================== //
     //       AHB Bus Config       //

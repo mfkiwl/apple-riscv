@@ -2,6 +2,13 @@
 
 ## Milestone 0.1
 
+- 04/09/2021
+  - Updated memory
+    - Reduced the size so it can be synthesis in Arty A7 FPGA board
+    - Renamed the memory name.
+    - Added a debug port on instruction and bring the port to top level.
+    - With the debug port FPGA synthesis will not optimize out the instruction memory
+
 - 04/08/2021
   - Moved hazard detection logic and forwarding logic into its own module.
 

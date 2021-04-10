@@ -19,19 +19,23 @@ package soc
 
 import spinal.core._
 import core._
-import ip._
+import mem._
+import spinal.lib.bus.amba3.ahblite.AhbLite3
+import spinal.lib.slave
 
 case class apple_riscv_soc(param: CPU_PARAM) extends Component {
+
+    val imem_dbg_ahb = slave(AhbLite3(param.imem_ahbCfg))
 
     // CPU core
     val cpu_core = apple_riscv(param)
 
     // Instruction RAM
-    val instruction_ram = instruction_ram_model(param)
-    cpu_core.imem_ahb <> instruction_ram.imem_ahb
+    val imem_inst = imem(param)
+    cpu_core.imem_ahb <> imem_inst.imem_cpu_ahb
+    imem_dbg_ahb <> imem_inst.imem_dbg_ahb
 
     // Data RAM
-    val data_ram = data_ram_model(param)
-    cpu_core.dmem_ahb <> data_ram.dmem_ahb
-
+    val dmem_inst = dmem(param)
+    cpu_core.dmem_ahb <> dmem_inst.dmem_ahb
 }

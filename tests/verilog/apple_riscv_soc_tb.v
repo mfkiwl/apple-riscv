@@ -28,7 +28,7 @@ initial begin
   $readmemh("instr_ram.rom", instr_ram);
   $display("[INFO] Loading Instruction RAM Done");
   for (im = 0; im < INSTR_RAM_SIZE; im = im + 4) begin
-    DUT_apple_riscv_soc.instruction_ram.ram[im/4] = {instr_ram[im+3], instr_ram[im+2],instr_ram[im+1],instr_ram[im]};
+    DUT_apple_riscv_soc.imem_inst.ram[im/4] = {instr_ram[im+3], instr_ram[im+2],instr_ram[im+1],instr_ram[im]};
   end
 end
 `endif
@@ -38,10 +38,10 @@ initial begin
   $display("Loading Data ram verilog file");
   $readmemh("data_ram.rom", data_ram);
   for (dm = 0; dm < DATA_RAM_SIZE; dm = dm + 4) begin
-    DUT_apple_riscv_soc.data_ram.ram_symbol3[dm/4] = data_ram[dm+3];
-    DUT_apple_riscv_soc.data_ram.ram_symbol2[dm/4] = data_ram[dm+2];
-    DUT_apple_riscv_soc.data_ram.ram_symbol1[dm/4] = data_ram[dm+1];
-    DUT_apple_riscv_soc.data_ram.ram_symbol0[dm/4] = data_ram[dm];
+    DUT_apple_riscv_soc.dmem_inst.ram_symbol3[dm/4] = data_ram[dm+3];
+    DUT_apple_riscv_soc.dmem_inst.ram_symbol2[dm/4] = data_ram[dm+2];
+    DUT_apple_riscv_soc.dmem_inst.ram_symbol1[dm/4] = data_ram[dm+1];
+    DUT_apple_riscv_soc.dmem_inst.ram_symbol0[dm/4] = data_ram[dm];
   end
   $display("[INFO] Loading Data RAM Done");
   //for (dm = 0; dm < 20; dm = dm + 1) begin
@@ -49,6 +49,20 @@ initial begin
   //end
 end
 `endif
+
+  reg      [15:0]   imem_dbg_ahb_HADDR      = 'b0;
+  reg               imem_dbg_ahb_HSEL       = 'b0;
+  reg               imem_dbg_ahb_HREADY     = 'b0;
+  reg               imem_dbg_ahb_HWRITE     = 'b0;
+  reg      [2:0]    imem_dbg_ahb_HSIZE      = 'b0;
+  reg      [2:0]    imem_dbg_ahb_HBURST     = 'b0;
+  reg      [3:0]    imem_dbg_ahb_HPROT      = 'b0;
+  reg      [1:0]    imem_dbg_ahb_HTRANS     = 'b0;
+  reg               imem_dbg_ahb_HMASTLOCK  = 'b0;
+  reg      [31:0]   imem_dbg_ahb_HWDATA     = 'b0;
+  wire     [31:0]   imem_dbg_ahb_HRDATA;
+  wire              imem_dbg_ahb_HREADYOUT;
+  wire              imem_dbg_ahb_HRESP;
 
 endmodule
 

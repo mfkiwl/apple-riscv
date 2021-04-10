@@ -25,16 +25,7 @@ import spinal.core._
 import spinal.lib.bus.amba3.ahblite._
 import spinal.lib.master
 
-case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
-
-    // data ram
-    val data_ram_wr         = out Bool
-    val data_ram_rd         = out Bool
-    val data_ram_addr       = out UInt(param.DATA_RAM_ADDR_WIDTH bits)
-    val data_ram_data_out   = out Bits(param.DATA_RAM_DATA_WIDTH bits)
-    val data_ram_byte_en    = out Bits(param.DATA_RAM_DATA_WIDTH / 8 bits)
-    val data_ram_data_in    = in  Bits(param.DATA_RAM_DATA_WIDTH bits)
-}
+case class apple_riscv_io(param: CPU_PARAM) extends Bundle {}
 
 case class apple_riscv (param: CPU_PARAM) extends Component {
 

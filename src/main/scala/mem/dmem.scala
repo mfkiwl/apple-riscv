@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: data_ram_model
+// Module Name: dmem
 //
 // Author: Heqing Huang
 // Date Created: 03/30/2021
@@ -13,18 +13,18 @@
 //
 // Data RAM
 //
-// - Data ram simulation model
+// - Data RAM
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package ip
+package mem
 
-import core.CPU_PARAM
+import core._
 import spinal.core._
 import spinal.lib.bus.amba3.ahblite.AhbLite3
 import spinal.lib.slave
 
-case class data_ram_model(param: CPU_PARAM) extends Component {
+case class dmem(param: CPU_PARAM) extends Component {
 
   val dmem_ahb = slave(AhbLite3(param.dmem_ahbCfg))
 
@@ -32,6 +32,7 @@ case class data_ram_model(param: CPU_PARAM) extends Component {
   val SIZE = 1 << (param.INSTR_RAM_ADDR_WIDTH - 2)
   val ram = new Mem(Bits(param.INSTR_RAM_DATA_WIDTH bits), SIZE)
 
+  // == CPU side == //
   val word_addr = dmem_ahb.HADDR(param.INSTR_RAM_ADDR_WIDTH -1 downto 2)
   // Here we use HSEL to indicate we want to stall the data
   val read_en = dmem_ahb.HSEL

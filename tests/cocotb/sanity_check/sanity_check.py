@@ -32,7 +32,7 @@ def clear_imem(dut, imem_size_to_clear):
     """ Clean the instruction ram """
     print("[TB-INFO]: Cleaning Instruction Memory")
     for i in range(imem_size_to_clear):
-        dut.DUT_apple_riscv_soc.instruction_ram.ram[i] = 0
+        dut.DUT_apple_riscv_soc.imem_inst.ram[i] = 0
     print(f"[TB-INFO]: Cleaning the Instruction Memory done")
 
 def load_imem(dut, imem):
@@ -40,7 +40,7 @@ def load_imem(dut, imem):
     print("[TB-INFO]: Loading Instruction Memory")
     size = len(imem)
     for i in range(size):
-        dut.DUT_apple_riscv_soc.instruction_ram.ram[i] = imem[i]
+        dut.DUT_apple_riscv_soc.imem_inst.ram[i] = imem[i]
     print(f"[TB-INFO]: Loading Instruction Memory done. Memory size is {size}")
 
 def print_register(dut, size=32):

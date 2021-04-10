@@ -1,20 +1,27 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 37def541955c5f59ca9032388ce49d187f92b4bf
+// Git hash  : 0fb184ed3bb9eb926b12495bbca8910b058a8080
 
 
 
 module apple_riscv_soc (
+  input      [15:0]   imem_dbg_ahb_HADDR,
+  input               imem_dbg_ahb_HSEL,
+  input               imem_dbg_ahb_HREADY,
+  input               imem_dbg_ahb_HWRITE,
+  input      [2:0]    imem_dbg_ahb_HSIZE,
+  input      [2:0]    imem_dbg_ahb_HBURST,
+  input      [3:0]    imem_dbg_ahb_HPROT,
+  input      [1:0]    imem_dbg_ahb_HTRANS,
+  input               imem_dbg_ahb_HMASTLOCK,
+  input      [31:0]   imem_dbg_ahb_HWDATA,
+  output     [31:0]   imem_dbg_ahb_HRDATA,
+  output              imem_dbg_ahb_HREADYOUT,
+  output              imem_dbg_ahb_HRESP,
   input               clk,
   input               reset
 );
-  wire       [31:0]   _zz_1;
-  wire                cpu_core_io_data_ram_wr;
-  wire                cpu_core_io_data_ram_rd;
-  wire       [19:0]   cpu_core_io_data_ram_addr;
-  wire       [31:0]   cpu_core_io_data_ram_data_out;
-  wire       [3:0]    cpu_core_io_data_ram_byte_en;
-  wire       [19:0]   cpu_core_imem_ahb_HADDR;
+  wire       [15:0]   cpu_core_imem_ahb_HADDR;
   wire                cpu_core_imem_ahb_HWRITE;
   wire       [2:0]    cpu_core_imem_ahb_HSIZE;
   wire       [2:0]    cpu_core_imem_ahb_HBURST;
@@ -24,7 +31,7 @@ module apple_riscv_soc (
   wire       [31:0]   cpu_core_imem_ahb_HWDATA;
   wire                cpu_core_imem_ahb_HREADY;
   wire                cpu_core_imem_ahb_HSEL;
-  wire       [19:0]   cpu_core_dmem_ahb_HADDR;
+  wire       [15:0]   cpu_core_dmem_ahb_HADDR;
   wire                cpu_core_dmem_ahb_HWRITE;
   wire       [2:0]    cpu_core_dmem_ahb_HSIZE;
   wire       [2:0]    cpu_core_dmem_ahb_HBURST;
@@ -34,88 +41,101 @@ module apple_riscv_soc (
   wire       [31:0]   cpu_core_dmem_ahb_HWDATA;
   wire                cpu_core_dmem_ahb_HREADY;
   wire                cpu_core_dmem_ahb_HSEL;
-  wire                instruction_ram_imem_ahb_HREADYOUT;
-  wire                instruction_ram_imem_ahb_HRESP;
-  wire       [31:0]   instruction_ram_imem_ahb_HRDATA;
-  wire                data_ram_dmem_ahb_HREADYOUT;
-  wire                data_ram_dmem_ahb_HRESP;
-  wire       [31:0]   data_ram_dmem_ahb_HRDATA;
+  wire                imem_inst_imem_cpu_ahb_HREADYOUT;
+  wire                imem_inst_imem_cpu_ahb_HRESP;
+  wire       [31:0]   imem_inst_imem_cpu_ahb_HRDATA;
+  wire                imem_inst_imem_dbg_ahb_HREADYOUT;
+  wire                imem_inst_imem_dbg_ahb_HRESP;
+  wire       [31:0]   imem_inst_imem_dbg_ahb_HRDATA;
+  wire                dmem_inst_dmem_ahb_HREADYOUT;
+  wire                dmem_inst_dmem_ahb_HRESP;
+  wire       [31:0]   dmem_inst_dmem_ahb_HRDATA;
 
   apple_riscv cpu_core (
-    .io_data_ram_wr          (cpu_core_io_data_ram_wr                ), //o
-    .io_data_ram_rd          (cpu_core_io_data_ram_rd                ), //o
-    .io_data_ram_addr        (cpu_core_io_data_ram_addr[19:0]        ), //o
-    .io_data_ram_data_out    (cpu_core_io_data_ram_data_out[31:0]    ), //o
-    .io_data_ram_byte_en     (cpu_core_io_data_ram_byte_en[3:0]      ), //o
-    .io_data_ram_data_in     (_zz_1[31:0]                            ), //i
-    .imem_ahb_HADDR          (cpu_core_imem_ahb_HADDR[19:0]          ), //o
-    .imem_ahb_HSEL           (cpu_core_imem_ahb_HSEL                 ), //o
-    .imem_ahb_HREADY         (cpu_core_imem_ahb_HREADY               ), //o
-    .imem_ahb_HWRITE         (cpu_core_imem_ahb_HWRITE               ), //o
-    .imem_ahb_HSIZE          (cpu_core_imem_ahb_HSIZE[2:0]           ), //o
-    .imem_ahb_HBURST         (cpu_core_imem_ahb_HBURST[2:0]          ), //o
-    .imem_ahb_HPROT          (cpu_core_imem_ahb_HPROT[3:0]           ), //o
-    .imem_ahb_HTRANS         (cpu_core_imem_ahb_HTRANS[1:0]          ), //o
-    .imem_ahb_HMASTLOCK      (cpu_core_imem_ahb_HMASTLOCK            ), //o
-    .imem_ahb_HWDATA         (cpu_core_imem_ahb_HWDATA[31:0]         ), //o
-    .imem_ahb_HRDATA         (instruction_ram_imem_ahb_HRDATA[31:0]  ), //i
-    .imem_ahb_HREADYOUT      (instruction_ram_imem_ahb_HREADYOUT     ), //i
-    .imem_ahb_HRESP          (instruction_ram_imem_ahb_HRESP         ), //i
-    .dmem_ahb_HADDR          (cpu_core_dmem_ahb_HADDR[19:0]          ), //o
-    .dmem_ahb_HSEL           (cpu_core_dmem_ahb_HSEL                 ), //o
-    .dmem_ahb_HREADY         (cpu_core_dmem_ahb_HREADY               ), //o
-    .dmem_ahb_HWRITE         (cpu_core_dmem_ahb_HWRITE               ), //o
-    .dmem_ahb_HSIZE          (cpu_core_dmem_ahb_HSIZE[2:0]           ), //o
-    .dmem_ahb_HBURST         (cpu_core_dmem_ahb_HBURST[2:0]          ), //o
-    .dmem_ahb_HPROT          (cpu_core_dmem_ahb_HPROT[3:0]           ), //o
-    .dmem_ahb_HTRANS         (cpu_core_dmem_ahb_HTRANS[1:0]          ), //o
-    .dmem_ahb_HMASTLOCK      (cpu_core_dmem_ahb_HMASTLOCK            ), //o
-    .dmem_ahb_HWDATA         (cpu_core_dmem_ahb_HWDATA[31:0]         ), //o
-    .dmem_ahb_HRDATA         (data_ram_dmem_ahb_HRDATA[31:0]         ), //i
-    .dmem_ahb_HREADYOUT      (data_ram_dmem_ahb_HREADYOUT            ), //i
-    .dmem_ahb_HRESP          (data_ram_dmem_ahb_HRESP                ), //i
-    .clk                     (clk                                    ), //i
-    .reset                   (reset                                  )  //i
+    .imem_ahb_HADDR        (cpu_core_imem_ahb_HADDR[15:0]        ), //o
+    .imem_ahb_HSEL         (cpu_core_imem_ahb_HSEL               ), //o
+    .imem_ahb_HREADY       (cpu_core_imem_ahb_HREADY             ), //o
+    .imem_ahb_HWRITE       (cpu_core_imem_ahb_HWRITE             ), //o
+    .imem_ahb_HSIZE        (cpu_core_imem_ahb_HSIZE[2:0]         ), //o
+    .imem_ahb_HBURST       (cpu_core_imem_ahb_HBURST[2:0]        ), //o
+    .imem_ahb_HPROT        (cpu_core_imem_ahb_HPROT[3:0]         ), //o
+    .imem_ahb_HTRANS       (cpu_core_imem_ahb_HTRANS[1:0]        ), //o
+    .imem_ahb_HMASTLOCK    (cpu_core_imem_ahb_HMASTLOCK          ), //o
+    .imem_ahb_HWDATA       (cpu_core_imem_ahb_HWDATA[31:0]       ), //o
+    .imem_ahb_HRDATA       (imem_inst_imem_cpu_ahb_HRDATA[31:0]  ), //i
+    .imem_ahb_HREADYOUT    (imem_inst_imem_cpu_ahb_HREADYOUT     ), //i
+    .imem_ahb_HRESP        (imem_inst_imem_cpu_ahb_HRESP         ), //i
+    .dmem_ahb_HADDR        (cpu_core_dmem_ahb_HADDR[15:0]        ), //o
+    .dmem_ahb_HSEL         (cpu_core_dmem_ahb_HSEL               ), //o
+    .dmem_ahb_HREADY       (cpu_core_dmem_ahb_HREADY             ), //o
+    .dmem_ahb_HWRITE       (cpu_core_dmem_ahb_HWRITE             ), //o
+    .dmem_ahb_HSIZE        (cpu_core_dmem_ahb_HSIZE[2:0]         ), //o
+    .dmem_ahb_HBURST       (cpu_core_dmem_ahb_HBURST[2:0]        ), //o
+    .dmem_ahb_HPROT        (cpu_core_dmem_ahb_HPROT[3:0]         ), //o
+    .dmem_ahb_HTRANS       (cpu_core_dmem_ahb_HTRANS[1:0]        ), //o
+    .dmem_ahb_HMASTLOCK    (cpu_core_dmem_ahb_HMASTLOCK          ), //o
+    .dmem_ahb_HWDATA       (cpu_core_dmem_ahb_HWDATA[31:0]       ), //o
+    .dmem_ahb_HRDATA       (dmem_inst_dmem_ahb_HRDATA[31:0]      ), //i
+    .dmem_ahb_HREADYOUT    (dmem_inst_dmem_ahb_HREADYOUT         ), //i
+    .dmem_ahb_HRESP        (dmem_inst_dmem_ahb_HRESP             ), //i
+    .clk                   (clk                                  ), //i
+    .reset                 (reset                                )  //i
   );
-  instruction_ram_model instruction_ram (
-    .imem_ahb_HADDR        (cpu_core_imem_ahb_HADDR[19:0]          ), //i
-    .imem_ahb_HSEL         (cpu_core_imem_ahb_HSEL                 ), //i
-    .imem_ahb_HREADY       (cpu_core_imem_ahb_HREADY               ), //i
-    .imem_ahb_HWRITE       (cpu_core_imem_ahb_HWRITE               ), //i
-    .imem_ahb_HSIZE        (cpu_core_imem_ahb_HSIZE[2:0]           ), //i
-    .imem_ahb_HBURST       (cpu_core_imem_ahb_HBURST[2:0]          ), //i
-    .imem_ahb_HPROT        (cpu_core_imem_ahb_HPROT[3:0]           ), //i
-    .imem_ahb_HTRANS       (cpu_core_imem_ahb_HTRANS[1:0]          ), //i
-    .imem_ahb_HMASTLOCK    (cpu_core_imem_ahb_HMASTLOCK            ), //i
-    .imem_ahb_HWDATA       (cpu_core_imem_ahb_HWDATA[31:0]         ), //i
-    .imem_ahb_HRDATA       (instruction_ram_imem_ahb_HRDATA[31:0]  ), //o
-    .imem_ahb_HREADYOUT    (instruction_ram_imem_ahb_HREADYOUT     ), //o
-    .imem_ahb_HRESP        (instruction_ram_imem_ahb_HRESP         ), //o
-    .clk                   (clk                                    ), //i
-    .reset                 (reset                                  )  //i
+  imem imem_inst (
+    .imem_cpu_ahb_HADDR        (cpu_core_imem_ahb_HADDR[15:0]        ), //i
+    .imem_cpu_ahb_HSEL         (cpu_core_imem_ahb_HSEL               ), //i
+    .imem_cpu_ahb_HREADY       (cpu_core_imem_ahb_HREADY             ), //i
+    .imem_cpu_ahb_HWRITE       (cpu_core_imem_ahb_HWRITE             ), //i
+    .imem_cpu_ahb_HSIZE        (cpu_core_imem_ahb_HSIZE[2:0]         ), //i
+    .imem_cpu_ahb_HBURST       (cpu_core_imem_ahb_HBURST[2:0]        ), //i
+    .imem_cpu_ahb_HPROT        (cpu_core_imem_ahb_HPROT[3:0]         ), //i
+    .imem_cpu_ahb_HTRANS       (cpu_core_imem_ahb_HTRANS[1:0]        ), //i
+    .imem_cpu_ahb_HMASTLOCK    (cpu_core_imem_ahb_HMASTLOCK          ), //i
+    .imem_cpu_ahb_HWDATA       (cpu_core_imem_ahb_HWDATA[31:0]       ), //i
+    .imem_cpu_ahb_HRDATA       (imem_inst_imem_cpu_ahb_HRDATA[31:0]  ), //o
+    .imem_cpu_ahb_HREADYOUT    (imem_inst_imem_cpu_ahb_HREADYOUT     ), //o
+    .imem_cpu_ahb_HRESP        (imem_inst_imem_cpu_ahb_HRESP         ), //o
+    .imem_dbg_ahb_HADDR        (imem_dbg_ahb_HADDR[15:0]             ), //i
+    .imem_dbg_ahb_HSEL         (imem_dbg_ahb_HSEL                    ), //i
+    .imem_dbg_ahb_HREADY       (imem_dbg_ahb_HREADY                  ), //i
+    .imem_dbg_ahb_HWRITE       (imem_dbg_ahb_HWRITE                  ), //i
+    .imem_dbg_ahb_HSIZE        (imem_dbg_ahb_HSIZE[2:0]              ), //i
+    .imem_dbg_ahb_HBURST       (imem_dbg_ahb_HBURST[2:0]             ), //i
+    .imem_dbg_ahb_HPROT        (imem_dbg_ahb_HPROT[3:0]              ), //i
+    .imem_dbg_ahb_HTRANS       (imem_dbg_ahb_HTRANS[1:0]             ), //i
+    .imem_dbg_ahb_HMASTLOCK    (imem_dbg_ahb_HMASTLOCK               ), //i
+    .imem_dbg_ahb_HWDATA       (imem_dbg_ahb_HWDATA[31:0]            ), //i
+    .imem_dbg_ahb_HRDATA       (imem_inst_imem_dbg_ahb_HRDATA[31:0]  ), //o
+    .imem_dbg_ahb_HREADYOUT    (imem_inst_imem_dbg_ahb_HREADYOUT     ), //o
+    .imem_dbg_ahb_HRESP        (imem_inst_imem_dbg_ahb_HRESP         ), //o
+    .clk                       (clk                                  ), //i
+    .reset                     (reset                                )  //i
   );
-  data_ram_model data_ram (
-    .dmem_ahb_HADDR        (cpu_core_dmem_ahb_HADDR[19:0]   ), //i
-    .dmem_ahb_HSEL         (cpu_core_dmem_ahb_HSEL          ), //i
-    .dmem_ahb_HREADY       (cpu_core_dmem_ahb_HREADY        ), //i
-    .dmem_ahb_HWRITE       (cpu_core_dmem_ahb_HWRITE        ), //i
-    .dmem_ahb_HSIZE        (cpu_core_dmem_ahb_HSIZE[2:0]    ), //i
-    .dmem_ahb_HBURST       (cpu_core_dmem_ahb_HBURST[2:0]   ), //i
-    .dmem_ahb_HPROT        (cpu_core_dmem_ahb_HPROT[3:0]    ), //i
-    .dmem_ahb_HTRANS       (cpu_core_dmem_ahb_HTRANS[1:0]   ), //i
-    .dmem_ahb_HMASTLOCK    (cpu_core_dmem_ahb_HMASTLOCK     ), //i
-    .dmem_ahb_HWDATA       (cpu_core_dmem_ahb_HWDATA[31:0]  ), //i
-    .dmem_ahb_HRDATA       (data_ram_dmem_ahb_HRDATA[31:0]  ), //o
-    .dmem_ahb_HREADYOUT    (data_ram_dmem_ahb_HREADYOUT     ), //o
-    .dmem_ahb_HRESP        (data_ram_dmem_ahb_HRESP         ), //o
-    .clk                   (clk                             ), //i
-    .reset                 (reset                           )  //i
+  dmem dmem_inst (
+    .dmem_ahb_HADDR        (cpu_core_dmem_ahb_HADDR[15:0]    ), //i
+    .dmem_ahb_HSEL         (cpu_core_dmem_ahb_HSEL           ), //i
+    .dmem_ahb_HREADY       (cpu_core_dmem_ahb_HREADY         ), //i
+    .dmem_ahb_HWRITE       (cpu_core_dmem_ahb_HWRITE         ), //i
+    .dmem_ahb_HSIZE        (cpu_core_dmem_ahb_HSIZE[2:0]     ), //i
+    .dmem_ahb_HBURST       (cpu_core_dmem_ahb_HBURST[2:0]    ), //i
+    .dmem_ahb_HPROT        (cpu_core_dmem_ahb_HPROT[3:0]     ), //i
+    .dmem_ahb_HTRANS       (cpu_core_dmem_ahb_HTRANS[1:0]    ), //i
+    .dmem_ahb_HMASTLOCK    (cpu_core_dmem_ahb_HMASTLOCK      ), //i
+    .dmem_ahb_HWDATA       (cpu_core_dmem_ahb_HWDATA[31:0]   ), //i
+    .dmem_ahb_HRDATA       (dmem_inst_dmem_ahb_HRDATA[31:0]  ), //o
+    .dmem_ahb_HREADYOUT    (dmem_inst_dmem_ahb_HREADYOUT     ), //o
+    .dmem_ahb_HRESP        (dmem_inst_dmem_ahb_HRESP         ), //o
+    .clk                   (clk                              ), //i
+    .reset                 (reset                            )  //i
   );
+  assign imem_dbg_ahb_HRDATA = imem_inst_imem_dbg_ahb_HRDATA;
+  assign imem_dbg_ahb_HREADYOUT = imem_inst_imem_dbg_ahb_HREADYOUT;
+  assign imem_dbg_ahb_HRESP = imem_inst_imem_dbg_ahb_HRESP;
 
 endmodule
 
-module data_ram_model (
-  input      [19:0]   dmem_ahb_HADDR,
+module dmem (
+  input      [15:0]   dmem_ahb_HADDR,
   input               dmem_ahb_HSEL,
   input               dmem_ahb_HREADY,
   input               dmem_ahb_HWRITE,
@@ -132,7 +152,7 @@ module data_ram_model (
   input               reset
 );
   reg        [31:0]   _zz_2;
-  wire       [17:0]   word_addr;
+  wire       [13:0]   word_addr;
   wire       [1:0]    byte_sel;
   wire                word_sel;
   wire                xfer_byte;
@@ -143,10 +163,10 @@ module data_ram_model (
   wire       [3:0]    word_mask;
   wire       [3:0]    byte_en;
   wire                _zz_1;
-  reg [7:0] ram_symbol0 [0:262143];
-  reg [7:0] ram_symbol1 [0:262143];
-  reg [7:0] ram_symbol2 [0:262143];
-  reg [7:0] ram_symbol3 [0:262143];
+  reg [7:0] ram_symbol0 [0:16383];
+  reg [7:0] ram_symbol1 [0:16383];
+  reg [7:0] ram_symbol2 [0:16383];
+  reg [7:0] ram_symbol3 [0:16383];
   reg [7:0] _zz_3;
   reg [7:0] _zz_4;
   reg [7:0] _zz_5;
@@ -179,7 +199,7 @@ module data_ram_model (
     end
   end
 
-  assign word_addr = dmem_ahb_HADDR[19 : 2];
+  assign word_addr = dmem_ahb_HADDR[15 : 2];
   assign byte_sel = dmem_ahb_HADDR[1 : 0];
   assign word_sel = dmem_ahb_HADDR[1];
   assign xfer_byte = (dmem_ahb_HSIZE == 3'b000);
@@ -196,54 +216,79 @@ module data_ram_model (
 
 endmodule
 
-module instruction_ram_model (
-  input      [19:0]   imem_ahb_HADDR,
-  input               imem_ahb_HSEL,
-  input               imem_ahb_HREADY,
-  input               imem_ahb_HWRITE,
-  input      [2:0]    imem_ahb_HSIZE,
-  input      [2:0]    imem_ahb_HBURST,
-  input      [3:0]    imem_ahb_HPROT,
-  input      [1:0]    imem_ahb_HTRANS,
-  input               imem_ahb_HMASTLOCK,
-  input      [31:0]   imem_ahb_HWDATA,
-  output     [31:0]   imem_ahb_HRDATA,
-  output              imem_ahb_HREADYOUT,
-  output              imem_ahb_HRESP,
+module imem (
+  input      [15:0]   imem_cpu_ahb_HADDR,
+  input               imem_cpu_ahb_HSEL,
+  input               imem_cpu_ahb_HREADY,
+  input               imem_cpu_ahb_HWRITE,
+  input      [2:0]    imem_cpu_ahb_HSIZE,
+  input      [2:0]    imem_cpu_ahb_HBURST,
+  input      [3:0]    imem_cpu_ahb_HPROT,
+  input      [1:0]    imem_cpu_ahb_HTRANS,
+  input               imem_cpu_ahb_HMASTLOCK,
+  input      [31:0]   imem_cpu_ahb_HWDATA,
+  output     [31:0]   imem_cpu_ahb_HRDATA,
+  output              imem_cpu_ahb_HREADYOUT,
+  output              imem_cpu_ahb_HRESP,
+  input      [15:0]   imem_dbg_ahb_HADDR,
+  input               imem_dbg_ahb_HSEL,
+  input               imem_dbg_ahb_HREADY,
+  input               imem_dbg_ahb_HWRITE,
+  input      [2:0]    imem_dbg_ahb_HSIZE,
+  input      [2:0]    imem_dbg_ahb_HBURST,
+  input      [3:0]    imem_dbg_ahb_HPROT,
+  input      [1:0]    imem_dbg_ahb_HTRANS,
+  input               imem_dbg_ahb_HMASTLOCK,
+  input      [31:0]   imem_dbg_ahb_HWDATA,
+  output     [31:0]   imem_dbg_ahb_HRDATA,
+  output              imem_dbg_ahb_HREADYOUT,
+  output              imem_dbg_ahb_HRESP,
   input               clk,
   input               reset
 );
   reg        [31:0]   _zz_1;
-  wire       [17:0]   word_addr;
-  reg [31:0] ram [0:262143];
+  reg        [31:0]   _zz_2;
+  wire       [13:0]   cpu_word_addr;
+  wire       [13:0]   dbg_word_addr;
+  reg [31:0] ram [0:16383];
 
   always @ (posedge clk) begin
-    if(imem_ahb_HWRITE) begin
-      ram[word_addr] <= imem_ahb_HWDATA;
+    if(imem_cpu_ahb_HWRITE) begin
+      ram[cpu_word_addr] <= imem_cpu_ahb_HWDATA;
     end
   end
 
   always @ (posedge clk) begin
-    if(imem_ahb_HSEL) begin
-      _zz_1 <= ram[word_addr];
+    if(imem_cpu_ahb_HSEL) begin
+      _zz_1 <= ram[cpu_word_addr];
     end
   end
 
-  assign word_addr = imem_ahb_HADDR[19 : 2];
-  assign imem_ahb_HREADYOUT = 1'b1;
-  assign imem_ahb_HRESP = 1'b0;
-  assign imem_ahb_HRDATA = _zz_1;
+  always @ (posedge clk) begin
+    if(imem_dbg_ahb_HWRITE) begin
+      ram[dbg_word_addr] <= imem_dbg_ahb_HWDATA;
+    end
+  end
+
+  always @ (posedge clk) begin
+    if(imem_dbg_ahb_HSEL) begin
+      _zz_2 <= ram[dbg_word_addr];
+    end
+  end
+
+  assign cpu_word_addr = imem_cpu_ahb_HADDR[15 : 2];
+  assign imem_cpu_ahb_HREADYOUT = 1'b1;
+  assign imem_cpu_ahb_HRESP = 1'b0;
+  assign imem_cpu_ahb_HRDATA = _zz_1;
+  assign dbg_word_addr = imem_dbg_ahb_HADDR[15 : 2];
+  assign imem_dbg_ahb_HREADYOUT = 1'b1;
+  assign imem_dbg_ahb_HRESP = 1'b0;
+  assign imem_dbg_ahb_HRDATA = _zz_2;
 
 endmodule
 
 module apple_riscv (
-  output              io_data_ram_wr,
-  output              io_data_ram_rd,
-  output     [19:0]   io_data_ram_addr,
-  output     [31:0]   io_data_ram_data_out,
-  output     [3:0]    io_data_ram_byte_en,
-  input      [31:0]   io_data_ram_data_in,
-  output     [19:0]   imem_ahb_HADDR,
+  output     [15:0]   imem_ahb_HADDR,
   output              imem_ahb_HSEL,
   output              imem_ahb_HREADY,
   output              imem_ahb_HWRITE,
@@ -256,7 +301,7 @@ module apple_riscv (
   input      [31:0]   imem_ahb_HRDATA,
   input               imem_ahb_HREADYOUT,
   input               imem_ahb_HRESP,
-  output     [19:0]   dmem_ahb_HADDR,
+  output     [15:0]   dmem_ahb_HADDR,
   output              dmem_ahb_HSEL,
   output              dmem_ahb_HREADY,
   output              dmem_ahb_HWRITE,
@@ -272,12 +317,12 @@ module apple_riscv (
   input               clk,
   input               reset
 );
-  wire       [19:0]   _zz_1;
+  wire       [15:0]   _zz_1;
   wire                _zz_2;
-  wire       [19:0]   _zz_3;
+  wire       [15:0]   _zz_3;
   wire       [31:0]   pc_inst_io_pc_out;
   wire       [31:0]   imem_ctrl_inst_io_mc2cpu_data;
-  wire       [19:0]   imem_ctrl_inst_imem_ahb_HADDR;
+  wire       [15:0]   imem_ctrl_inst_imem_ahb_HADDR;
   wire                imem_ctrl_inst_imem_ahb_HWRITE;
   wire       [2:0]    imem_ctrl_inst_imem_ahb_HSIZE;
   wire       [2:0]    imem_ctrl_inst_imem_ahb_HBURST;
@@ -328,7 +373,7 @@ module apple_riscv (
   wire                branch_unit_inst_io_branch_taken;
   wire                branch_unit_inst_io_instruction_address_misaligned_exception;
   wire       [31:0]   dmem_ctrl_isnt_io_mc2cpu_data;
-  wire       [19:0]   dmem_ctrl_isnt_dmem_ahb_HADDR;
+  wire       [15:0]   dmem_ctrl_isnt_dmem_ahb_HADDR;
   wire                dmem_ctrl_isnt_dmem_ahb_HWRITE;
   wire       [2:0]    dmem_ctrl_isnt_dmem_ahb_HSIZE;
   wire       [2:0]    dmem_ctrl_isnt_dmem_ahb_HBURST;
@@ -408,8 +453,8 @@ module apple_riscv (
   reg                 id2ex_op2_sel_imm;
   reg                 id2ex_op1_sel_pc;
   reg                 id2ex_op1_sel_zero;
-  reg        [31:0]   ex_rs1_value_forwarded;
-  reg        [31:0]   ex_rs2_value_forwarded;
+  wire       [31:0]   ex_rs1_value_forwarded;
+  wire       [31:0]   ex_rs2_value_forwarded;
   wire       [31:0]   alu_operand1_muxout;
   wire       [31:0]   alu_operand2_muxout;
   reg                 ex2mem_instr_valid;
@@ -440,10 +485,10 @@ module apple_riscv (
     .reset        (reset                    )  //i
   );
   imem_ctrl imem_ctrl_inst (
-    .io_cpu2mc_addr        (_zz_1[19:0]                           ), //i
+    .io_cpu2mc_addr        (_zz_1[15:0]                           ), //i
     .io_cpu2mc_en          (if_pipe_run                           ), //i
     .io_mc2cpu_data        (imem_ctrl_inst_io_mc2cpu_data[31:0]   ), //o
-    .imem_ahb_HADDR        (imem_ctrl_inst_imem_ahb_HADDR[19:0]   ), //o
+    .imem_ahb_HADDR        (imem_ctrl_inst_imem_ahb_HADDR[15:0]   ), //o
     .imem_ahb_HSEL         (imem_ctrl_inst_imem_ahb_HSEL          ), //o
     .imem_ahb_HREADY       (imem_ctrl_inst_imem_ahb_HREADY        ), //o
     .imem_ahb_HWRITE       (imem_ctrl_inst_imem_ahb_HWRITE        ), //o
@@ -537,13 +582,13 @@ module apple_riscv (
   dmem_ctrl dmem_ctrl_isnt (
     .io_cpu2mc_wr                 (ex2mem_data_ram_wr                    ), //i
     .io_cpu2mc_rd                 (ex2mem_data_ram_rd                    ), //i
-    .io_cpu2mc_addr               (_zz_3[19:0]                           ), //i
+    .io_cpu2mc_addr               (_zz_3[15:0]                           ), //i
     .io_cpu2mc_data               (ex2mem_rs2_value[31:0]                ), //i
     .io_mc2cpu_data               (dmem_ctrl_isnt_io_mc2cpu_data[31:0]   ), //o
     .io_cpu2mc_mem_LS_byte        (ex2mem_data_ram_ld_byte               ), //i
     .io_cpu2mc_mem_LS_halfword    (ex2mem_data_ram_ld_hword              ), //i
     .io_cpu2mc_mem_LW_unsigned    (ex2mem_data_ram_ld_unsign             ), //i
-    .dmem_ahb_HADDR               (dmem_ctrl_isnt_dmem_ahb_HADDR[19:0]   ), //o
+    .dmem_ahb_HADDR               (dmem_ctrl_isnt_dmem_ahb_HADDR[15:0]   ), //o
     .dmem_ahb_HSEL                (dmem_ctrl_isnt_dmem_ahb_HSEL          ), //o
     .dmem_ahb_HREADY              (dmem_ctrl_isnt_dmem_ahb_HREADY        ), //o
     .dmem_ahb_HWRITE              (dmem_ctrl_isnt_dmem_ahb_HWRITE        ), //o
@@ -607,7 +652,7 @@ module apple_riscv (
   assign imem_ahb_HTRANS = imem_ctrl_inst_imem_ahb_HTRANS;
   assign imem_ahb_HMASTLOCK = imem_ctrl_inst_imem_ahb_HMASTLOCK;
   assign imem_ahb_HWDATA = imem_ctrl_inst_imem_ahb_HWDATA;
-  assign _zz_1 = pc_inst_io_pc_out[19 : 0];
+  assign _zz_1 = pc_inst_io_pc_out[15 : 0];
   assign alu_operand1_muxout = (id2ex_op1_sel_zero ? 32'h0 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
   assign alu_operand2_muxout = (id2ex_op2_sel_imm ? id2ex_imm_value : ex_rs2_value_forwarded);
   assign _zz_2 = alu_inst_io_alu_out[0];
@@ -623,32 +668,10 @@ module apple_riscv (
   assign dmem_ahb_HTRANS = dmem_ctrl_isnt_dmem_ahb_HTRANS;
   assign dmem_ahb_HMASTLOCK = dmem_ctrl_isnt_dmem_ahb_HMASTLOCK;
   assign dmem_ahb_HWDATA = dmem_ctrl_isnt_dmem_ahb_HWDATA;
-  assign _zz_3 = ex2mem_alu_out[19 : 0];
+  assign _zz_3 = ex2mem_alu_out[15 : 0];
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dmem_ctrl_isnt_io_mc2cpu_data : mem2wb_alu_out);
-  always @ (*) begin
-    if(fu_inst_io_forward_rs1_from_mem)begin
-      ex_rs1_value_forwarded = ex2mem_alu_out;
-    end else begin
-      if(fu_inst_io_forward_rs1_from_wb)begin
-        ex_rs1_value_forwarded = wb_rd_wr_data;
-      end else begin
-        ex_rs1_value_forwarded = id2ex_rs1_value;
-      end
-    end
-  end
-
-  always @ (*) begin
-    if(fu_inst_io_forward_rs2_from_mem)begin
-      ex_rs2_value_forwarded = ex2mem_alu_out;
-    end else begin
-      if(fu_inst_io_forward_rs2_from_wb)begin
-        ex_rs2_value_forwarded = wb_rd_wr_data;
-      end else begin
-        ex_rs2_value_forwarded = id2ex_rs2_value;
-      end
-    end
-  end
-
+  assign ex_rs1_value_forwarded = (fu_inst_io_forward_rs1_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs1_from_wb ? wb_rd_wr_data : id2ex_rs1_value));
+  assign ex_rs2_value_forwarded = (fu_inst_io_forward_rs2_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs2_from_wb ? wb_rd_wr_data : id2ex_rs2_value));
   assign if_instr_valid = hdu_inst_io_if_valid;
   assign id_instr_valid = (if2id_instr_valid && hdu_inst_io_id_valid);
   assign ex_instr_valid = (id2ex_instr_valid && hdu_inst_io_ex_valid);
@@ -933,13 +956,13 @@ endmodule
 module dmem_ctrl (
   input               io_cpu2mc_wr,
   input               io_cpu2mc_rd,
-  input      [19:0]   io_cpu2mc_addr,
+  input      [15:0]   io_cpu2mc_addr,
   input      [31:0]   io_cpu2mc_data,
   output reg [31:0]   io_mc2cpu_data,
   input               io_cpu2mc_mem_LS_byte,
   input               io_cpu2mc_mem_LS_halfword,
   input               io_cpu2mc_mem_LW_unsigned,
-  output     [19:0]   dmem_ahb_HADDR,
+  output     [15:0]   dmem_ahb_HADDR,
   output              dmem_ahb_HSEL,
   output              dmem_ahb_HREADY,
   output              dmem_ahb_HWRITE,
@@ -1440,10 +1463,10 @@ module instr_dec (
 endmodule
 
 module imem_ctrl (
-  input      [19:0]   io_cpu2mc_addr,
+  input      [15:0]   io_cpu2mc_addr,
   input               io_cpu2mc_en,
   output     [31:0]   io_mc2cpu_data,
-  output     [19:0]   imem_ahb_HADDR,
+  output     [15:0]   imem_ahb_HADDR,
   output              imem_ahb_HSEL,
   output              imem_ahb_HREADY,
   output              imem_ahb_HWRITE,
