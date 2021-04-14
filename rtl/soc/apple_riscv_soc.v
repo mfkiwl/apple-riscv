@@ -1,7 +1,18 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : eea8f2ebda4ccd9ceda5c16a790c31719cc8fa66
+// Git hash  : c0861e80ab14a46d5f38104d23780b1839d9fa79
 
+
+`define br_imm_type_e_binary_sequential_type [1:0]
+`define br_imm_type_e_binary_sequential_JTYPE 2'b00
+`define br_imm_type_e_binary_sequential_BTYPE 2'b01
+`define br_imm_type_e_binary_sequential_ITYPE 2'b10
+
+`define alu_imm_type_e_binary_sequential_type [1:0]
+`define alu_imm_type_e_binary_sequential_ITYPE 2'b00
+`define alu_imm_type_e_binary_sequential_STYPE 2'b01
+`define alu_imm_type_e_binary_sequential_UTYPE 2'b10
+`define alu_imm_type_e_binary_sequential_FOUR 2'b11
 
 
 module apple_riscv_soc (
@@ -338,7 +349,7 @@ module apple_riscv (
   wire       [4:0]    instr_dec_inst_io_rs2_idx;
   wire       [6:0]    instr_dec_inst_io_func7;
   wire       [31:0]   instr_dec_inst_io_imm_value;
-  wire       [20:0]   instr_dec_inst_io_brjp_imm_value;
+  wire       [20:0]   instr_dec_inst_io_jump_imm_value;
   wire                instr_dec_inst_io_register_wr;
   wire                instr_dec_inst_io_register_rs1_rd;
   wire                instr_dec_inst_io_register_rs2_rd;
@@ -359,13 +370,14 @@ module apple_riscv (
   wire                instr_dec_inst_io_alu_op_sltu;
   wire                instr_dec_inst_io_alu_op_eqt;
   wire                instr_dec_inst_io_alu_op_invb0;
+  wire       [1:0]    instr_dec_inst_io_alu_branch_op;
   wire                instr_dec_inst_io_op2_sel_imm;
   wire                instr_dec_inst_io_op1_sel_pc;
   wire                instr_dec_inst_io_op1_sel_zero;
   wire                instr_dec_inst_io_branch_op;
   wire                instr_dec_inst_io_jal_op;
   wire                instr_dec_inst_io_jalr_op;
-  wire                instr_dec_inst_io_invalid_instr;
+  wire                instr_dec_inst_io_invld_instr;
   wire       [31:0]   regfile_inst_io_rs1_data_out;
   wire       [31:0]   regfile_inst_io_rs2_data_out;
   wire       [31:0]   alu_inst_io_alu_out;
@@ -510,7 +522,7 @@ module apple_riscv (
     .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]          ), //o
     .io_func7                 (instr_dec_inst_io_func7[6:0]            ), //o
     .io_imm_value             (instr_dec_inst_io_imm_value[31:0]       ), //o
-    .io_brjp_imm_value        (instr_dec_inst_io_brjp_imm_value[20:0]  ), //o
+    .io_jump_imm_value        (instr_dec_inst_io_jump_imm_value[20:0]  ), //o
     .io_register_wr           (instr_dec_inst_io_register_wr           ), //o
     .io_register_rs1_rd       (instr_dec_inst_io_register_rs1_rd       ), //o
     .io_register_rs2_rd       (instr_dec_inst_io_register_rs2_rd       ), //o
@@ -531,13 +543,14 @@ module apple_riscv (
     .io_alu_op_sltu           (instr_dec_inst_io_alu_op_sltu           ), //o
     .io_alu_op_eqt            (instr_dec_inst_io_alu_op_eqt            ), //o
     .io_alu_op_invb0          (instr_dec_inst_io_alu_op_invb0          ), //o
+    .io_alu_branch_op         (instr_dec_inst_io_alu_branch_op[1:0]    ), //o
     .io_op2_sel_imm           (instr_dec_inst_io_op2_sel_imm           ), //o
     .io_op1_sel_pc            (instr_dec_inst_io_op1_sel_pc            ), //o
     .io_op1_sel_zero          (instr_dec_inst_io_op1_sel_zero          ), //o
     .io_branch_op             (instr_dec_inst_io_branch_op             ), //o
     .io_jal_op                (instr_dec_inst_io_jal_op                ), //o
     .io_jalr_op               (instr_dec_inst_io_jalr_op               ), //o
-    .io_invalid_instr         (instr_dec_inst_io_invalid_instr         )  //o
+    .io_invld_instr           (instr_dec_inst_io_invld_instr           )  //o
   );
   regfile regfile_inst (
     .io_rs1_rd_addr         (instr_dec_inst_io_rs1_idx[4:0]      ), //i
@@ -831,7 +844,7 @@ module apple_riscv (
       id2ex_imm_value <= instr_dec_inst_io_imm_value;
     end
     if(ex_pipe_run)begin
-      id2ex_brjp_imm_value <= instr_dec_inst_io_brjp_imm_value;
+      id2ex_brjp_imm_value <= instr_dec_inst_io_jump_imm_value;
     end
     if(ex_pipe_run)begin
       id2ex_pc <= if2id_pc;
@@ -1306,152 +1319,1222 @@ module instr_dec (
   output     [4:0]    io_rs2_idx,
   output     [6:0]    io_func7,
   output reg [31:0]   io_imm_value,
-  output reg [20:0]   io_brjp_imm_value,
-  output              io_register_wr,
-  output              io_register_rs1_rd,
-  output              io_register_rs2_rd,
-  output              io_data_ram_wr,
-  output              io_data_ram_rd,
-  output              io_data_ram_ld_byte,
-  output              io_data_ram_ld_hword,
-  output              io_data_ram_ld_unsign,
-  output              io_alu_op_and,
-  output              io_alu_op_or,
-  output              io_alu_op_xor,
-  output              io_alu_op_add,
-  output              io_alu_op_sub,
-  output              io_alu_op_sra,
-  output              io_alu_op_srl,
-  output              io_alu_op_sll,
-  output              io_alu_op_slt,
-  output              io_alu_op_sltu,
-  output              io_alu_op_eqt,
-  output              io_alu_op_invb0,
-  output              io_op2_sel_imm,
-  output              io_op1_sel_pc,
-  output              io_op1_sel_zero,
-  output              io_branch_op,
-  output              io_jal_op,
-  output              io_jalr_op,
-  output              io_invalid_instr
+  output reg [20:0]   io_jump_imm_value,
+  output reg          io_register_wr,
+  output reg          io_register_rs1_rd,
+  output reg          io_register_rs2_rd,
+  output reg          io_data_ram_wr,
+  output reg          io_data_ram_rd,
+  output reg          io_data_ram_ld_byte,
+  output reg          io_data_ram_ld_hword,
+  output reg          io_data_ram_ld_unsign,
+  output reg          io_alu_op_and,
+  output reg          io_alu_op_or,
+  output reg          io_alu_op_xor,
+  output reg          io_alu_op_add,
+  output reg          io_alu_op_sub,
+  output reg          io_alu_op_sra,
+  output reg          io_alu_op_srl,
+  output reg          io_alu_op_sll,
+  output reg          io_alu_op_slt,
+  output reg          io_alu_op_sltu,
+  output reg          io_alu_op_eqt,
+  output reg          io_alu_op_invb0,
+  output     [1:0]    io_alu_branch_op,
+  output reg          io_op2_sel_imm,
+  output reg          io_op1_sel_pc,
+  output reg          io_op1_sel_zero,
+  output reg          io_branch_op,
+  output reg          io_jal_op,
+  output reg          io_jalr_op,
+  output reg          io_invld_instr
 );
   wire       [11:0]   _zz_1;
   wire       [11:0]   _zz_2;
   wire       [12:0]   _zz_3;
-  wire       [11:0]   _zz_4;
   wire       [6:0]    opcode;
-  wire                op_logic_arithm;
-  wire                op_logic_arithm_imm;
-  wire                op_store;
-  wire                op_load;
-  wire                op_branch;
-  wire                op_lui;
-  wire                op_auipc;
-  wire                op_jal;
-  wire                op_jalr;
-  wire                op_fence;
-  wire                func7_shift_arithm;
-  wire                func7_subtraction;
-  wire                logic_slt;
-  wire                branch_slt;
-  wire                branch_sltu;
-  wire                logic_add;
-  wire                logic_add_imm;
-  wire                invalid_opcode;
-  wire                invalid_load;
-  wire                invalid_store;
-  wire                invalid_branch;
-  wire                invalid_jalr;
-  wire                invalid_fence;
+  wire       [2:0]    func3;
+  wire       [6:0]    func7;
+  reg        `br_imm_type_e_binary_sequential_type br_imm_type;
+  reg        `alu_imm_type_e_binary_sequential_type alu_imm_type;
+  wire                func7_all_zero;
+  wire       [31:0]   i_type_imm;
+  wire       [31:0]   s_type_imm;
+  wire       [31:0]   u_type_imm;
+  wire       [20:0]   b_type_imm;
+  wire       [20:0]   j_type_imm;
+  `ifndef SYNTHESIS
+  reg [39:0] br_imm_type_string;
+  reg [39:0] alu_imm_type_string;
+  `endif
+
 
   assign _zz_1 = io_instr[31 : 20];
   assign _zz_2 = {io_instr[31 : 25],io_instr[11 : 7]};
   assign _zz_3 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
-  assign _zz_4 = io_instr[31 : 20];
+  `ifndef SYNTHESIS
+  always @(*) begin
+    case(br_imm_type)
+      `br_imm_type_e_binary_sequential_JTYPE : br_imm_type_string = "JTYPE";
+      `br_imm_type_e_binary_sequential_BTYPE : br_imm_type_string = "BTYPE";
+      `br_imm_type_e_binary_sequential_ITYPE : br_imm_type_string = "ITYPE";
+      default : br_imm_type_string = "?????";
+    endcase
+  end
+  always @(*) begin
+    case(alu_imm_type)
+      `alu_imm_type_e_binary_sequential_ITYPE : alu_imm_type_string = "ITYPE";
+      `alu_imm_type_e_binary_sequential_STYPE : alu_imm_type_string = "STYPE";
+      `alu_imm_type_e_binary_sequential_UTYPE : alu_imm_type_string = "UTYPE";
+      `alu_imm_type_e_binary_sequential_FOUR : alu_imm_type_string = "FOUR ";
+      default : alu_imm_type_string = "?????";
+    endcase
+  end
+  `endif
+
   assign opcode = io_instr[6 : 0];
+  assign func3 = io_instr[14 : 12];
+  assign func7 = io_instr[31 : 25];
   assign io_rd_idx = io_instr[11 : 7];
-  assign io_func3 = io_instr[14 : 12];
   assign io_rs1_idx = io_instr[19 : 15];
   assign io_rs2_idx = io_instr[24 : 20];
-  assign io_func7 = io_instr[31 : 25];
-  assign op_logic_arithm = (opcode == 7'h33);
-  assign op_logic_arithm_imm = (opcode == 7'h13);
-  assign op_store = (opcode == 7'h23);
-  assign op_load = (opcode == 7'h03);
-  assign op_branch = (opcode == 7'h63);
-  assign op_lui = (opcode == 7'h37);
-  assign op_auipc = (opcode == 7'h17);
-  assign op_jal = (opcode == 7'h6f);
-  assign op_jalr = (opcode == 7'h67);
-  assign op_fence = (opcode == 7'h0f);
-  assign func7_shift_arithm = io_func7[5];
-  assign func7_subtraction = io_func7[5];
-  assign logic_slt = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b010));
-  assign branch_slt = (op_branch && (io_func3[2 : 1] == 2'b10));
-  assign branch_sltu = (op_branch && (io_func3[2 : 1] == 2'b11));
-  assign logic_add = ((op_logic_arithm && (io_func3 == 3'b000)) && (! func7_subtraction));
-  assign logic_add_imm = (op_logic_arithm_imm && (io_func3 == 3'b000));
-  assign io_alu_op_and = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b111));
-  assign io_alu_op_or = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b110));
-  assign io_alu_op_xor = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b100));
-  assign io_alu_op_add = (((((((logic_add || logic_add_imm) || op_auipc) || op_lui) || op_load) || op_store) || op_jal) || op_jalr);
-  assign io_alu_op_sub = ((op_logic_arithm && (io_func3 == 3'b000)) && func7_subtraction);
-  assign io_alu_op_sra = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && func7_shift_arithm);
-  assign io_alu_op_srl = (((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b101)) && (! func7_shift_arithm));
-  assign io_alu_op_sll = ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b001));
-  assign io_alu_op_slt = (logic_slt || branch_slt);
-  assign io_alu_op_sltu = (branch_sltu || ((op_logic_arithm || op_logic_arithm_imm) && (io_func3 == 3'b011)));
-  assign io_alu_op_eqt = (op_branch && ((io_func3 == 3'b000) || (io_func3 == 3'b001)));
-  assign io_alu_op_invb0 = (op_branch && (io_func3[0] == 1'b1));
-  assign io_op1_sel_pc = ((op_auipc || op_jal) || op_jalr);
-  assign io_op2_sel_imm = ((((((op_logic_arithm_imm || op_load) || op_store) || op_lui) || op_auipc) || op_jal) || op_jalr);
-  assign io_op1_sel_zero = op_lui;
-  assign io_branch_op = op_branch;
-  assign io_jal_op = op_jal;
-  assign io_jalr_op = op_jalr;
-  assign io_register_wr = ((((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_lui) || op_auipc) || op_jal) || op_jalr);
-  assign io_register_rs1_rd = (((((op_logic_arithm || op_logic_arithm_imm) || op_load) || op_store) || op_branch) || op_jalr);
-  assign io_register_rs2_rd = ((op_logic_arithm || op_store) || op_branch);
-  assign io_data_ram_wr = op_store;
-  assign io_data_ram_rd = op_load;
-  assign io_data_ram_ld_byte = ((io_func3 == 3'b000) || (io_func3 == 3'b100));
-  assign io_data_ram_ld_hword = ((io_func3 == 3'b001) || (io_func3 == 3'b101));
-  assign io_data_ram_ld_unsign = ((io_func3 == 3'b100) || (io_func3 == 3'b101));
   always @ (*) begin
-    if((op_logic_arithm_imm || op_load))begin
-      io_imm_value = {{20{_zz_1[11]}}, _zz_1};
-    end else begin
-      if(op_store)begin
-        io_imm_value = {{20{_zz_2[11]}}, _zz_2};
-      end else begin
-        if((op_jal || op_jalr))begin
-          io_imm_value = 32'h00000004;
-        end else begin
-          io_imm_value = {io_instr[31 : 12],12'h0};
-        end
+    br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
+    case(opcode)
+      7'h6f : begin
+        br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
       end
-    end
+      7'h67 : begin
+        br_imm_type = `br_imm_type_e_binary_sequential_ITYPE;
+      end
+      7'h63 : begin
+        br_imm_type = `br_imm_type_e_binary_sequential_BTYPE;
+      end
+      default : begin
+      end
+    endcase
   end
 
   always @ (*) begin
-    if(op_branch)begin
-      io_brjp_imm_value = {{8{_zz_3[12]}}, _zz_3};
-    end else begin
-      if(op_jalr)begin
-        io_brjp_imm_value = {{9{_zz_4[11]}}, _zz_4};
-      end else begin
-        io_brjp_imm_value = {{{{io_instr[31],io_instr[19 : 12]},io_instr[20]},io_instr[30 : 21]},1'b0};
+    alu_imm_type = `alu_imm_type_e_binary_sequential_FOUR;
+    case(opcode)
+      7'h37 : begin
+        alu_imm_type = `alu_imm_type_e_binary_sequential_UTYPE;
       end
-    end
+      7'h17 : begin
+        alu_imm_type = `alu_imm_type_e_binary_sequential_UTYPE;
+      end
+      7'h03 : begin
+        alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
+      end
+      7'h23 : begin
+        alu_imm_type = `alu_imm_type_e_binary_sequential_STYPE;
+      end
+      7'h13 : begin
+        alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
+      end
+      default : begin
+      end
+    endcase
   end
 
-  assign invalid_opcode = (! (((((((((op_logic_arithm || op_logic_arithm_imm) || op_store) || op_load) || op_branch) || op_lui) || op_auipc) || op_jal) || op_jalr) || op_fence));
-  assign invalid_load = (op_load && ((io_func3[2 : 1] == 2'b11) || (io_func3[1 : 0] == 2'b11)));
-  assign invalid_store = (op_store && ((io_func3[2] == 1'b1) || (io_func3[1 : 0] == 2'b11)));
-  assign invalid_branch = (op_branch && (io_func3[2 : 1] == 2'b01));
-  assign invalid_jalr = (op_jalr && (io_func3 != 3'b000));
-  assign invalid_fence = (op_fence && (io_func3[2 : 1] != 2'b00));
-  assign io_invalid_instr = (((((invalid_opcode || invalid_load) || invalid_store) || invalid_branch) || invalid_jalr) || invalid_fence);
+  assign func7_all_zero = (func7 == 7'h0);
+  always @ (*) begin
+    io_register_wr = 1'b0;
+    case(opcode)
+      7'h37 : begin
+        io_register_wr = 1'b1;
+      end
+      7'h17 : begin
+        io_register_wr = 1'b1;
+      end
+      7'h6f : begin
+        io_register_wr = 1'b1;
+      end
+      7'h67 : begin
+        io_register_wr = 1'b1;
+      end
+      7'h03 : begin
+        io_register_wr = 1'b1;
+      end
+      7'h13 : begin
+        io_register_wr = 1'b1;
+      end
+      7'h33 : begin
+        io_register_wr = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_register_rs1_rd = 1'b0;
+    case(opcode)
+      7'h67 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      7'h63 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      7'h03 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      7'h23 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      7'h13 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      7'h33 : begin
+        io_register_rs1_rd = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_register_rs2_rd = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        io_register_rs2_rd = 1'b1;
+      end
+      7'h23 : begin
+        io_register_rs2_rd = 1'b1;
+      end
+      7'h33 : begin
+        io_register_rs2_rd = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_data_ram_wr = 1'b0;
+    case(opcode)
+      7'h23 : begin
+        io_data_ram_wr = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_data_ram_rd = 1'b0;
+    case(opcode)
+      7'h03 : begin
+        io_data_ram_rd = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_data_ram_ld_byte = 1'b0;
+    case(opcode)
+      7'h03 : begin
+        case(func3)
+          3'b000 : begin
+            io_data_ram_ld_byte = 1'b1;
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b100 : begin
+            io_data_ram_ld_byte = 1'b1;
+          end
+          3'b101 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h23 : begin
+        case(func3)
+          3'b000 : begin
+            io_data_ram_ld_byte = 1'b1;
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_data_ram_ld_hword = 1'b0;
+    case(opcode)
+      7'h03 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+            io_data_ram_ld_hword = 1'b1;
+          end
+          3'b010 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+            io_data_ram_ld_hword = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h23 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+            io_data_ram_ld_hword = 1'b1;
+          end
+          3'b010 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_data_ram_ld_unsign = 1'b0;
+    case(opcode)
+      7'h03 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b100 : begin
+            io_data_ram_ld_unsign = 1'b1;
+          end
+          3'b101 : begin
+            io_data_ram_ld_unsign = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_and = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+            io_alu_op_and = 1'b1;
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+            io_alu_op_and = 1'b1;
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_or = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+            io_alu_op_or = 1'b1;
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+            io_alu_op_or = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_xor = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+            io_alu_op_xor = 1'b1;
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+            io_alu_op_xor = 1'b1;
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_add = 1'b0;
+    case(opcode)
+      7'h37 : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h17 : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h6f : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h67 : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h03 : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h23 : begin
+        io_alu_op_add = 1'b1;
+      end
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+            io_alu_op_add = 1'b1;
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+            case(func7)
+              7'h0 : begin
+                io_alu_op_add = 1'b1;
+              end
+              7'h20 : begin
+              end
+              default : begin
+              end
+            endcase
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_sub = 1'b0;
+    case(opcode)
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+                io_alu_op_sub = 1'b1;
+              end
+              default : begin
+              end
+            endcase
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_sra = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+                io_alu_op_sra = 1'b1;
+              end
+              default : begin
+              end
+            endcase
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+                io_alu_op_sra = 1'b1;
+              end
+              default : begin
+              end
+            endcase
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_srl = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+            case(func7)
+              7'h0 : begin
+                io_alu_op_srl = 1'b1;
+              end
+              7'h20 : begin
+              end
+              default : begin
+              end
+            endcase
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+            case(func7)
+              7'h0 : begin
+                io_alu_op_srl = 1'b1;
+              end
+              7'h20 : begin
+              end
+              default : begin
+              end
+            endcase
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_sll = 1'b0;
+    case(opcode)
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+            io_alu_op_sll = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+            io_alu_op_sll = 1'b1;
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_slt = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b100 : begin
+            io_alu_op_slt = 1'b1;
+          end
+          3'b101 : begin
+            io_alu_op_slt = 1'b1;
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+            io_alu_op_slt = 1'b1;
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+            io_alu_op_slt = 1'b1;
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_sltu = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+            io_alu_op_sltu = 1'b1;
+          end
+          3'b111 : begin
+            io_alu_op_sltu = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+            io_alu_op_sltu = 1'b1;
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+            io_alu_op_sltu = 1'b1;
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_eqt = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+            io_alu_op_eqt = 1'b1;
+          end
+          3'b001 : begin
+            io_alu_op_eqt = 1'b1;
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_alu_op_invb0 = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+            io_alu_op_invb0 = 1'b1;
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+            io_alu_op_invb0 = 1'b1;
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+            io_alu_op_invb0 = 1'b1;
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_op2_sel_imm = 1'b0;
+    case(opcode)
+      7'h37 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h17 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h6f : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h67 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h03 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h23 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      7'h13 : begin
+        io_op2_sel_imm = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_op1_sel_pc = 1'b0;
+    case(opcode)
+      7'h17 : begin
+        io_op1_sel_pc = 1'b1;
+      end
+      7'h6f : begin
+        io_op1_sel_pc = 1'b1;
+      end
+      7'h67 : begin
+        io_op1_sel_pc = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_op1_sel_zero = 1'b0;
+    case(opcode)
+      7'h37 : begin
+        io_op1_sel_zero = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_branch_op = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        io_branch_op = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_jal_op = 1'b0;
+    case(opcode)
+      7'h6f : begin
+        io_jal_op = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_jalr_op = 1'b0;
+    case(opcode)
+      7'h67 : begin
+        io_jalr_op = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_invld_instr = 1'b0;
+    case(opcode)
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          default : begin
+            io_invld_instr = 1'b1;
+          end
+        endcase
+      end
+      7'h03 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          default : begin
+            io_invld_instr = 1'b1;
+          end
+        endcase
+      end
+      7'h23 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          default : begin
+            io_invld_instr = 1'b1;
+          end
+        endcase
+      end
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                io_invld_instr = 1'b1;
+              end
+            endcase
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                io_invld_instr = 1'b1;
+              end
+            endcase
+          end
+          3'b001 : begin
+            io_invld_instr = func7_all_zero;
+          end
+          3'b010 : begin
+            io_invld_instr = func7_all_zero;
+          end
+          3'b011 : begin
+            io_invld_instr = func7_all_zero;
+          end
+          3'b100 : begin
+            io_invld_instr = func7_all_zero;
+          end
+          3'b101 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                io_invld_instr = 1'b1;
+              end
+            endcase
+          end
+          3'b110 : begin
+            io_invld_instr = func7_all_zero;
+          end
+          default : begin
+            io_invld_instr = func7_all_zero;
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign i_type_imm = {{20{_zz_1[11]}}, _zz_1};
+  assign s_type_imm = {{20{_zz_2[11]}}, _zz_2};
+  assign u_type_imm = {io_instr[31 : 12],12'h0};
+  assign b_type_imm = {{8{_zz_3[12]}}, _zz_3};
+  assign j_type_imm = {{{{io_instr[31],io_instr[19 : 12]},io_instr[20]},io_instr[30 : 21]},1'b0};
+  always @ (*) begin
+    case(alu_imm_type)
+      `alu_imm_type_e_binary_sequential_ITYPE : begin
+        io_imm_value = i_type_imm;
+      end
+      `alu_imm_type_e_binary_sequential_STYPE : begin
+        io_imm_value = s_type_imm;
+      end
+      `alu_imm_type_e_binary_sequential_UTYPE : begin
+        io_imm_value = u_type_imm;
+      end
+      default : begin
+        io_imm_value = 32'h00000004;
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    case(br_imm_type)
+      `br_imm_type_e_binary_sequential_BTYPE : begin
+        io_jump_imm_value = b_type_imm;
+      end
+      `br_imm_type_e_binary_sequential_ITYPE : begin
+        io_jump_imm_value = i_type_imm[20 : 0];
+      end
+      default : begin
+        io_jump_imm_value = j_type_imm;
+      end
+    endcase
+  end
+
 
 endmodule
 

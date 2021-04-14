@@ -2,6 +2,10 @@
 
 ## Milestone 0.1
 
+- 04/14/2021
+  - Updated instruction decoder logic.
+    - Using switch structure for decode logic
+
 - 04/09/2021
   - Updated register file
     - Using single ram instead of two.

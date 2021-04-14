@@ -153,7 +153,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id2ex_rs1_value = RegNextWhen(regfile_inst.io.rs1_data_out, ex_pipe_run)
     val id2ex_rs2_value = RegNextWhen(regfile_inst.io.rs2_data_out, ex_pipe_run)
     val id2ex_imm_value = RegNextWhen(instr_dec_inst.io.imm_value , ex_pipe_run)
-    val id2ex_brjp_imm_value = RegNextWhen(instr_dec_inst.io.brjp_imm_value , ex_pipe_run)
+    val id2ex_brjp_imm_value = RegNextWhen(instr_dec_inst.io.jump_imm_value , ex_pipe_run)
 
     // Others
     val id2ex_pc            = RegNextWhen(if2id_pc, ex_pipe_run)
@@ -249,7 +249,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // control signal
     val mem2wb_instr_valid  = RegNextWhen(mem_instr_valid, wb_pipe_run) init False
-    val mem2wb_rd_wr  = RegNextWhen(ex2mem_rd_wr  & mem_instr_valid, wb_pipe_run) init False
+    val mem2wb_rd_wr        = RegNextWhen(ex2mem_rd_wr  & mem_instr_valid, wb_pipe_run) init False
     val mem2wb_data_ram_rd  = RegNextWhen(ex2mem_data_ram_rd & mem_instr_valid, wb_pipe_run) init False
 
     // data signal

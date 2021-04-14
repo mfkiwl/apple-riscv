@@ -82,15 +82,18 @@ class CPU_PARAM {
     val LA_F3_XOR       = Integer.parseInt("100", 2) // XOR
     val LA_F3_ADD_SUB   = Integer.parseInt("000", 2) // ADD, SUB
     val LA_F3_SR        = Integer.parseInt("101", 2) // SRL, SRLI, SRA, SRAI
-    val LA_F3_SL        = Integer.parseInt("001", 2) // SLL, SLLI
+    val LA_F3_SLL       = Integer.parseInt("001", 2) // SLL, SLLI
     val LA_F3_SLT       = Integer.parseInt("010", 2) // SLT, SLTI
     val LA_F3_SLTU      = Integer.parseInt("011", 2) // SLTU, SLTIU
     // Load/Store func3 field
-    val LS_F3_LB_SB = Integer.parseInt("000", 2) // SB, LB
-    val LS_F3_LH_SH = Integer.parseInt("001", 2) // LH, SH
-    val LS_F3_LW_SW = Integer.parseInt("010", 2) // LW, SW
-    val LS_F3_LBU   = Integer.parseInt("100", 2) // LBU
-    val LS_F3_LHU   = Integer.parseInt("101", 2) // LHU
+    val LW_F3_LB    = Integer.parseInt("000", 2) // LB
+    val LW_F3_LH    = Integer.parseInt("001", 2) // LH
+    val LW_F3_LW    = Integer.parseInt("010", 2) // LW, SW
+    val LW_F3_LBU   = Integer.parseInt("100", 2) // LBU
+    val LW_F3_LHU   = Integer.parseInt("101", 2) // LHU
+    val SW_F3_SB    = Integer.parseInt("000", 2) // SB
+    val SW_F3_SH    = Integer.parseInt("001", 2) // SH
+    val SW_F3_SW    = Integer.parseInt("010", 2) // SW
     // Branch func3 field
     val BR_F3_BEQ   = Integer.parseInt("000", 2) // BEQ
     val BR_F3_BNE   = Integer.parseInt("001", 2) // BNE
@@ -101,4 +104,29 @@ class CPU_PARAM {
     // Fence func3 field
     val FE_F3_FENCE =  Integer.parseInt("000", 2) // FENCE
     val FE_F3_FENCEI =  Integer.parseInt("001", 2) // FENCE.I
+
+    // == func3 == //
+    val LA_F7_SRL   = Integer.parseInt("0000000", 2) // SRL, SRLT
+    val LA_F7_SRA   = Integer.parseInt("0100000", 2) // SRA, SRAT
+    val LA_F7_ADD   = Integer.parseInt("0000000", 2) // ADD
+    val LA_F7_SUB   = Integer.parseInt("0100000", 2) // SUB
+
+    // ========================== //
+    //     Macro define           //
+    // ========================== //
+    // Branch operation encoding for ALU
+    object alu_branch_op_e extends SpinalEnum {
+        val eqt, slt, sltu = newElement()
+    }
+
+
+    /////////////////////////////
+    // Backup
+    /////////////////////////////
+    // Load/Store func3 field
+    val LS_F3_LB_SB = Integer.parseInt("000", 2) // SB, LB
+    val LS_F3_LH_SH = Integer.parseInt("001", 2) // LH, SH
+    val LS_F3_LW_SW = Integer.parseInt("010", 2) // LW, SW
+    val LS_F3_LBU   = Integer.parseInt("100", 2) // LBU
+    val LS_F3_LHU   = Integer.parseInt("101", 2) // LHU
 }
