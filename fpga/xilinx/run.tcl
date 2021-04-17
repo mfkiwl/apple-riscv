@@ -22,6 +22,8 @@ create_project $PRJ_NAME -dir $PRJ_NAME -part $DEVICE
 # ========================================
 set SOC_RTL  $REPO_ROOT/$SOC_RTL_PATH/apple_riscv_soc.v
 read_verilog $SOC_RTL
+set XDC      "constraints.xdc timing.xdc"
+read_xdc     $XDC
 
 # ========================================
 # Step 3: synthesis
@@ -36,8 +38,6 @@ report_utilization -hierarchical -file $OUTPUT/syn/syn_utilization_hier.rpt
 # Step 4: opt, place and route
 # ========================================
 
-# PNR not supported on the cpu core.
-if {$::env(RUN_APR) == 1} {
 opt_design
 place_design
 phys_opt_design
@@ -45,4 +45,5 @@ write_checkpoint -force $OUTPUT/pnr/pnr_checkpoint
 report_timing_summary -file $OUTPUT/pnr/pnr_timing.rpt
 report_utilization -file $OUTPUT/pnr/pnr_utilization_all.rpt
 report_utilization -hierarchical -file $OUTPUT/pnr/pnr_utilization_hier.rpt
-}
+
+

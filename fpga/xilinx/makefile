@@ -19,8 +19,7 @@ _DEVICE = xc7a35ticsg324-1L
 soc: export PRJ_NAME 	= soc
 soc: export TOP 		= apple_riscv_soc
 soc: export DEVICE 	    = $(_DEVICE)
-soc: export RUN_APR     = 0 # Don't run apr for now
-soc:
+soc: clean_soc
 	vivado -mode tcl -source run.tcl
 
 
@@ -28,7 +27,7 @@ soc:
 core: export PRJ_NAME 	= core
 core: export TOP 		= apple_riscv
 core: export DEVICE 	= $(_DEVICE)
-core:
+core: clean_core
 	vivado -mode tcl -source run.tcl -nojournal -nolog
 
 core_gui:
