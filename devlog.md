@@ -2,6 +2,9 @@
 
 ## Milestone 0.1
 
+- 04/17/2021
+  - Designed the csr module and exception logic
+
 - 04/14/2021
   - Updated instruction decoder logic.
     - Using switch structure for decode logic

@@ -33,7 +33,7 @@ case class branch_unit_io(param: CPU_PARAM) extends Bundle {
   val jalr_op       = in Bool
   val target_pc     = out UInt(param.PC_WIDTH bits)
   val branch_taken  = out Bool
-  val instruction_address_misaligned_exception = out Bool
+  val instr_addr_misalign_exception = out Bool
 
 }
 
@@ -51,5 +51,5 @@ case class branch_unit(param: CPU_PARAM) extends Component {
 
   // Check address misaligned exception
   val pc_1_0 = io.target_pc(1 downto 0)
-  io.instruction_address_misaligned_exception := (io.branch_taken & (pc_1_0 =/= 0))
+  io.instr_addr_misalign_exception := (io.branch_taken & (pc_1_0 =/= 0))
 }

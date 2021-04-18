@@ -21,10 +21,12 @@ import spinal.core._
 
 case class pc_io(param: CPU_PARAM) extends Bundle{
     // IO port
-    val pc_in  = in UInt(param.PC_WIDTH bits)      // branch address calculated from branch unit
-    val branch = in Bool                 // takes the branch/jump
-    val stall  = in Bool                  // stall the pc
-    val pc_out = out UInt(param.PC_WIDTH bits)
+    val branch_pc_in    = in UInt(param.PC_WIDTH bits)
+    val trap_pc_in      = in UInt(param.PC_WIDTH bits)
+    val branch          = in Bool                            // takes the branch/jump
+    val trap            = in Bool
+    val stall           = in Bool                            // stall the pc
+    val pc_out          = out UInt(param.PC_WIDTH bits)
 }
 
 case class program_counter(param: CPU_PARAM) extends Component {
@@ -33,8 +35,10 @@ case class program_counter(param: CPU_PARAM) extends Component {
     val pc = Reg(UInt(param.PC_WIDTH bits)) init 0
     when(!io.stall) {
         when(io.branch) {   // stall has higher priority then branch
-            pc := io.pc_in
-        } otherwise {
+            pc := io.branch_pc_in
+        }.elsewhen(io.trap) {
+            pc := io.trap_pc_in
+        }.otherwise {
             pc := pc + 4
         }
     }

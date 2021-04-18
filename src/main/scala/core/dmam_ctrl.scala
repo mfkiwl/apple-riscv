@@ -38,6 +38,10 @@ case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
   val cpu2mc_mem_LS_byte     = in Bool
   val cpu2mc_mem_LS_halfword = in Bool
   val cpu2mc_mem_LW_unsigned = in Bool
+
+  // Exception
+  val load_addr_misalign     = out Bool
+  val store_addr_misalign    = out Bool
 }
 
 case class dmem_ctrl(param: CPU_PARAM) extends Component {
@@ -182,4 +186,10 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
       }
     }
   }
+
+  // == check address alignment == //
+  val halfword_addr_misalign = io.cpu2mc_mem_LS_halfword & io.cpu2mc_addr(0)
+  val word_address_misalign  = ~(io.cpu2mc_mem_LS_byte | io.cpu2mc_mem_LS_halfword) & (io.cpu2mc_addr(1 downto 0) =/= 0)
+  io.load_addr_misalign  := io.cpu2mc_rd & (halfword_addr_misalign | word_address_misalign)
+  io.store_addr_misalign := io.cpu2mc_wr & (halfword_addr_misalign | word_address_misalign)
 }

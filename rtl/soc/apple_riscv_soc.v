@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : c0861e80ab14a46d5f38104d23780b1839d9fa79
+// Git hash  : a5b0f172580cf33d6e9966c44ebc2559bbc85548
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -330,7 +330,10 @@ module apple_riscv (
 );
   wire       [15:0]   _zz_1;
   wire                _zz_2;
-  wire       [15:0]   _zz_3;
+  wire       [11:0]   _zz_3;
+  wire       [31:0]   _zz_4;
+  wire                _zz_5;
+  wire       [31:0]   _zz_6;
   wire       [31:0]   pc_inst_io_pc_out;
   wire       [31:0]   imem_ctrl_inst_io_mc2cpu_data;
   wire       [15:0]   imem_ctrl_inst_imem_ahb_HADDR;
@@ -383,8 +386,10 @@ module apple_riscv (
   wire       [31:0]   alu_inst_io_alu_out;
   wire       [31:0]   branch_unit_inst_io_target_pc;
   wire                branch_unit_inst_io_branch_taken;
-  wire                branch_unit_inst_io_instruction_address_misaligned_exception;
+  wire                branch_unit_inst_io_instr_addr_misalign_exception;
   wire       [31:0]   dmem_ctrl_isnt_io_mc2cpu_data;
+  wire                dmem_ctrl_isnt_io_load_addr_misalign;
+  wire                dmem_ctrl_isnt_io_store_addr_misalign;
   wire       [15:0]   dmem_ctrl_isnt_dmem_ahb_HADDR;
   wire                dmem_ctrl_isnt_dmem_ahb_HWRITE;
   wire       [2:0]    dmem_ctrl_isnt_dmem_ahb_HSIZE;
@@ -395,6 +400,15 @@ module apple_riscv (
   wire       [31:0]   dmem_ctrl_isnt_dmem_ahb_HWDATA;
   wire                dmem_ctrl_isnt_dmem_ahb_HREADY;
   wire                dmem_ctrl_isnt_dmem_ahb_HSEL;
+  wire                trap_ctrl_inst_io_mtrap_enter;
+  wire                trap_ctrl_inst_io_mtrap_exit;
+  wire       [31:0]   trap_ctrl_inst_io_mtrap_mepc;
+  wire       [31:0]   trap_ctrl_inst_io_mtrap_mcause;
+  wire       [31:0]   trap_ctrl_inst_io_mtrap_mtval;
+  wire                trap_ctrl_inst_io_pc_trap;
+  wire       [31:0]   trap_ctrl_inst_io_pc_value;
+  wire       [31:0]   mcsr_inst_io_mcsr_dout;
+  wire       [31:0]   mcsr_inst_io_mtrap_mtvec;
   wire                fu_inst_io_forward_rs1_from_mem;
   wire                fu_inst_io_forward_rs1_from_wb;
   wire                fu_inst_io_forward_rs2_from_mem;
@@ -409,6 +423,7 @@ module apple_riscv (
   wire                hdu_inst_io_ex_pipe_stall;
   wire                hdu_inst_io_mem_pipe_stall;
   wire                hdu_inst_io_wb_pipe_stall;
+  wire       [0:0]    _zz_7;
   wire                if_instr_valid;
   wire                id_instr_valid;
   wire                ex_instr_valid;
@@ -465,10 +480,13 @@ module apple_riscv (
   reg                 id2ex_op2_sel_imm;
   reg                 id2ex_op1_sel_pc;
   reg                 id2ex_op1_sel_zero;
+  reg        [31:0]   id2ex_instr;
+  reg                 id2ex_illegal_instr_exception;
   wire       [31:0]   ex_rs1_value_forwarded;
   wire       [31:0]   ex_rs2_value_forwarded;
   wire       [31:0]   alu_operand1_muxout;
   wire       [31:0]   alu_operand2_muxout;
+  wire                ex_exception;
   reg                 ex2mem_instr_valid;
   reg                 ex2mem_rd_wr;
   reg                 ex2mem_data_ram_wr;
@@ -481,20 +499,36 @@ module apple_riscv (
   reg        [4:0]    ex2mem_rs2_idx;
   reg        [4:0]    ex2mem_rd_idx;
   reg        [31:0]   ex2mem_rs2_value;
+  reg        [31:0]   ex2mem_pc;
+  reg        [31:0]   ex2mem_instr;
+  reg                 ex2mem_illegal_instr_exception;
+  reg                 ex2mem_instr_addr_misalign_exception;
+  wire       [15:0]   dmem_addr;
+  wire                mem_exception;
   reg                 mem2wb_instr_valid;
   reg                 mem2wb_rd_wr;
   reg                 mem2wb_data_ram_rd;
   reg        [31:0]   mem2wb_alu_out;
   reg        [4:0]    mem2wb_rd_idx;
+  reg        [31:0]   mem2wb_pc;
+  reg        [31:0]   mem2wb_instr;
+  reg        [15:0]   mem2wb_dmem_addr;
+  reg                 mem2wb_illegal_instr_exception;
+  reg                 mem2wb_instr_addr_misalign_exception;
+  reg                 mem2wb_load_addr_misalign;
+  reg                 mem2wb_store_addr_misalign;
   wire       [31:0]   wb_rd_wr_data;
 
+  assign _zz_7 = 1'b0;
   program_counter pc_inst (
-    .io_pc_in     (target_pc[31:0]          ), //i
-    .io_branch    (branch_taken             ), //i
-    .io_stall     (if_pipe_stall            ), //i
-    .io_pc_out    (pc_inst_io_pc_out[31:0]  ), //o
-    .clk          (clk                      ), //i
-    .reset        (reset                    )  //i
+    .io_branch_pc_in    (target_pc[31:0]                   ), //i
+    .io_trap_pc_in      (trap_ctrl_inst_io_pc_value[31:0]  ), //i
+    .io_branch          (branch_taken                      ), //i
+    .io_trap            (trap_ctrl_inst_io_pc_trap         ), //i
+    .io_stall           (if_pipe_stall                     ), //i
+    .io_pc_out          (pc_inst_io_pc_out[31:0]           ), //o
+    .clk                (clk                               ), //i
+    .reset              (reset                             )  //i
   );
   imem_ctrl imem_ctrl_inst (
     .io_cpu2mc_addr        (_zz_1[15:0]                           ), //i
@@ -581,41 +615,75 @@ module apple_riscv (
     .io_alu_op_invb0    (id2ex_alu_op_invb0         )  //i
   );
   branch_unit branch_unit_inst (
-    .io_branch_result                               (_zz_2                                                         ), //i
-    .io_current_pc                                  (id2ex_pc[31:0]                                                ), //i
-    .io_imm_value                                   (id2ex_brjp_imm_value[20:0]                                    ), //i
-    .io_rs1_value                                   (ex_rs1_value_forwarded[31:0]                                  ), //i
-    .io_br_op                                       (id2ex_branch_op                                               ), //i
-    .io_jal_op                                      (id2ex_jal_op                                                  ), //i
-    .io_jalr_op                                     (id2ex_jalr_op                                                 ), //i
-    .io_target_pc                                   (branch_unit_inst_io_target_pc[31:0]                           ), //o
-    .io_branch_taken                                (branch_unit_inst_io_branch_taken                              ), //o
-    .io_instruction_address_misaligned_exception    (branch_unit_inst_io_instruction_address_misaligned_exception  )  //o
+    .io_branch_result                    (_zz_2                                              ), //i
+    .io_current_pc                       (id2ex_pc[31:0]                                     ), //i
+    .io_imm_value                        (id2ex_brjp_imm_value[20:0]                         ), //i
+    .io_rs1_value                        (ex_rs1_value_forwarded[31:0]                       ), //i
+    .io_br_op                            (id2ex_branch_op                                    ), //i
+    .io_jal_op                           (id2ex_jal_op                                       ), //i
+    .io_jalr_op                          (id2ex_jalr_op                                      ), //i
+    .io_target_pc                        (branch_unit_inst_io_target_pc[31:0]                ), //o
+    .io_branch_taken                     (branch_unit_inst_io_branch_taken                   ), //o
+    .io_instr_addr_misalign_exception    (branch_unit_inst_io_instr_addr_misalign_exception  )  //o
   );
   dmem_ctrl dmem_ctrl_isnt (
-    .io_cpu2mc_wr                 (ex2mem_data_ram_wr                    ), //i
-    .io_cpu2mc_rd                 (ex2mem_data_ram_rd                    ), //i
-    .io_cpu2mc_addr               (_zz_3[15:0]                           ), //i
-    .io_cpu2mc_data               (ex2mem_rs2_value[31:0]                ), //i
-    .io_mc2cpu_data               (dmem_ctrl_isnt_io_mc2cpu_data[31:0]   ), //o
-    .io_cpu2mc_mem_LS_byte        (ex2mem_data_ram_ld_byte               ), //i
-    .io_cpu2mc_mem_LS_halfword    (ex2mem_data_ram_ld_hword              ), //i
-    .io_cpu2mc_mem_LW_unsigned    (ex2mem_data_ram_ld_unsign             ), //i
-    .dmem_ahb_HADDR               (dmem_ctrl_isnt_dmem_ahb_HADDR[15:0]   ), //o
-    .dmem_ahb_HSEL                (dmem_ctrl_isnt_dmem_ahb_HSEL          ), //o
-    .dmem_ahb_HREADY              (dmem_ctrl_isnt_dmem_ahb_HREADY        ), //o
-    .dmem_ahb_HWRITE              (dmem_ctrl_isnt_dmem_ahb_HWRITE        ), //o
-    .dmem_ahb_HSIZE               (dmem_ctrl_isnt_dmem_ahb_HSIZE[2:0]    ), //o
-    .dmem_ahb_HBURST              (dmem_ctrl_isnt_dmem_ahb_HBURST[2:0]   ), //o
-    .dmem_ahb_HPROT               (dmem_ctrl_isnt_dmem_ahb_HPROT[3:0]    ), //o
-    .dmem_ahb_HTRANS              (dmem_ctrl_isnt_dmem_ahb_HTRANS[1:0]   ), //o
-    .dmem_ahb_HMASTLOCK           (dmem_ctrl_isnt_dmem_ahb_HMASTLOCK     ), //o
-    .dmem_ahb_HWDATA              (dmem_ctrl_isnt_dmem_ahb_HWDATA[31:0]  ), //o
-    .dmem_ahb_HRDATA              (dmem_ahb_HRDATA[31:0]                 ), //i
-    .dmem_ahb_HREADYOUT           (dmem_ahb_HREADYOUT                    ), //i
-    .dmem_ahb_HRESP               (dmem_ahb_HRESP                        ), //i
-    .clk                          (clk                                   ), //i
-    .reset                        (reset                                 )  //i
+    .io_cpu2mc_wr                 (ex2mem_data_ram_wr                     ), //i
+    .io_cpu2mc_rd                 (ex2mem_data_ram_rd                     ), //i
+    .io_cpu2mc_addr               (dmem_addr[15:0]                        ), //i
+    .io_cpu2mc_data               (ex2mem_rs2_value[31:0]                 ), //i
+    .io_mc2cpu_data               (dmem_ctrl_isnt_io_mc2cpu_data[31:0]    ), //o
+    .io_cpu2mc_mem_LS_byte        (ex2mem_data_ram_ld_byte                ), //i
+    .io_cpu2mc_mem_LS_halfword    (ex2mem_data_ram_ld_hword               ), //i
+    .io_cpu2mc_mem_LW_unsigned    (ex2mem_data_ram_ld_unsign              ), //i
+    .io_load_addr_misalign        (dmem_ctrl_isnt_io_load_addr_misalign   ), //o
+    .io_store_addr_misalign       (dmem_ctrl_isnt_io_store_addr_misalign  ), //o
+    .dmem_ahb_HADDR               (dmem_ctrl_isnt_dmem_ahb_HADDR[15:0]    ), //o
+    .dmem_ahb_HSEL                (dmem_ctrl_isnt_dmem_ahb_HSEL           ), //o
+    .dmem_ahb_HREADY              (dmem_ctrl_isnt_dmem_ahb_HREADY         ), //o
+    .dmem_ahb_HWRITE              (dmem_ctrl_isnt_dmem_ahb_HWRITE         ), //o
+    .dmem_ahb_HSIZE               (dmem_ctrl_isnt_dmem_ahb_HSIZE[2:0]     ), //o
+    .dmem_ahb_HBURST              (dmem_ctrl_isnt_dmem_ahb_HBURST[2:0]    ), //o
+    .dmem_ahb_HPROT               (dmem_ctrl_isnt_dmem_ahb_HPROT[3:0]     ), //o
+    .dmem_ahb_HTRANS              (dmem_ctrl_isnt_dmem_ahb_HTRANS[1:0]    ), //o
+    .dmem_ahb_HMASTLOCK           (dmem_ctrl_isnt_dmem_ahb_HMASTLOCK      ), //o
+    .dmem_ahb_HWDATA              (dmem_ctrl_isnt_dmem_ahb_HWDATA[31:0]   ), //o
+    .dmem_ahb_HRDATA              (dmem_ahb_HRDATA[31:0]                  ), //i
+    .dmem_ahb_HREADYOUT           (dmem_ahb_HREADYOUT                     ), //i
+    .dmem_ahb_HRESP               (dmem_ahb_HRESP                         ), //i
+    .clk                          (clk                                    ), //i
+    .reset                        (reset                                  )  //i
+  );
+  trap_ctrl trap_ctrl_inst (
+    .io_load_addr_misalign               (mem2wb_load_addr_misalign             ), //i
+    .io_store_addr_misalign              (mem2wb_store_addr_misalign            ), //i
+    .io_illegal_instr_exception          (mem2wb_illegal_instr_exception        ), //i
+    .io_instr_addr_misalign_exception    (mem2wb_instr_addr_misalign_exception  ), //i
+    .io_wb_pc                            (mem2wb_pc[31:0]                       ), //i
+    .io_wb_instr                         (mem2wb_instr[31:0]                    ), //i
+    .io_wb_dmem_addr                     (mem2wb_dmem_addr[15:0]                ), //i
+    .io_mtrap_enter                      (trap_ctrl_inst_io_mtrap_enter         ), //o
+    .io_mtrap_exit                       (trap_ctrl_inst_io_mtrap_exit          ), //o
+    .io_mtrap_mepc                       (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //o
+    .io_mtrap_mcause                     (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //o
+    .io_mtrap_mtval                      (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //o
+    .io_mtrap_mtvec                      (mcsr_inst_io_mtrap_mtvec[31:0]        ), //i
+    .io_pc_trap                          (trap_ctrl_inst_io_pc_trap             ), //o
+    .io_pc_value                         (trap_ctrl_inst_io_pc_value[31:0]      )  //o
+  );
+  mcsr mcsr_inst (
+    .io_mcsr_addr       (_zz_3[11:0]                           ), //i
+    .io_mcsr_din        (_zz_4[31:0]                           ), //i
+    .io_mcsr_wen        (_zz_5                                 ), //i
+    .io_mcsr_dout       (mcsr_inst_io_mcsr_dout[31:0]          ), //o
+    .io_mtrap_enter     (trap_ctrl_inst_io_mtrap_enter         ), //i
+    .io_mtrap_exit      (trap_ctrl_inst_io_mtrap_exit          ), //i
+    .io_mtrap_mepc      (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //i
+    .io_mtrap_mcause    (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //i
+    .io_mtrap_mtval     (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //i
+    .io_mtrap_mtvec     (mcsr_inst_io_mtrap_mtvec[31:0]        ), //o
+    .io_hartId          (_zz_6[31:0]                           ), //i
+    .clk                (clk                                   ), //i
+    .reset              (reset                                 )  //i
   );
   fu fu_inst (
     .io_ex_rs1_idx              (id2ex_rs1_idx[4:0]               ), //i
@@ -648,7 +716,10 @@ module apple_riscv (
     .io_ex_dmem_rd        (id2ex_data_ram_rd                  ), //i
     .io_id_rs1_idx        (instr_dec_inst_io_rs1_idx[4:0]     ), //i
     .io_id_rs2_idx        (instr_dec_inst_io_rs2_idx[4:0]     ), //i
-    .io_ex_rd_idx         (id2ex_rd_idx[4:0]                  )  //i
+    .io_ex_rd_idx         (id2ex_rd_idx[4:0]                  ), //i
+    .io_id_exception      (instr_dec_inst_io_invld_instr      ), //i
+    .io_ex_exception      (ex_exception                       ), //i
+    .io_mem_exception     (mem_exception                      )  //i
   );
   assign if_pipe_run = (! if_pipe_stall);
   assign id_pipe_run = (! id_pipe_stall);
@@ -671,6 +742,8 @@ module apple_riscv (
   assign _zz_2 = alu_inst_io_alu_out[0];
   assign target_pc = branch_unit_inst_io_target_pc;
   assign branch_taken = branch_unit_inst_io_branch_taken;
+  assign ex_exception = (id2ex_illegal_instr_exception || branch_unit_inst_io_instr_addr_misalign_exception);
+  assign dmem_addr = ex2mem_alu_out[15 : 0];
   assign dmem_ahb_HADDR = dmem_ctrl_isnt_dmem_ahb_HADDR;
   assign dmem_ahb_HSEL = dmem_ctrl_isnt_dmem_ahb_HSEL;
   assign dmem_ahb_HREADY = dmem_ctrl_isnt_dmem_ahb_HREADY;
@@ -681,12 +754,16 @@ module apple_riscv (
   assign dmem_ahb_HTRANS = dmem_ctrl_isnt_dmem_ahb_HTRANS;
   assign dmem_ahb_HMASTLOCK = dmem_ctrl_isnt_dmem_ahb_HMASTLOCK;
   assign dmem_ahb_HWDATA = dmem_ctrl_isnt_dmem_ahb_HWDATA;
-  assign _zz_3 = ex2mem_alu_out[15 : 0];
+  assign mem_exception = (((ex2mem_illegal_instr_exception || ex2mem_instr_addr_misalign_exception) || dmem_ctrl_isnt_io_load_addr_misalign) || dmem_ctrl_isnt_io_store_addr_misalign);
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dmem_ctrl_isnt_io_mc2cpu_data : mem2wb_alu_out);
+  assign _zz_3 = 12'h0;
+  assign _zz_4 = 32'h0;
+  assign _zz_5 = 1'b0;
+  assign _zz_6 = {31'd0, _zz_7};
   assign ex_rs1_value_forwarded = (fu_inst_io_forward_rs1_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs1_from_wb ? wb_rd_wr_data : id2ex_rs1_value));
   assign ex_rs2_value_forwarded = (fu_inst_io_forward_rs2_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs2_from_wb ? wb_rd_wr_data : id2ex_rs2_value));
-  assign if_instr_valid = hdu_inst_io_if_valid;
-  assign id_instr_valid = (if2id_instr_valid && hdu_inst_io_id_valid);
+  assign if_instr_valid = (hdu_inst_io_if_valid && (! branch_unit_inst_io_instr_addr_misalign_exception));
+  assign id_instr_valid = ((if2id_instr_valid && hdu_inst_io_id_valid) && (! instr_dec_inst_io_invld_instr));
   assign ex_instr_valid = (id2ex_instr_valid && hdu_inst_io_ex_valid);
   assign mem_instr_valid = (ex2mem_instr_valid && hdu_inst_io_mem_valid);
   assign wb_instr_valid = (mem2wb_instr_valid && hdu_inst_io_wb_valid);
@@ -708,13 +785,20 @@ module apple_riscv (
       id2ex_branch_op <= 1'b0;
       id2ex_jal_op <= 1'b0;
       id2ex_jalr_op <= 1'b0;
+      id2ex_illegal_instr_exception <= 1'b0;
       ex2mem_instr_valid <= 1'b0;
       ex2mem_rd_wr <= 1'b0;
       ex2mem_data_ram_wr <= 1'b0;
       ex2mem_data_ram_rd <= 1'b0;
+      ex2mem_illegal_instr_exception <= 1'b0;
+      ex2mem_instr_addr_misalign_exception <= 1'b0;
       mem2wb_instr_valid <= 1'b0;
       mem2wb_rd_wr <= 1'b0;
       mem2wb_data_ram_rd <= 1'b0;
+      mem2wb_illegal_instr_exception <= 1'b0;
+      mem2wb_instr_addr_misalign_exception <= 1'b0;
+      mem2wb_load_addr_misalign <= 1'b0;
+      mem2wb_store_addr_misalign <= 1'b0;
     end else begin
       if(id_pipe_run)begin
         if2id_pc <= pc_inst_io_pc_out;
@@ -749,6 +833,9 @@ module apple_riscv (
       if(ex_pipe_run)begin
         id2ex_jalr_op <= (instr_dec_inst_io_jalr_op && id_instr_valid);
       end
+      if(ex_pipe_run)begin
+        id2ex_illegal_instr_exception <= instr_dec_inst_io_invld_instr;
+      end
       if(mem_pipe_run)begin
         ex2mem_instr_valid <= ex_instr_valid;
       end
@@ -761,6 +848,12 @@ module apple_riscv (
       if(mem_pipe_run)begin
         ex2mem_data_ram_rd <= (id2ex_data_ram_rd && ex_instr_valid);
       end
+      if(mem_pipe_run)begin
+        ex2mem_illegal_instr_exception <= id2ex_illegal_instr_exception;
+      end
+      if(mem_pipe_run)begin
+        ex2mem_instr_addr_misalign_exception <= branch_unit_inst_io_instr_addr_misalign_exception;
+      end
       if(wb_pipe_run)begin
         mem2wb_instr_valid <= mem_instr_valid;
       end
@@ -769,6 +862,18 @@ module apple_riscv (
       end
       if(wb_pipe_run)begin
         mem2wb_data_ram_rd <= (ex2mem_data_ram_rd && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_illegal_instr_exception <= ex2mem_illegal_instr_exception;
+      end
+      if(mem_pipe_run)begin
+        mem2wb_instr_addr_misalign_exception <= ex2mem_instr_addr_misalign_exception;
+      end
+      if(mem_pipe_run)begin
+        mem2wb_load_addr_misalign <= dmem_ctrl_isnt_io_load_addr_misalign;
+      end
+      if(mem_pipe_run)begin
+        mem2wb_store_addr_misalign <= dmem_ctrl_isnt_io_store_addr_misalign;
       end
     end
   end
@@ -858,6 +963,9 @@ module apple_riscv (
     if(ex_pipe_run)begin
       id2ex_op1_sel_zero <= instr_dec_inst_io_op1_sel_zero;
     end
+    if(ex_pipe_run)begin
+      id2ex_instr <= imem_ctrl_inst_io_mc2cpu_data;
+    end
     if(mem_pipe_run)begin
       ex2mem_data_ram_ld_byte <= (id2ex_data_ram_ld_byte && ex_instr_valid);
     end
@@ -882,11 +990,26 @@ module apple_riscv (
     if(mem_pipe_run)begin
       ex2mem_rs2_value <= ex_rs2_value_forwarded;
     end
+    if(mem_pipe_run)begin
+      ex2mem_pc <= id2ex_pc;
+    end
+    if(mem_pipe_run)begin
+      ex2mem_instr <= id2ex_instr;
+    end
     if(wb_pipe_run)begin
       mem2wb_alu_out <= ex2mem_alu_out;
     end
     if(wb_pipe_run)begin
       mem2wb_rd_idx <= ex2mem_rd_idx;
+    end
+    if(wb_pipe_run)begin
+      mem2wb_pc <= ex2mem_pc;
+    end
+    if(wb_pipe_run)begin
+      mem2wb_instr <= ex2mem_instr;
+    end
+    if(wb_pipe_run)begin
+      mem2wb_dmem_addr <= dmem_addr;
     end
   end
 
@@ -910,21 +1033,28 @@ module hdu (
   input               io_ex_dmem_rd,
   input      [4:0]    io_id_rs1_idx,
   input      [4:0]    io_id_rs2_idx,
-  input      [4:0]    io_ex_rd_idx
+  input      [4:0]    io_ex_rd_idx,
+  input               io_id_exception,
+  input               io_ex_exception,
+  input               io_mem_exception
 );
   wire                id_rs1_depends_on_ex_rd;
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
+  wire                exception_flush_if;
+  wire                exception_flush_id;
 
   assign id_rs1_depends_on_ex_rd = ((io_id_rs1_idx == io_ex_rd_idx) && io_id_rs1_rd);
   assign id_rs2_depends_on_ex_rd = ((io_id_rs2_idx == io_ex_rd_idx) && io_id_rs2_rd);
   assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && io_ex_dmem_rd);
+  assign exception_flush_if = ((io_id_exception || io_ex_exception) || io_mem_exception);
+  assign exception_flush_id = (io_ex_exception || io_mem_exception);
   assign io_if_pipe_stall = stall_on_load_dependence;
   assign io_id_pipe_stall = stall_on_load_dependence;
   assign io_ex_pipe_stall = 1'b0;
   assign io_mem_pipe_stall = 1'b0;
   assign io_wb_pipe_stall = 1'b0;
-  assign io_if_valid = (! io_branch_taken);
+  assign io_if_valid = ((! io_branch_taken) && (! exception_flush_if));
   assign io_id_valid = ((! io_branch_taken) && (! stall_on_load_dependence));
   assign io_ex_valid = 1'b1;
   assign io_mem_valid = 1'b1;
@@ -966,6 +1096,194 @@ module fu (
 
 endmodule
 
+module mcsr (
+  input      [11:0]   io_mcsr_addr,
+  input      [31:0]   io_mcsr_din,
+  input               io_mcsr_wen,
+  output reg [31:0]   io_mcsr_dout,
+  input               io_mtrap_enter,
+  input               io_mtrap_exit,
+  input      [31:0]   io_mtrap_mepc,
+  input      [31:0]   io_mtrap_mcause,
+  input      [31:0]   io_mtrap_mtval,
+  output     [31:0]   io_mtrap_mtvec,
+  input      [31:0]   io_hartId,
+  input               clk,
+  input               reset
+);
+  wire       [0:0]    _zz_1;
+  wire       [0:0]    _zz_2;
+  wire       [0:0]    _zz_3;
+  wire       [31:0]   mvendorid;
+  wire       [31:0]   marchid;
+  wire       [31:0]   mimpid;
+  reg        [31:0]   mstatus;
+  reg        [31:0]   mie;
+  reg        [31:0]   mtvec;
+  reg        [31:0]   mepc;
+  reg        [31:0]   mcause;
+  reg        [31:0]   mtval;
+  reg        [31:0]   mip;
+  wire                mstatus_wen;
+  wire                mie_wen;
+  wire                mtvec_wen;
+  wire                mepc_wen;
+  wire                mcause_wen;
+  wire                mtval_wen;
+  wire                mip_wen;
+
+  assign _zz_1 = 1'b0;
+  assign _zz_2 = 1'b0;
+  assign _zz_3 = 1'b0;
+  assign mvendorid = {31'd0, _zz_1};
+  assign marchid = {31'd0, _zz_2};
+  assign mimpid = {31'd0, _zz_3};
+  always @ (*) begin
+    case(io_mcsr_addr)
+      12'hf11 : begin
+        io_mcsr_dout = mvendorid;
+      end
+      12'hf12 : begin
+        io_mcsr_dout = marchid;
+      end
+      12'hf13 : begin
+        io_mcsr_dout = mimpid;
+      end
+      12'hf14 : begin
+        io_mcsr_dout = io_hartId;
+      end
+      12'h300 : begin
+        io_mcsr_dout = mstatus;
+      end
+      12'h304 : begin
+        io_mcsr_dout = mie;
+      end
+      12'h305 : begin
+        io_mcsr_dout = mtvec;
+      end
+      12'h341 : begin
+        io_mcsr_dout = mepc;
+      end
+      12'h342 : begin
+        io_mcsr_dout = mcause;
+      end
+      12'h343 : begin
+        io_mcsr_dout = mtval;
+      end
+      12'h344 : begin
+        io_mcsr_dout = mip;
+      end
+      default : begin
+        io_mcsr_dout = mvendorid;
+      end
+    endcase
+  end
+
+  assign mstatus_wen = ((io_mcsr_addr == 12'h300) && io_mcsr_wen);
+  assign mie_wen = ((io_mcsr_addr == 12'h302) && io_mcsr_wen);
+  assign mtvec_wen = ((io_mcsr_addr == 12'h303) && io_mcsr_wen);
+  assign mepc_wen = ((io_mcsr_addr == 12'h341) && io_mcsr_wen);
+  assign mcause_wen = ((io_mcsr_addr == 12'h342) && io_mcsr_wen);
+  assign mtval_wen = ((io_mcsr_addr == 12'h343) && io_mcsr_wen);
+  assign mip_wen = ((io_mcsr_addr == 12'h344) && io_mcsr_wen);
+  assign io_mtrap_mtvec = mtvec;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      mstatus <= 32'h0;
+      mie <= 32'h0;
+      mtvec <= 32'h0;
+      mepc <= 32'h0;
+      mcause <= 32'h0;
+      mtval <= 32'h0;
+      mip <= 32'h0;
+    end else begin
+      mstatus[12 : 11] <= 2'b11;
+      if(io_mtrap_enter)begin
+        mstatus[3] <= 1'b0;
+        mstatus[7] <= mstatus[3];
+      end else begin
+        if(io_mtrap_exit)begin
+          mstatus[3] <= mstatus[7];
+          mstatus[7] <= 1'b1;
+        end else begin
+          if(mstatus_wen)begin
+            mstatus <= io_mcsr_din;
+          end
+        end
+      end
+      if(mie_wen)begin
+        mie <= io_mcsr_din;
+      end
+      if(mtvec_wen)begin
+        mtvec <= io_mcsr_din;
+      end
+      if(io_mtrap_enter)begin
+        mepc <= io_mtrap_mepc;
+      end else begin
+        if(mepc_wen)begin
+          mepc <= io_mcsr_din;
+        end
+      end
+      if(io_mtrap_enter)begin
+        mcause <= io_mtrap_mcause;
+      end else begin
+        if(mcause_wen)begin
+          mcause <= io_mcsr_din;
+        end
+      end
+      if(io_mtrap_enter)begin
+        mtval <= io_mtrap_mtval;
+      end else begin
+        if(mtval_wen)begin
+          mtval <= io_mcsr_din;
+        end
+      end
+      if(mip_wen)begin
+        mip <= io_mcsr_din;
+      end
+    end
+  end
+
+
+endmodule
+
+module trap_ctrl (
+  input               io_load_addr_misalign,
+  input               io_store_addr_misalign,
+  input               io_illegal_instr_exception,
+  input               io_instr_addr_misalign_exception,
+  input      [31:0]   io_wb_pc,
+  input      [31:0]   io_wb_instr,
+  input      [15:0]   io_wb_dmem_addr,
+  output              io_mtrap_enter,
+  output              io_mtrap_exit,
+  output     [31:0]   io_mtrap_mepc,
+  output     [31:0]   io_mtrap_mcause,
+  output     [31:0]   io_mtrap_mtval,
+  input      [31:0]   io_mtrap_mtvec,
+  output              io_pc_trap,
+  output     [31:0]   io_pc_value
+);
+  wire       [15:0]   _zz_1;
+  wire       [31:0]   _zz_2;
+  wire                dmem_addr_exception;
+  wire                exception;
+  wire       [30:0]   exception_code;
+
+  assign _zz_1 = io_wb_dmem_addr;
+  assign _zz_2 = {16'd0, _zz_1};
+  assign dmem_addr_exception = (io_load_addr_misalign || io_store_addr_misalign);
+  assign exception = ((dmem_addr_exception || io_illegal_instr_exception) || io_instr_addr_misalign_exception);
+  assign io_mtrap_enter = exception;
+  assign io_mtrap_exit = 1'b0;
+  assign io_mtrap_mepc = io_wb_pc;
+  assign io_mtrap_mcause = {1'b0,exception_code};
+  assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : _zz_2);
+  assign io_pc_trap = exception;
+  assign io_pc_value = io_mtrap_mtvec;
+
+endmodule
+
 module dmem_ctrl (
   input               io_cpu2mc_wr,
   input               io_cpu2mc_rd,
@@ -975,6 +1293,8 @@ module dmem_ctrl (
   input               io_cpu2mc_mem_LS_byte,
   input               io_cpu2mc_mem_LS_halfword,
   input               io_cpu2mc_mem_LW_unsigned,
+  output              io_load_addr_misalign,
+  output              io_store_addr_misalign,
   output     [15:0]   dmem_ahb_HADDR,
   output              dmem_ahb_HSEL,
   output              dmem_ahb_HREADY,
@@ -1029,6 +1349,8 @@ module dmem_ctrl (
   wire       [31:0]   mem2mc_data_byte3_sign_ext;
   wire       [31:0]   mem2mc_data_hw0_sign_ext;
   wire       [31:0]   mem2mc_data_hw1_sign_ext;
+  wire                halfword_addr_misalign;
+  wire                word_address_misalign;
 
   assign _zz_1 = mem2mc_data_byte0;
   assign _zz_2 = {{24{_zz_1[7]}}, _zz_1};
@@ -1116,6 +1438,10 @@ module dmem_ctrl (
     end
   end
 
+  assign halfword_addr_misalign = (io_cpu2mc_mem_LS_halfword && io_cpu2mc_addr[0]);
+  assign word_address_misalign = ((! (io_cpu2mc_mem_LS_byte || io_cpu2mc_mem_LS_halfword)) && (io_cpu2mc_addr[1 : 0] != 2'b00));
+  assign io_load_addr_misalign = (io_cpu2mc_rd && (halfword_addr_misalign || word_address_misalign));
+  assign io_store_addr_misalign = (io_cpu2mc_wr && (halfword_addr_misalign || word_address_misalign));
   always @ (posedge clk) begin
     if(io_cpu2mc_rd)begin
       LW_unsigned_s1 <= io_cpu2mc_mem_LW_unsigned;
@@ -1144,7 +1470,7 @@ module branch_unit (
   input               io_jalr_op,
   output reg [31:0]   io_target_pc,
   output              io_branch_taken,
-  output              io_instruction_address_misaligned_exception
+  output              io_instr_addr_misalign_exception
 );
   wire       [31:0]   _zz_1;
   wire       [31:0]   addr_in;
@@ -1159,7 +1485,7 @@ module branch_unit (
   end
 
   assign pc_1_0 = io_target_pc[1 : 0];
-  assign io_instruction_address_misaligned_exception = (io_branch_taken && (pc_1_0 != 2'b00));
+  assign io_instr_addr_misalign_exception = (io_branch_taken && (pc_1_0 != 2'b00));
 
 endmodule
 
@@ -1357,7 +1683,7 @@ module instr_dec (
   wire       [6:0]    func7;
   reg        `br_imm_type_e_binary_sequential_type br_imm_type;
   reg        `alu_imm_type_e_binary_sequential_type alu_imm_type;
-  wire                func7_all_zero;
+  wire                func7_not_all_zero;
   wire       [31:0]   i_type_imm;
   wire       [31:0]   s_type_imm;
   wire       [31:0]   u_type_imm;
@@ -1438,7 +1764,7 @@ module instr_dec (
     endcase
   end
 
-  assign func7_all_zero = (func7 == 7'h0);
+  assign func7_not_all_zero = (func7 != 7'h0);
   always @ (*) begin
     io_register_wr = 1'b0;
     case(opcode)
@@ -2464,16 +2790,16 @@ module instr_dec (
             endcase
           end
           3'b001 : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
           3'b010 : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
           3'b011 : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
           3'b100 : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
           3'b101 : begin
             case(func7)
@@ -2487,10 +2813,10 @@ module instr_dec (
             endcase
           end
           3'b110 : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
           default : begin
-            io_invld_instr = func7_all_zero;
+            io_invld_instr = func7_not_all_zero;
           end
         endcase
       end
@@ -2573,8 +2899,10 @@ module imem_ctrl (
 endmodule
 
 module program_counter (
-  input      [31:0]   io_pc_in,
+  input      [31:0]   io_branch_pc_in,
+  input      [31:0]   io_trap_pc_in,
   input               io_branch,
+  input               io_trap,
   input               io_stall,
   output     [31:0]   io_pc_out,
   input               clk,
@@ -2589,9 +2917,13 @@ module program_counter (
     end else begin
       if((! io_stall))begin
         if(io_branch)begin
-          pc <= io_pc_in;
+          pc <= io_branch_pc_in;
         end else begin
-          pc <= (pc + 32'h00000004);
+          if(io_trap)begin
+            pc <= io_trap_pc_in;
+          end else begin
+            pc <= (pc + 32'h00000004);
+          end
         end
       end
     end

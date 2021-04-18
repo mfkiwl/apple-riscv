@@ -42,6 +42,10 @@ class CPU_PARAM {
     val DATA_RAM_DATA_WIDTH = DATA_WIDTH
     val DATA_RAM_ADDR_WIDTH = 16                // 64KB Data RAM for now
 
+    // CSR related
+    val MXLEN       = XLEN                      // MCSR register length
+    val CSR_ADDR_WIDTH = 12
+
     // ========================== //
     //       AHB Bus Config       //
     // ========================== //
@@ -102,7 +106,7 @@ class CPU_PARAM {
     val BR_F3_BLTU  = Integer.parseInt("110", 2) // BLTU
     val BR_F3_BGEU  = Integer.parseInt("111", 2) // BGEU
     // Fence func3 field
-    val FE_F3_FENCE =  Integer.parseInt("000", 2) // FENCE
+    val FE_F3_FENCE  =  Integer.parseInt("000", 2) // FENCE
     val FE_F3_FENCEI =  Integer.parseInt("001", 2) // FENCE.I
 
     // == func3 == //
@@ -112,21 +116,7 @@ class CPU_PARAM {
     val LA_F7_SUB   = Integer.parseInt("0100000", 2) // SUB
 
     // ========================== //
-    //     Macro define           //
+    //        Macro define        //
     // ========================== //
-    // Branch operation encoding for ALU
-    object alu_branch_op_e extends SpinalEnum {
-        val eqt, slt, sltu = newElement()
-    }
 
-
-    /////////////////////////////
-    // Backup
-    /////////////////////////////
-    // Load/Store func3 field
-    val LS_F3_LB_SB = Integer.parseInt("000", 2) // SB, LB
-    val LS_F3_LH_SH = Integer.parseInt("001", 2) // LH, SH
-    val LS_F3_LW_SW = Integer.parseInt("010", 2) // LW, SW
-    val LS_F3_LBU   = Integer.parseInt("100", 2) // LBU
-    val LS_F3_LHU   = Integer.parseInt("101", 2) // LHU
 }

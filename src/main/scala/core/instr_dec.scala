@@ -105,7 +105,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     alu_imm_type := alu_imm_type_e.FOUR
 
     // intermediate logic
-    val func7_all_zero = (func7 === 0)
+    val func7_not_all_zero = (func7 =/= 0)
 
     // default value
     io.register_wr        := False
@@ -353,22 +353,22 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 // SLL
                 is(param.LA_F3_SLL) {
                     io.alu_op_sll   := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // SLT
                 is(param.LA_F3_SLT) {
                     io.alu_op_slt   := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // SLTU
                 is(param.LA_F3_SLTU) {
                     io.alu_op_sltu  := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // XOR
                 is(param.LA_F3_XOR) {
                     io.alu_op_xor   := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // SRL/SRA
                 is(param.LA_F3_SR) {
@@ -389,12 +389,12 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 // ORI
                 is(param.LA_F3_OR) {
                     io.alu_op_or    := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // AND
                 is(param.LA_F3_AND) {
                     io.alu_op_and   := True
-                    io.invld_instr  := func7_all_zero
+                    io.invld_instr  := func7_not_all_zero
                 }
                 // No default required. Complete switch statement
             }

@@ -43,12 +43,19 @@ case class hdu_io(param: CPU_PARAM) extends Bundle {
   val id_rs1_idx = in UInt(param.RF_ADDR_WDITH bits)
   val id_rs2_idx = in UInt(param.RF_ADDR_WDITH bits)
   val ex_rd_idx = in UInt(param.RF_ADDR_WDITH bits)
+
+  // exception related signal
+  val id_exception  = in Bool
+  val ex_exception  = in Bool
+  val mem_exception = in Bool
 }
 
 case class hdu(param: CPU_PARAM) extends Component {
   val io = hdu_io(param)
 
-  // HDU Case 1: Load dependency
+  // ======================================
+  // Load dependency
+  // ======================================
   // If there is immediate read data dependence on Load instruction,
   // we need to stall the pipe for one cycle
   // ID   |  EX  |  MEM | WB
@@ -59,16 +66,26 @@ case class hdu(param: CPU_PARAM) extends Component {
   val id_rs2_depends_on_ex_rd = (io.id_rs2_idx === io.ex_rd_idx) & io.id_rs2_rd
   val stall_on_load_dependence = (id_rs1_depends_on_ex_rd | id_rs2_depends_on_ex_rd) & io.ex_dmem_rd
 
+  // ======================================
+  // Exception
+  // ======================================
+  val exception_flush_if = io.id_exception | io.ex_exception | io.mem_exception
+  val exception_flush_id = io.ex_exception | io.mem_exception
+  val exception_flush_ex = io.mem_exception
 
+  // ======================================
   // Overall Stall Logic
+  // ======================================
   io.if_pipe_stall  := stall_on_load_dependence
   io.id_pipe_stall  := stall_on_load_dependence
   io.ex_pipe_stall  := False
   io.mem_pipe_stall := False
   io.wb_pipe_stall  := False
 
+  // ======================================
   // Overall Flushing logic
-  io.if_valid   := ~io.branch_taken
+  // ======================================
+  io.if_valid   := ~io.branch_taken & ~exception_flush_if
   io.id_valid   := ~io.branch_taken & ~stall_on_load_dependence
   io.ex_valid   := True
   io.mem_valid  := True

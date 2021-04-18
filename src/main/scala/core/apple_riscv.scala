@@ -75,7 +75,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val pc_inst = program_counter(param)
     pc_inst.io.branch := branch_taken
     pc_inst.io.stall  := if_pipe_stall
-    pc_inst.io.pc_in  := target_pc
+    pc_inst.io.branch_pc_in  := target_pc
+
 
     // == instruction RAM Controller == //
     val imem_ctrl_inst = imem_ctrl(param)
@@ -105,6 +106,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     regfile_inst.io.rs2_rd_addr := instr_dec_inst.io.rs2_idx
     val rs1_data_out = regfile_inst.io.rs1_data_out
     val rs2_data_out = regfile_inst.io.rs2_data_out
+
+    // == exception == //
+    val id_exception = instr_dec_inst.io.invld_instr
 
     // =========================
     // ID/EX Pipeline
@@ -158,8 +162,12 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Others
     val id2ex_pc            = RegNextWhen(if2id_pc, ex_pipe_run)
     val id2ex_op2_sel_imm   = RegNextWhen(instr_dec_inst.io.op2_sel_imm , ex_pipe_run)
-    val id2ex_op1_sel_pc    = RegNextWhen(instr_dec_inst.io.op1_sel_pc  ,  ex_pipe_run)
-    val id2ex_op1_sel_zero  = RegNextWhen(instr_dec_inst.io.op1_sel_zero,  ex_pipe_run)
+    val id2ex_op1_sel_pc    = RegNextWhen(instr_dec_inst.io.op1_sel_pc  , ex_pipe_run)
+    val id2ex_op1_sel_zero  = RegNextWhen(instr_dec_inst.io.op1_sel_zero, ex_pipe_run)
+    val id2ex_instr         = RegNextWhen(imem_ctrl_inst.io.mc2cpu_data , ex_pipe_run)
+
+    // Exception
+    val id2ex_illegal_instr_exception = RegNextWhen(instr_dec_inst.io.invld_instr, ex_pipe_run) init False
 
     // =========================
     // EX stage
@@ -203,7 +211,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     branch_unit_inst.io.jalr_op         := id2ex_jalr_op
     target_pc                           := branch_unit_inst.io.target_pc
     branch_taken                        := branch_unit_inst.io.branch_taken
-    // FIXME: Exception Logic // = branch_unit_inst.io.instruction_address_misaligned_exception
+
+    // == exception == //
+    val ex_exception = id2ex_illegal_instr_exception | branch_unit_inst.io.instr_addr_misalign_exception
 
     // =========================
     // EX/Mem Pipeline
@@ -224,24 +234,34 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex2mem_rs2_idx   = RegNextWhen(id2ex_rs2_idx, mem_pipe_run)
     val ex2mem_rd_idx    = RegNextWhen(id2ex_rd_idx, mem_pipe_run)
     val ex2mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, mem_pipe_run)
+    val ex2mem_pc        = RegNextWhen(id2ex_pc, mem_pipe_run)
+    val ex2mem_instr     = RegNextWhen(id2ex_instr, mem_pipe_run)
+    
+    // Exception
+    val ex2mem_illegal_instr_exception = RegNextWhen(id2ex_illegal_instr_exception, mem_pipe_run) init False
+    val ex2mem_instr_addr_misalign_exception = RegNextWhen(branch_unit_inst.io.instr_addr_misalign_exception, mem_pipe_run) init False
 
     // =========================
     // Mem stage
     // =========================
 
+    val dmem_addr = ex2mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt
+
     // == Memory Controller == //
     val dmem_ctrl_isnt = dmem_ctrl(param)
-
     dmem_ctrl_isnt.dmem_ahb <> dmem_ahb
     // CPU side
     dmem_ctrl_isnt.io.cpu2mc_wr                 := ex2mem_data_ram_wr
     dmem_ctrl_isnt.io.cpu2mc_rd                 := ex2mem_data_ram_rd
-    dmem_ctrl_isnt.io.cpu2mc_addr               := ex2mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt   // ALU output is the address
-    dmem_ctrl_isnt.io.cpu2mc_data               := ex2mem_rs2_value        // Write data is in rs2
+    dmem_ctrl_isnt.io.cpu2mc_addr               := dmem_addr
+    dmem_ctrl_isnt.io.cpu2mc_data               := ex2mem_rs2_value
     dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte        := ex2mem_data_ram_ld_byte
     dmem_ctrl_isnt.io.cpu2mc_mem_LS_halfword    := ex2mem_data_ram_ld_hword
     dmem_ctrl_isnt.io.cpu2mc_mem_LW_unsigned    := ex2mem_data_ram_ld_unsign
 
+    // == exception == //
+    val mem_exception = ex2mem_illegal_instr_exception | ex2mem_instr_addr_misalign_exception |
+                        dmem_ctrl_isnt.io.load_addr_misalign | dmem_ctrl_isnt.io.store_addr_misalign
 
     // =========================
     // Mem/WB stage
@@ -255,6 +275,15 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // data signal
     val mem2wb_alu_out  = RegNextWhen(ex2mem_alu_out, wb_pipe_run)
     val mem2wb_rd_idx   = RegNextWhen(ex2mem_rd_idx, wb_pipe_run)
+    val mem2wb_pc       = RegNextWhen(ex2mem_pc, wb_pipe_run)
+    val mem2wb_instr    = RegNextWhen(ex2mem_instr, wb_pipe_run)
+    val mem2wb_dmem_addr = RegNextWhen(dmem_addr, wb_pipe_run)
+
+    // Exception
+    val mem2wb_illegal_instr_exception = RegNextWhen(ex2mem_illegal_instr_exception, wb_pipe_run) init False
+    val mem2wb_instr_addr_misalign_exception = RegNextWhen(ex2mem_instr_addr_misalign_exception, mem_pipe_run) init False
+    val mem2wb_load_addr_misalign = RegNextWhen(dmem_ctrl_isnt.io.load_addr_misalign, mem_pipe_run) init False
+    val mem2wb_store_addr_misalign = RegNextWhen(dmem_ctrl_isnt.io.store_addr_misalign, mem_pipe_run) init False
 
     // =========================
     // WB stage
@@ -266,6 +295,35 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Select data between memory output and alu output
     val wb_rd_wr_data = Mux(mem2wb_data_ram_rd, dmem_ctrl_isnt.io.mc2cpu_data, mem2wb_alu_out)
     regfile_inst.io.rd_in := wb_rd_wr_data
+
+    // == trap controller == //
+    val trap_ctrl_inst = trap_ctrl(param)
+    trap_ctrl_inst.io.illegal_instr_exception       := mem2wb_illegal_instr_exception
+    trap_ctrl_inst.io.instr_addr_misalign_exception := mem2wb_instr_addr_misalign_exception
+    trap_ctrl_inst.io.load_addr_misalign            := mem2wb_load_addr_misalign
+    trap_ctrl_inst.io.store_addr_misalign           := mem2wb_store_addr_misalign
+    trap_ctrl_inst.io.wb_pc                         := mem2wb_pc
+    trap_ctrl_inst.io.wb_instr                      := mem2wb_instr
+    trap_ctrl_inst.io.wb_dmem_addr                  := mem2wb_dmem_addr
+
+    pc_inst.io.trap         := trap_ctrl_inst.io.pc_trap
+    pc_inst.io.trap_pc_in   := trap_ctrl_inst.io.pc_value
+
+    // == MCSR - Machine Level CSR module == //
+    val mcsr_inst = mcsr(param)  // mcsr with hart 0
+
+    mcsr_inst.io.mcsr_addr := 0
+    mcsr_inst.io.mcsr_din  := 0
+    mcsr_inst.io.mcsr_wen  := False
+    // FIXME: mcsr_inst.io.mcsr_dout
+    mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
+    mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
+    mcsr_inst.io.mtrap_mepc   := trap_ctrl_inst.io.mtrap_mepc
+    mcsr_inst.io.mtrap_mcause := trap_ctrl_inst.io.mtrap_mcause
+    mcsr_inst.io.mtrap_mtval  := trap_ctrl_inst.io.mtrap_mtval
+    mcsr_inst.io.hartId       := B"0".resized
+
+    trap_ctrl_inst.io.mtrap_mtvec  := mcsr_inst.io.mtrap_mtvec
 
     //////////////////////////////////////////////////
     //         Other Components                     //
@@ -292,7 +350,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
                                   Mux(fu_inst.io.forward_rs2_from_wb, wb_rd_wr_data, id2ex_rs2_value))
 
     // ===============================
-    // HDU - Hazard Detection Unit  //
+    // HDU - Hazard Detection Unit
     // ===============================
 
     val hdu_inst = hdu(param)
@@ -303,13 +361,24 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     hdu_inst.io.id_rs2_idx   := instr_dec_inst.io.rs2_idx
     hdu_inst.io.ex_dmem_rd   := id2ex_data_ram_rd
     hdu_inst.io.ex_rd_idx    := id2ex_rd_idx
+    hdu_inst.io.id_exception := id_exception
+    hdu_inst.io.ex_exception := ex_exception
+    hdu_inst.io.mem_exception := mem_exception
 
-    // valid signal is ANDing the valid signal from HDU and the valid signal from pipe stage
-    if_instr_valid  := hdu_inst.io.if_valid
-    id_instr_valid  := if2id_instr_valid  & hdu_inst.io.id_valid
+    // ===============================
+    // Flushing/stalling logic
+    // ===============================
+
+    // valid signal is ANDing the valid signal from HDU and the valid signal from previous pipe stage
+    if_instr_valid  := hdu_inst.io.if_valid & ~branch_unit_inst.io.instr_addr_misalign_exception
+    id_instr_valid  := if2id_instr_valid  & hdu_inst.io.id_valid & ~instr_dec_inst.io.invld_instr
     ex_instr_valid  := id2ex_instr_valid  & hdu_inst.io.ex_valid
     mem_instr_valid := ex2mem_instr_valid & hdu_inst.io.mem_valid
     wb_instr_valid  := mem2wb_instr_valid & hdu_inst.io.wb_valid
+
+    // Place holder for the stall/run signal
+    // The stage prefix indicate if we need to stall the pipeline entering this stage
+    // For example, id_pipe_stall will stall if2id pipeline stage
 
     if_pipe_stall  :=  hdu_inst.io.if_pipe_stall
     id_pipe_stall  :=  hdu_inst.io.id_pipe_stall
