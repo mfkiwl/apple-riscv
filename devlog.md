@@ -2,6 +2,9 @@
 
 ## Milestone 0.1
 
+- 04/18/2021
+  - Implemented interrupt logic and added few more csr register
+
 - 04/17/2021
   - Designed the csr module and exception logic
   - Implemented the 'Zicsr' csr related instructions

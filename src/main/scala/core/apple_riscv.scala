@@ -25,7 +25,12 @@ import spinal.core._
 import spinal.lib.bus.amba3.ahblite._
 import spinal.lib.master
 
-case class apple_riscv_io(param: CPU_PARAM) extends Bundle {}
+case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
+    val external_interrupt  = in Bool
+    val timer_interrupt     = in Bool
+    val software_interrupt  = in Bool
+    val debug_interrupt     = in Bool
+}
 
 case class apple_riscv (param: CPU_PARAM) extends Component {
 
@@ -76,7 +81,6 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     pc_inst.io.branch := branch_taken
     pc_inst.io.stall  := if_pipe_stall
     pc_inst.io.branch_pc_in  := target_pc
-
 
     // == instruction RAM Controller == //
     val imem_ctrl_inst = imem_ctrl(param)
@@ -321,8 +325,15 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // WB stage
     // =========================
 
-    // == trap controller == //
-    val trap_ctrl_inst = trap_ctrl(param)
+    // instantiate module first
+    val mcsr_inst       = mcsr(param)  // mcsr with hart 0
+    val trap_ctrl_inst  = trap_ctrl(param)
+
+    // == trap controller wire connection == //
+    trap_ctrl_inst.io.external_interrupt            := io.external_interrupt
+    trap_ctrl_inst.io.timer_interrupt               := io.timer_interrupt
+    trap_ctrl_inst.io.software_interrupt            := io.software_interrupt
+    trap_ctrl_inst.io.debug_interrupt               := io.debug_interrupt   
     trap_ctrl_inst.io.illegal_instr_exception       := mem2wb_illegal_instr_exception
     trap_ctrl_inst.io.instr_addr_misalign_exception := mem2wb_instr_addr_misalign_exception
     trap_ctrl_inst.io.load_addr_misalign            := mem2wb_load_addr_misalign
@@ -330,28 +341,35 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     trap_ctrl_inst.io.wb_pc                         := mem2wb_pc
     trap_ctrl_inst.io.wb_instr                      := mem2wb_instr
     trap_ctrl_inst.io.wb_dmem_addr                  := mem2wb_dmem_addr
+    trap_ctrl_inst.io.mtrap_mtvec                   := mcsr_inst.io.mtrap_mtvec
+    trap_ctrl_inst.io.mie_meie                      := mcsr_inst.io.mie_meie
+    trap_ctrl_inst.io.mie_mtie                      := mcsr_inst.io.mie_mtie
+    trap_ctrl_inst.io.mie_msie                      := mcsr_inst.io.mie_msie
+    trap_ctrl_inst.io.mstatus_mie                   := mcsr_inst.io.mstatus_mie
 
-    pc_inst.io.trap         := trap_ctrl_inst.io.pc_trap
-    pc_inst.io.trap_pc_in   := trap_ctrl_inst.io.pc_value
+    pc_inst.io.trap                                 := trap_ctrl_inst.io.pc_trap
+    pc_inst.io.trap_pc_in                           := trap_ctrl_inst.io.pc_value
 
-    // == MCSR - Machine Level CSR module == //
-    val mcsr_inst = mcsr(param)  // mcsr with hart 0
+    // == mcsr wire connection == //
     mcsr_inst.io.mcsr_addr := mem2wb_csr_idx
     // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
-    val mcsr_data = Mux(mem2wb_csr_sel_imm, mem2wb_rs1_idx.asBits.resized, mem2wb_rs1_value)
-    val mcsr_masked_set = mcsr_inst.io.mcsr_dout & mcsr_data
-    val mcsr_masked_clear = mcsr_inst.io.mcsr_dout & ~mcsr_data
+    val mcsr_data          = Mux(mem2wb_csr_sel_imm, mem2wb_rs1_idx.asBits.resized, mem2wb_rs1_value)
+    val mcsr_masked_set    = mcsr_inst.io.mcsr_dout & mcsr_data
+    val mcsr_masked_clear  = mcsr_inst.io.mcsr_dout & ~mcsr_data
     mcsr_inst.io.mcsr_din  := Mux(mem2wb_csr_rw, mcsr_data, Mux(mem2wb_csr_rs, mcsr_masked_set, mcsr_masked_clear))
     mcsr_inst.io.mcsr_wen  := mem2wb_csr_wr
     // mem2wb_csr_rd is not used so far
-    // trap
     mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
     mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
     mcsr_inst.io.mtrap_mepc   := trap_ctrl_inst.io.mtrap_mepc
     mcsr_inst.io.mtrap_mcause := trap_ctrl_inst.io.mtrap_mcause
     mcsr_inst.io.mtrap_mtval  := trap_ctrl_inst.io.mtrap_mtval
+    mcsr_inst.io.external_interrupt  := io.external_interrupt
+    mcsr_inst.io.timer_interrupt     := io.timer_interrupt
+    mcsr_inst.io.software_interrupt  := io.software_interrupt
+
+
     mcsr_inst.io.hartId       := B"0".resized
-    trap_ctrl_inst.io.mtrap_mtvec  := mcsr_inst.io.mtrap_mtvec
 
     // == Write back to register == //
     regfile_inst.io.register_wr := mem2wb_rd_wr

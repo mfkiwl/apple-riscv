@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : e9766889b792bb57a34daef6ceb149632c9e71f3
+// Git hash  : 9f93fdc3af7c576fa99869a790d4b7c2e3848838
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -33,6 +33,10 @@ module apple_riscv_soc (
   input               clk,
   input               reset
 );
+  wire                _zz_1;
+  wire                _zz_2;
+  wire                _zz_3;
+  wire                _zz_4;
   wire       [15:0]   cpu_core_imem_ahb_HADDR;
   wire                cpu_core_imem_ahb_HWRITE;
   wire       [2:0]    cpu_core_imem_ahb_HSIZE;
@@ -64,34 +68,38 @@ module apple_riscv_soc (
   wire       [31:0]   dmem_inst_dmem_ahb_HRDATA;
 
   apple_riscv cpu_core (
-    .imem_ahb_HADDR        (cpu_core_imem_ahb_HADDR[15:0]        ), //o
-    .imem_ahb_HSEL         (cpu_core_imem_ahb_HSEL               ), //o
-    .imem_ahb_HREADY       (cpu_core_imem_ahb_HREADY             ), //o
-    .imem_ahb_HWRITE       (cpu_core_imem_ahb_HWRITE             ), //o
-    .imem_ahb_HSIZE        (cpu_core_imem_ahb_HSIZE[2:0]         ), //o
-    .imem_ahb_HBURST       (cpu_core_imem_ahb_HBURST[2:0]        ), //o
-    .imem_ahb_HPROT        (cpu_core_imem_ahb_HPROT[3:0]         ), //o
-    .imem_ahb_HTRANS       (cpu_core_imem_ahb_HTRANS[1:0]        ), //o
-    .imem_ahb_HMASTLOCK    (cpu_core_imem_ahb_HMASTLOCK          ), //o
-    .imem_ahb_HWDATA       (cpu_core_imem_ahb_HWDATA[31:0]       ), //o
-    .imem_ahb_HRDATA       (imem_inst_imem_cpu_ahb_HRDATA[31:0]  ), //i
-    .imem_ahb_HREADYOUT    (imem_inst_imem_cpu_ahb_HREADYOUT     ), //i
-    .imem_ahb_HRESP        (imem_inst_imem_cpu_ahb_HRESP         ), //i
-    .dmem_ahb_HADDR        (cpu_core_dmem_ahb_HADDR[15:0]        ), //o
-    .dmem_ahb_HSEL         (cpu_core_dmem_ahb_HSEL               ), //o
-    .dmem_ahb_HREADY       (cpu_core_dmem_ahb_HREADY             ), //o
-    .dmem_ahb_HWRITE       (cpu_core_dmem_ahb_HWRITE             ), //o
-    .dmem_ahb_HSIZE        (cpu_core_dmem_ahb_HSIZE[2:0]         ), //o
-    .dmem_ahb_HBURST       (cpu_core_dmem_ahb_HBURST[2:0]        ), //o
-    .dmem_ahb_HPROT        (cpu_core_dmem_ahb_HPROT[3:0]         ), //o
-    .dmem_ahb_HTRANS       (cpu_core_dmem_ahb_HTRANS[1:0]        ), //o
-    .dmem_ahb_HMASTLOCK    (cpu_core_dmem_ahb_HMASTLOCK          ), //o
-    .dmem_ahb_HWDATA       (cpu_core_dmem_ahb_HWDATA[31:0]       ), //o
-    .dmem_ahb_HRDATA       (dmem_inst_dmem_ahb_HRDATA[31:0]      ), //i
-    .dmem_ahb_HREADYOUT    (dmem_inst_dmem_ahb_HREADYOUT         ), //i
-    .dmem_ahb_HRESP        (dmem_inst_dmem_ahb_HRESP             ), //i
-    .clk                   (clk                                  ), //i
-    .reset                 (reset                                )  //i
+    .io_external_interrupt    (_zz_1                                ), //i
+    .io_timer_interrupt       (_zz_2                                ), //i
+    .io_software_interrupt    (_zz_3                                ), //i
+    .io_debug_interrupt       (_zz_4                                ), //i
+    .imem_ahb_HADDR           (cpu_core_imem_ahb_HADDR[15:0]        ), //o
+    .imem_ahb_HSEL            (cpu_core_imem_ahb_HSEL               ), //o
+    .imem_ahb_HREADY          (cpu_core_imem_ahb_HREADY             ), //o
+    .imem_ahb_HWRITE          (cpu_core_imem_ahb_HWRITE             ), //o
+    .imem_ahb_HSIZE           (cpu_core_imem_ahb_HSIZE[2:0]         ), //o
+    .imem_ahb_HBURST          (cpu_core_imem_ahb_HBURST[2:0]        ), //o
+    .imem_ahb_HPROT           (cpu_core_imem_ahb_HPROT[3:0]         ), //o
+    .imem_ahb_HTRANS          (cpu_core_imem_ahb_HTRANS[1:0]        ), //o
+    .imem_ahb_HMASTLOCK       (cpu_core_imem_ahb_HMASTLOCK          ), //o
+    .imem_ahb_HWDATA          (cpu_core_imem_ahb_HWDATA[31:0]       ), //o
+    .imem_ahb_HRDATA          (imem_inst_imem_cpu_ahb_HRDATA[31:0]  ), //i
+    .imem_ahb_HREADYOUT       (imem_inst_imem_cpu_ahb_HREADYOUT     ), //i
+    .imem_ahb_HRESP           (imem_inst_imem_cpu_ahb_HRESP         ), //i
+    .dmem_ahb_HADDR           (cpu_core_dmem_ahb_HADDR[15:0]        ), //o
+    .dmem_ahb_HSEL            (cpu_core_dmem_ahb_HSEL               ), //o
+    .dmem_ahb_HREADY          (cpu_core_dmem_ahb_HREADY             ), //o
+    .dmem_ahb_HWRITE          (cpu_core_dmem_ahb_HWRITE             ), //o
+    .dmem_ahb_HSIZE           (cpu_core_dmem_ahb_HSIZE[2:0]         ), //o
+    .dmem_ahb_HBURST          (cpu_core_dmem_ahb_HBURST[2:0]        ), //o
+    .dmem_ahb_HPROT           (cpu_core_dmem_ahb_HPROT[3:0]         ), //o
+    .dmem_ahb_HTRANS          (cpu_core_dmem_ahb_HTRANS[1:0]        ), //o
+    .dmem_ahb_HMASTLOCK       (cpu_core_dmem_ahb_HMASTLOCK          ), //o
+    .dmem_ahb_HWDATA          (cpu_core_dmem_ahb_HWDATA[31:0]       ), //o
+    .dmem_ahb_HRDATA          (dmem_inst_dmem_ahb_HRDATA[31:0]      ), //i
+    .dmem_ahb_HREADYOUT       (dmem_inst_dmem_ahb_HREADYOUT         ), //i
+    .dmem_ahb_HRESP           (dmem_inst_dmem_ahb_HRESP             ), //i
+    .clk                      (clk                                  ), //i
+    .reset                    (reset                                )  //i
   );
   imem imem_inst (
     .imem_cpu_ahb_HADDR        (cpu_core_imem_ahb_HADDR[15:0]        ), //i
@@ -140,6 +148,10 @@ module apple_riscv_soc (
     .clk                   (clk                              ), //i
     .reset                 (reset                            )  //i
   );
+  assign _zz_1 = 1'b0;
+  assign _zz_2 = 1'b0;
+  assign _zz_3 = 1'b0;
+  assign _zz_4 = 1'b0;
   assign imem_dbg_ahb_HRDATA = imem_inst_imem_dbg_ahb_HRDATA;
   assign imem_dbg_ahb_HREADYOUT = imem_inst_imem_dbg_ahb_HREADYOUT;
   assign imem_dbg_ahb_HRESP = imem_inst_imem_dbg_ahb_HRESP;
@@ -300,6 +312,10 @@ module imem (
 endmodule
 
 module apple_riscv (
+  input               io_external_interrupt,
+  input               io_timer_interrupt,
+  input               io_software_interrupt,
+  input               io_debug_interrupt,
   output     [15:0]   imem_ahb_HADDR,
   output              imem_ahb_HSEL,
   output              imem_ahb_HREADY,
@@ -406,6 +422,12 @@ module apple_riscv (
   wire       [31:0]   dmem_ctrl_isnt_dmem_ahb_HWDATA;
   wire                dmem_ctrl_isnt_dmem_ahb_HREADY;
   wire                dmem_ctrl_isnt_dmem_ahb_HSEL;
+  wire       [31:0]   mcsr_inst_io_mcsr_dout;
+  wire       [31:0]   mcsr_inst_io_mtrap_mtvec;
+  wire                mcsr_inst_io_mie_meie;
+  wire                mcsr_inst_io_mie_mtie;
+  wire                mcsr_inst_io_mie_msie;
+  wire                mcsr_inst_io_mstatus_mie;
   wire                trap_ctrl_inst_io_mtrap_enter;
   wire                trap_ctrl_inst_io_mtrap_exit;
   wire       [31:0]   trap_ctrl_inst_io_mtrap_mepc;
@@ -413,8 +435,6 @@ module apple_riscv (
   wire       [31:0]   trap_ctrl_inst_io_mtrap_mtval;
   wire                trap_ctrl_inst_io_pc_trap;
   wire       [31:0]   trap_ctrl_inst_io_pc_value;
-  wire       [31:0]   mcsr_inst_io_mcsr_dout;
-  wire       [31:0]   mcsr_inst_io_mtrap_mtvec;
   wire                fu_inst_io_forward_rs1_from_mem;
   wire                fu_inst_io_forward_rs1_from_wb;
   wire                fu_inst_io_forward_rs2_from_mem;
@@ -698,14 +718,44 @@ module apple_riscv (
     .clk                          (clk                                    ), //i
     .reset                        (reset                                  )  //i
   );
+  mcsr mcsr_inst (
+    .io_mcsr_addr             (mem2wb_csr_idx[11:0]                  ), //i
+    .io_mcsr_din              (_zz_3[31:0]                           ), //i
+    .io_mcsr_wen              (mem2wb_csr_wr                         ), //i
+    .io_mcsr_dout             (mcsr_inst_io_mcsr_dout[31:0]          ), //o
+    .io_mtrap_enter           (trap_ctrl_inst_io_mtrap_enter         ), //i
+    .io_mtrap_exit            (trap_ctrl_inst_io_mtrap_exit          ), //i
+    .io_mtrap_mepc            (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //i
+    .io_mtrap_mcause          (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //i
+    .io_mtrap_mtval           (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //i
+    .io_external_interrupt    (io_external_interrupt                 ), //i
+    .io_timer_interrupt       (io_timer_interrupt                    ), //i
+    .io_software_interrupt    (io_software_interrupt                 ), //i
+    .io_mtrap_mtvec           (mcsr_inst_io_mtrap_mtvec[31:0]        ), //o
+    .io_mie_meie              (mcsr_inst_io_mie_meie                 ), //o
+    .io_mie_mtie              (mcsr_inst_io_mie_mtie                 ), //o
+    .io_mie_msie              (mcsr_inst_io_mie_msie                 ), //o
+    .io_mstatus_mie           (mcsr_inst_io_mstatus_mie              ), //o
+    .io_hartId                (_zz_4[31:0]                           ), //i
+    .clk                      (clk                                   ), //i
+    .reset                    (reset                                 )  //i
+  );
   trap_ctrl trap_ctrl_inst (
     .io_load_addr_misalign               (mem2wb_load_addr_misalign             ), //i
     .io_store_addr_misalign              (mem2wb_store_addr_misalign            ), //i
     .io_illegal_instr_exception          (mem2wb_illegal_instr_exception        ), //i
     .io_instr_addr_misalign_exception    (mem2wb_instr_addr_misalign_exception  ), //i
+    .io_external_interrupt               (io_external_interrupt                 ), //i
+    .io_timer_interrupt                  (io_timer_interrupt                    ), //i
+    .io_software_interrupt               (io_software_interrupt                 ), //i
+    .io_debug_interrupt                  (io_debug_interrupt                    ), //i
     .io_wb_pc                            (mem2wb_pc[31:0]                       ), //i
     .io_wb_instr                         (mem2wb_instr[31:0]                    ), //i
     .io_wb_dmem_addr                     (mem2wb_dmem_addr[15:0]                ), //i
+    .io_mie_meie                         (mcsr_inst_io_mie_meie                 ), //i
+    .io_mie_mtie                         (mcsr_inst_io_mie_mtie                 ), //i
+    .io_mie_msie                         (mcsr_inst_io_mie_msie                 ), //i
+    .io_mstatus_mie                      (mcsr_inst_io_mstatus_mie              ), //i
     .io_mtrap_enter                      (trap_ctrl_inst_io_mtrap_enter         ), //o
     .io_mtrap_exit                       (trap_ctrl_inst_io_mtrap_exit          ), //o
     .io_mtrap_mepc                       (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //o
@@ -714,21 +764,6 @@ module apple_riscv (
     .io_mtrap_mtvec                      (mcsr_inst_io_mtrap_mtvec[31:0]        ), //i
     .io_pc_trap                          (trap_ctrl_inst_io_pc_trap             ), //o
     .io_pc_value                         (trap_ctrl_inst_io_pc_value[31:0]      )  //o
-  );
-  mcsr mcsr_inst (
-    .io_mcsr_addr       (mem2wb_csr_idx[11:0]                  ), //i
-    .io_mcsr_din        (_zz_3[31:0]                           ), //i
-    .io_mcsr_wen        (mem2wb_csr_wr                         ), //i
-    .io_mcsr_dout       (mcsr_inst_io_mcsr_dout[31:0]          ), //o
-    .io_mtrap_enter     (trap_ctrl_inst_io_mtrap_enter         ), //i
-    .io_mtrap_exit      (trap_ctrl_inst_io_mtrap_exit          ), //i
-    .io_mtrap_mepc      (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //i
-    .io_mtrap_mcause    (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //i
-    .io_mtrap_mtval     (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //i
-    .io_mtrap_mtvec     (mcsr_inst_io_mtrap_mtvec[31:0]        ), //o
-    .io_hartId          (_zz_4[31:0]                           ), //i
-    .clk                (clk                                   ), //i
-    .reset              (reset                                 )  //i
   );
   fu fu_inst (
     .io_ex_rs1_idx              (id2ex_rs1_idx[4:0]               ), //i
@@ -1215,6 +1250,80 @@ module fu (
 
 endmodule
 
+module trap_ctrl (
+  input               io_load_addr_misalign,
+  input               io_store_addr_misalign,
+  input               io_illegal_instr_exception,
+  input               io_instr_addr_misalign_exception,
+  input               io_external_interrupt,
+  input               io_timer_interrupt,
+  input               io_software_interrupt,
+  input               io_debug_interrupt,
+  input      [31:0]   io_wb_pc,
+  input      [31:0]   io_wb_instr,
+  input      [15:0]   io_wb_dmem_addr,
+  input               io_mie_meie,
+  input               io_mie_mtie,
+  input               io_mie_msie,
+  input               io_mstatus_mie,
+  output              io_mtrap_enter,
+  output              io_mtrap_exit,
+  output     [31:0]   io_mtrap_mepc,
+  output     [31:0]   io_mtrap_mcause,
+  output     [31:0]   io_mtrap_mtval,
+  input      [31:0]   io_mtrap_mtvec,
+  output              io_pc_trap,
+  output     [31:0]   io_pc_value
+);
+  wire                dmem_addr_exception;
+  wire                exception;
+  wire       [31:0]   dmem_addr_extended;
+  wire                external_interrupt_masked;
+  wire                timer_interrupt_masked;
+  wire                software_interrupt_masked;
+  wire                debug_interrupt_masked;
+  wire                interrupt;
+  wire       [31:0]   pc_plus_4;
+  wire       [30:0]   external_interrupt_mask;
+  wire       [30:0]   timer_interrupt_mask;
+  wire       [30:0]   software_interrupt_mask;
+  wire       [30:0]   interrupt_code;
+  wire       [30:0]   load_addr_misalign_mask;
+  wire       [30:0]   store_addr_misalign_mask;
+  wire       [30:0]   illegal_instr_mask;
+  wire       [30:0]   instr_addr_misalign_mask;
+  wire       [30:0]   exceptions_code;
+  wire       [30:0]   exception_code;
+
+  assign dmem_addr_exception = (io_load_addr_misalign || io_store_addr_misalign);
+  assign exception = ((dmem_addr_exception || io_illegal_instr_exception) || io_instr_addr_misalign_exception);
+  assign dmem_addr_extended = {16'd0, io_wb_dmem_addr};
+  assign external_interrupt_masked = ((io_external_interrupt && io_mstatus_mie) && io_mie_meie);
+  assign timer_interrupt_masked = ((io_timer_interrupt && io_mstatus_mie) && io_mie_mtie);
+  assign software_interrupt_masked = ((io_software_interrupt && io_mstatus_mie) && io_mie_msie);
+  assign debug_interrupt_masked = (io_debug_interrupt && io_mstatus_mie);
+  assign interrupt = (((external_interrupt_masked || timer_interrupt_masked) || software_interrupt_masked) || debug_interrupt_masked);
+  assign pc_plus_4 = (io_pc_value + 32'h00000004);
+  assign external_interrupt_mask = (external_interrupt_masked ? 31'h7fffffff : 31'h0);
+  assign timer_interrupt_mask = (timer_interrupt_masked ? 31'h7fffffff : 31'h0);
+  assign software_interrupt_mask = (software_interrupt_masked ? 31'h7fffffff : 31'h0);
+  assign interrupt_code = (((external_interrupt_mask & 31'h0000000b) | (timer_interrupt_mask & 31'h00000007)) | (software_interrupt_mask & 31'h00000003));
+  assign load_addr_misalign_mask = (io_load_addr_misalign ? 31'h7fffffff : 31'h0);
+  assign store_addr_misalign_mask = (io_store_addr_misalign ? 31'h7fffffff : 31'h0);
+  assign illegal_instr_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
+  assign instr_addr_misalign_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
+  assign exceptions_code = ((((load_addr_misalign_mask & 31'h00000004) | (store_addr_misalign_mask & 31'h00000006)) | (illegal_instr_mask & 31'h00000002)) | (instr_addr_misalign_mask & 31'h0));
+  assign exception_code = (interrupt_code | exceptions_code);
+  assign io_mtrap_enter = (exception || interrupt);
+  assign io_mtrap_exit = 1'b0;
+  assign io_mtrap_mepc = (exception ? io_wb_pc : pc_plus_4);
+  assign io_mtrap_mcause = {interrupt,exception_code};
+  assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : dmem_addr_extended);
+  assign io_pc_trap = exception;
+  assign io_pc_value = io_mtrap_mtvec;
+
+endmodule
+
 module mcsr (
   input      [11:0]   io_mcsr_addr,
   input      [31:0]   io_mcsr_din,
@@ -1225,20 +1334,26 @@ module mcsr (
   input      [31:0]   io_mtrap_mepc,
   input      [31:0]   io_mtrap_mcause,
   input      [31:0]   io_mtrap_mtval,
+  input               io_external_interrupt,
+  input               io_timer_interrupt,
+  input               io_software_interrupt,
   output     [31:0]   io_mtrap_mtvec,
+  output              io_mie_meie,
+  output              io_mie_mtie,
+  output              io_mie_msie,
+  output              io_mstatus_mie,
   input      [31:0]   io_hartId,
   input               clk,
   input               reset
 );
-  wire       [0:0]    _zz_1;
-  wire       [0:0]    _zz_2;
-  wire       [0:0]    _zz_3;
   wire       [31:0]   mvendorid;
   wire       [31:0]   marchid;
   wire       [31:0]   mimpid;
   reg        [31:0]   mstatus;
+  reg        [31:0]   misa;
   reg        [31:0]   mie;
   reg        [31:0]   mtvec;
+  reg        [31:0]   mscratch;
   reg        [31:0]   mepc;
   reg        [31:0]   mcause;
   reg        [31:0]   mtval;
@@ -1246,17 +1361,23 @@ module mcsr (
   wire                mstatus_wen;
   wire                mie_wen;
   wire                mtvec_wen;
+  wire                mscratch_wen;
   wire                mepc_wen;
   wire                mcause_wen;
   wire                mtval_wen;
-  wire                mip_wen;
+  function [31:0] zz_misa(input dummy);
+    begin
+      zz_misa = 32'h0;
+      zz_misa[31 : 30] = 2'b01;
+    end
+  endfunction
+  wire [31:0] _zz_1;
 
-  assign _zz_1 = 1'b0;
-  assign _zz_2 = 1'b0;
-  assign _zz_3 = 1'b0;
-  assign mvendorid = {31'd0, _zz_1};
-  assign marchid = {31'd0, _zz_2};
-  assign mimpid = {31'd0, _zz_3};
+  assign mvendorid = 32'h0;
+  assign marchid = 32'h0;
+  assign mimpid = 32'h0;
+  assign _zz_1 = zz_misa(1'b0);
+  always @ (*) misa = _zz_1;
   always @ (*) begin
     case(io_mcsr_addr)
       12'hf11 : begin
@@ -1273,6 +1394,9 @@ module mcsr (
       end
       12'h300 : begin
         io_mcsr_dout = mstatus;
+      end
+      12'h301 : begin
+        io_mcsr_dout = misa;
       end
       12'h304 : begin
         io_mcsr_dout = mie;
@@ -1301,16 +1425,21 @@ module mcsr (
   assign mstatus_wen = ((io_mcsr_addr == 12'h300) && io_mcsr_wen);
   assign mie_wen = ((io_mcsr_addr == 12'h302) && io_mcsr_wen);
   assign mtvec_wen = ((io_mcsr_addr == 12'h303) && io_mcsr_wen);
+  assign mscratch_wen = ((io_mcsr_addr == 12'h340) && io_mcsr_wen);
   assign mepc_wen = ((io_mcsr_addr == 12'h341) && io_mcsr_wen);
   assign mcause_wen = ((io_mcsr_addr == 12'h342) && io_mcsr_wen);
   assign mtval_wen = ((io_mcsr_addr == 12'h343) && io_mcsr_wen);
-  assign mip_wen = ((io_mcsr_addr == 12'h344) && io_mcsr_wen);
   assign io_mtrap_mtvec = mtvec;
+  assign io_mie_meie = mie[11];
+  assign io_mie_mtie = mie[7];
+  assign io_mie_msie = mie[3];
+  assign io_mstatus_mie = mstatus[3];
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
       mstatus <= 32'h0;
       mie <= 32'h0;
       mtvec <= 32'h0;
+      mscratch <= 32'h0;
       mepc <= 32'h0;
       mcause <= 32'h0;
       mtval <= 32'h0;
@@ -1336,6 +1465,9 @@ module mcsr (
       if(mtvec_wen)begin
         mtvec <= io_mcsr_din;
       end
+      if(mscratch_wen)begin
+        mscratch <= io_mcsr_din;
+      end
       if(io_mtrap_enter)begin
         mepc <= io_mtrap_mepc;
       end else begin
@@ -1357,58 +1489,12 @@ module mcsr (
           mtval <= io_mcsr_din;
         end
       end
-      if(mip_wen)begin
-        mip <= io_mcsr_din;
-      end
+      mip[11] <= (io_external_interrupt && mie[11]);
+      mip[7] <= (io_timer_interrupt && mie[7]);
+      mip[3] <= (io_software_interrupt && mie[3]);
     end
   end
 
-
-endmodule
-
-module trap_ctrl (
-  input               io_load_addr_misalign,
-  input               io_store_addr_misalign,
-  input               io_illegal_instr_exception,
-  input               io_instr_addr_misalign_exception,
-  input      [31:0]   io_wb_pc,
-  input      [31:0]   io_wb_instr,
-  input      [15:0]   io_wb_dmem_addr,
-  output              io_mtrap_enter,
-  output              io_mtrap_exit,
-  output     [31:0]   io_mtrap_mepc,
-  output     [31:0]   io_mtrap_mcause,
-  output     [31:0]   io_mtrap_mtval,
-  input      [31:0]   io_mtrap_mtvec,
-  output              io_pc_trap,
-  output     [31:0]   io_pc_value
-);
-  wire       [15:0]   _zz_1;
-  wire       [31:0]   _zz_2;
-  wire                dmem_addr_exception;
-  wire                exception;
-  wire       [30:0]   exception_code;
-  wire       [30:0]   load_addr_misalign_mask;
-  wire       [30:0]   store_addr_misalign_mask;
-  wire       [30:0]   illegal_instr_mask;
-  wire       [30:0]   instr_addr_misalign_mask;
-
-  assign _zz_1 = io_wb_dmem_addr;
-  assign _zz_2 = {16'd0, _zz_1};
-  assign dmem_addr_exception = (io_load_addr_misalign || io_store_addr_misalign);
-  assign exception = ((dmem_addr_exception || io_illegal_instr_exception) || io_instr_addr_misalign_exception);
-  assign io_mtrap_enter = exception;
-  assign io_mtrap_exit = 1'b0;
-  assign io_mtrap_mepc = io_wb_pc;
-  assign io_mtrap_mcause = {1'b0,exception_code};
-  assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : _zz_2);
-  assign io_pc_trap = exception;
-  assign io_pc_value = io_mtrap_mtvec;
-  assign load_addr_misalign_mask = (io_load_addr_misalign ? 31'h7fffffff : 31'h0);
-  assign store_addr_misalign_mask = (io_store_addr_misalign ? 31'h7fffffff : 31'h0);
-  assign illegal_instr_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
-  assign instr_addr_misalign_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
-  assign exception_code = ((((load_addr_misalign_mask & 31'h00000004) | (store_addr_misalign_mask & 31'h00000006)) | (illegal_instr_mask & 31'h00000002)) | (instr_addr_misalign_mask & 31'h0));
 
 endmodule
 

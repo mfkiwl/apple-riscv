@@ -29,6 +29,10 @@ case class apple_riscv_soc(param: CPU_PARAM) extends Component {
 
     // CPU core
     val cpu_core = apple_riscv(param)
+    cpu_core.io.external_interrupt  := False
+    cpu_core.io.timer_interrupt     := False
+    cpu_core.io.software_interrupt  := False
+    cpu_core.io.debug_interrupt     := False
 
     // Instruction RAM
     val imem_inst = imem(param)

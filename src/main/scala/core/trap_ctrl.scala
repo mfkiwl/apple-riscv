@@ -30,10 +30,22 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   val illegal_instr_exception           = in Bool
   val instr_addr_misalign_exception     = in Bool
 
+  // interrupt signal
+  val external_interrupt  = in Bool
+  val timer_interrupt     = in Bool
+  val software_interrupt  = in Bool
+  val debug_interrupt     = in Bool
+
   // info
   val wb_pc         = in UInt(param.PC_WIDTH bits)
   val wb_instr      = in Bits(param.XLEN bits)
   val wb_dmem_addr  = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
+
+  // mcsr input
+  val mie_meie    = in Bool
+  val mie_mtie    = in Bool
+  val mie_msie    = in Bool
+  val mstatus_mie = in Bool
 
   // mcsr output
   val mtrap_enter  = out Bool
@@ -51,23 +63,35 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
 case class trap_ctrl(param: CPU_PARAM) extends Component {
   val io = trap_ctrl_io(param)
 
+  // == exception control == //
   val dmem_addr_exception = io.load_addr_misalign | io.store_addr_misalign
-  val exception = dmem_addr_exception | io.illegal_instr_exception | io.instr_addr_misalign_exception
+  val exception           = dmem_addr_exception | io.illegal_instr_exception | io.instr_addr_misalign_exception
+  val dmem_addr_extended  = io.wb_dmem_addr.resize(param.MXLEN)
 
+  // == interrupt control == //
+  val external_interrupt_masked = io.external_interrupt & io.mstatus_mie & io.mie_meie
+  val timer_interrupt_masked    = io.timer_interrupt & io.mstatus_mie & io.mie_mtie
+  val software_interrupt_masked = io.software_interrupt & io.mstatus_mie & io.mie_msie
+  val debug_interrupt_masked    = io.debug_interrupt & io.mstatus_mie
+  val interrupt = external_interrupt_masked | timer_interrupt_masked |
+                  software_interrupt_masked | debug_interrupt_masked
+  val pc_plus_4 = io.pc_value + 4
 
-  val exception_code = Bits(param.MXLEN - 1 bits)
+  // == mcause exception code == //
 
-  io.mtrap_enter  := exception
-  io.mtrap_exit   := False // FIXME
-  io.mtrap_mepc   := io.wb_pc.asBits // FIXME
-  io.mtrap_mcause := False ## exception_code // FIXME
-  io.mtrap_mtval  := Mux(io.illegal_instr_exception, io.wb_instr, io.wb_dmem_addr.asBits.resized)
+  // interrupt
+  val external_interrupt_mask  = Bits(param.MXLEN - 1 bits)
+  val timer_interrupt_mask     = Bits(param.MXLEN - 1 bits)
+  val software_interrupt_mask  = Bits(param.MXLEN - 1 bits)
+  external_interrupt_mask.setAllTo(external_interrupt_masked)
+  timer_interrupt_mask.setAllTo(timer_interrupt_masked)
+  software_interrupt_mask.setAllTo(software_interrupt_masked)
 
-  io.pc_trap      := exception
-  io.pc_value     := io.mtrap_mtvec.asUInt.resized
+  val interrupt_code = external_interrupt_mask & param.EXCEP_CODE_M_external_interrupt |
+                       timer_interrupt_mask    & param.EXCEP_CODE_M_timer_interrupt    |
+                       software_interrupt_mask & param.EXCEP_CODE_M_software_interrupt
 
-
-  // logic for exception code
+  // exception
   val load_addr_misalign_mask   = Bits(param.MXLEN - 1 bits)
   val store_addr_misalign_mask  = Bits(param.MXLEN - 1 bits)
   val illegal_instr_mask        = Bits(param.MXLEN - 1 bits)
@@ -77,8 +101,20 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   illegal_instr_mask.setAllTo(io.instr_addr_misalign_exception)
   instr_addr_misalign_mask.setAllTo(io.instr_addr_misalign_exception)
 
-  exception_code := load_addr_misalign_mask & param.EXCEP_CODE_load_addr_misalign |
-    store_addr_misalign_mask & param.EXCEP_CODE_store_addr_misalign |
-    illegal_instr_mask & param.EXCEP_CODE_illegal_instr |
-    instr_addr_misalign_mask & param.EXCEP_CODE_instr_addr_misalign
+  val exceptions_code = load_addr_misalign_mask  & param.EXCEP_CODE_load_addr_misalign  |
+                        store_addr_misalign_mask & param.EXCEP_CODE_store_addr_misalign |
+                        illegal_instr_mask       & param.EXCEP_CODE_illegal_instr       |
+                        instr_addr_misalign_mask & param.EXCEP_CODE_instr_addr_misalign
+
+  val exception_code = interrupt_code | exceptions_code
+
+  // == mcsr == //
+  io.mtrap_enter  := exception | interrupt
+  io.mtrap_exit   := False // FIXME
+  io.mtrap_mepc   := Mux(exception, io.wb_pc.asBits, pc_plus_4.asBits)
+  io.mtrap_mcause := interrupt ## exception_code
+  io.mtrap_mtval  := Mux(io.illegal_instr_exception, io.wb_instr, dmem_addr_extended.asBits)
+
+  io.pc_trap      := exception
+  io.pc_value     := io.mtrap_mtvec.asUInt.resized
 }

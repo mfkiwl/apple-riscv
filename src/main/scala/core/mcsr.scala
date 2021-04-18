@@ -32,15 +32,23 @@ case class mcsr_io(param: CPU_PARAM) extends Bundle {
   val mcsr_wen  = in Bool
   val mcsr_dout = out Bits(param.MXLEN bits)
 
-  // Interrupt related input
+  // trap related input
   val mtrap_enter  = in Bool
   val mtrap_exit   = in Bool
   val mtrap_mepc   = in Bits(param.PC_WIDTH bits)
   val mtrap_mcause = in Bits(param.MXLEN bits)
   val mtrap_mtval  = in Bits(param.MXLEN bits)
+  val external_interrupt  = in Bool
+  val timer_interrupt     = in Bool
+  val software_interrupt  = in Bool
 
-  // Interrupt related output
+
+  // trap related output
   val mtrap_mtvec  = out Bits(param.PC_WIDTH bits)
+  val mie_meie     = out Bool
+  val mie_mtie     = out Bool
+  val mie_msie     = out Bool
+  val mstatus_mie  = out Bool
 
   // other
   val hartId       = in Bits(param.MXLEN bits)
@@ -54,17 +62,19 @@ case class mcsr(param: CPU_PARAM) extends Component {
   // ============================================
 
   // Machine Information Registers
-  val mvendorid = False.asBits.resize(param.MXLEN) // RO
-  val marchid   = False.asBits.resize(param.MXLEN) // RO
-  val mimpid    = False.asBits.resize(param.MXLEN) // RO
+  val mvendorid = B(0, param.MXLEN bits) // RO
+  val marchid   = B(0, param.MXLEN bits) // RO
+  val mimpid    = B(0, param.MXLEN bits) // RO
   val mhartid   = io.hartId                        // RO
 
   // Machine Trap Setup
   val mstatus   = Reg(Bits(param.MXLEN bits)) init 0  // RW
+  val misa      = B(0, param.MXLEN bits)  // RW
   val mie       = Reg(Bits(param.MXLEN bits)) init 0  // RW
   val mtvec     = Reg(Bits(param.MXLEN bits)) init 0  // RW
 
   // Machine Trap Handling
+  val mscratch  = Reg(Bits(param.MXLEN bits)) init 0  // RW
   val mepc      = Reg(Bits(param.MXLEN bits)) init 0  // RW
   val mcause    = Reg(Bits(param.MXLEN bits)) init 0  // RW
   val mtval     = Reg(Bits(param.MXLEN bits)) init 0  // RW
@@ -82,6 +92,7 @@ case class mcsr(param: CPU_PARAM) extends Component {
     is(B"hF14") {io.mcsr_dout := mhartid}
 
     is(B"h300") {io.mcsr_dout := mstatus}
+    is(B"h301") {io.mcsr_dout := misa}
     is(B"h304") {io.mcsr_dout := mie}
     is(B"h305") {io.mcsr_dout := mtvec}
 
@@ -99,10 +110,10 @@ case class mcsr(param: CPU_PARAM) extends Component {
   val mie_wen     = (io.mcsr_addr === B"h302") & io.mcsr_wen
   val mtvec_wen   = (io.mcsr_addr === B"h303") & io.mcsr_wen
 
+  val mscratch_wen = (io.mcsr_addr === B"h340") & io.mcsr_wen
   val mepc_wen    = (io.mcsr_addr === B"h341") & io.mcsr_wen
   val mcause_wen  = (io.mcsr_addr === B"h342") & io.mcsr_wen
   val mtval_wen   = (io.mcsr_addr === B"h343") & io.mcsr_wen
-  val mip_wen     = (io.mcsr_addr === B"h344") & io.mcsr_wen
 
   // ============================================
   // HW access
@@ -125,7 +136,13 @@ case class mcsr(param: CPU_PARAM) extends Component {
     mstatus       := io.mcsr_din
   }
 
+  // misa register
+  misa(param.MXLEN-1 downto param.MXLEN-2) := 1
+
   // mie register
+  def mie_meie: Bool = mie(11)
+  def mie_mtie: Bool = mie(7)
+  def mie_msie: Bool = mie(3)
   when(mie_wen) {
     mie := io.mcsr_din
   }
@@ -138,6 +155,11 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // == Machine Trap Handling == //
+
+  // mscratch
+  when(mscratch_wen) {
+    mscratch := io.mcsr_din
+  }
 
   // mepc
   def mepc_base: Bits = mepc(param.MXLEN-1 downto 2)
@@ -165,12 +187,19 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // mip register
-  when(mip_wen) {
-    mip := io.mcsr_din
-  }
+  def mip_meip: Bool = mip(11)
+  def mip_mtip: Bool = mip(7)
+  def mip_msip: Bool = mip(3)
+  mip_meip := io.external_interrupt &  mie_meie
+  mip_mtip := io.timer_interrupt    &  mie_mtie
+  mip_msip := io.software_interrupt &  mie_msie
 
   // ============================================
-  // Interrupt related
+  // Trap related
   // ============================================
   io.mtrap_mtvec := mtvec
+  io.mie_meie    := mie_meie
+  io.mie_mtie    := mie_mtie
+  io.mie_msie    := mie_msie
+  io.mstatus_mie := mstatus_mie
 }

@@ -127,9 +127,14 @@ class CPU_PARAM {
     // ========================== //
     //        Macro define        //
     // ========================== //
+
+    // == Exception Code == //
     val EXCEP_CODE_instr_addr_misalign  = 0
     val EXCEP_CODE_illegal_instr        = 2
     val EXCEP_CODE_load_addr_misalign   = 4
     val EXCEP_CODE_store_addr_misalign  = 6
 
+    val EXCEP_CODE_M_software_interrupt = 3
+    val EXCEP_CODE_M_timer_interrupt    = 7
+    val EXCEP_CODE_M_external_interrupt = 11     
 }
