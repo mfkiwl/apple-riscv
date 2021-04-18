@@ -44,10 +44,20 @@ case class hdu_io(param: CPU_PARAM) extends Bundle {
   val id_rs2_idx = in UInt(param.RF_ADDR_WDITH bits)
   val ex_rd_idx = in UInt(param.RF_ADDR_WDITH bits)
 
-  // exception related signal
+  // trap related signal
   val id_exception  = in Bool
   val ex_exception  = in Bool
   val mem_exception = in Bool
+  val wb_exception  = in Bool
+  val ex_mret       = in Bool
+  val mem_mret      = in Bool
+  val wb_mret       = in Bool
+  val ex_ecall      = in Bool
+  val mem_ecall     = in Bool
+  val wb_ecall      = in Bool
+  val ex_ebreak     = in Bool
+  val mem_ebreak    = in Bool
+  val wb_ebreak     = in Bool
 }
 
 case class hdu(param: CPU_PARAM) extends Component {
@@ -67,11 +77,23 @@ case class hdu(param: CPU_PARAM) extends Component {
   val stall_on_load_dependence = (id_rs1_depends_on_ex_rd | id_rs2_depends_on_ex_rd) & io.ex_dmem_rd
 
   // ======================================
-  // Exception
+  // Trap
   // ======================================
-  val exception_flush_if = io.id_exception | io.ex_exception | io.mem_exception
-  val exception_flush_id = io.ex_exception | io.mem_exception
-  val exception_flush_ex = io.mem_exception
+
+  val exception_flush_mem = io.wb_exception
+  val exception_flush_ex = io.mem_exception | exception_flush_mem
+  val exception_flush_id = io.ex_exception  | exception_flush_ex
+  val exception_flush_if = io.id_exception  | exception_flush_id
+
+  val sys_flush_mem = io.wb_mret   | io.wb_ebreak  | io.wb_ecall
+  val sys_flush_ex  = (io.mem_mret | io.mem_ebreak | io.mem_ecall) | sys_flush_mem
+  val sys_flush_id  = (io.ex_mret  | io.ex_ebreak  | io.ex_ecall)  | sys_flush_ex
+  val sys_flush_if  = sys_flush_id
+
+  val trap_flush_if  = sys_flush_if  | exception_flush_if
+  val trap_flush_id  = sys_flush_id  | exception_flush_id
+  val trap_flush_ex  = sys_flush_ex  | exception_flush_ex
+  val trap_flush_mem = sys_flush_mem | exception_flush_mem
 
   // ======================================
   // Overall Stall Logic
@@ -85,10 +107,10 @@ case class hdu(param: CPU_PARAM) extends Component {
   // ======================================
   // Overall Flushing logic
   // ======================================
-  io.if_valid   := ~io.branch_taken & ~exception_flush_if
-  io.id_valid   := ~io.branch_taken & ~stall_on_load_dependence
-  io.ex_valid   := True
-  io.mem_valid  := True
+  io.if_valid   := ~io.branch_taken & ~trap_flush_if
+  io.id_valid   := ~io.branch_taken & ~stall_on_load_dependence & ~trap_flush_id
+  io.ex_valid   := ~trap_flush_ex
+  io.mem_valid  := ~trap_flush_mem
   io.wb_valid   := True
 }
 

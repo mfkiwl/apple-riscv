@@ -4,6 +4,8 @@
 
 - 04/18/2021
   - Implemented interrupt logic and added few more csr register
+  - Updated pipeline logic for zicsr and exception
+  - Implemented mret and ecall instruction
 
 - 04/17/2021
   - Designed the csr module and exception logic

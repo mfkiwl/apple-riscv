@@ -68,6 +68,7 @@ class CPU_PARAM {
 
     // == opcode == //
     // TODO: Potential optimization. Remove the "11" bits
+    // RV32I Basic Instruction
     val OP_LOGIC_ARITH      = Integer.parseInt("0110011", 2)        // Logic and arithmetic operation
     val OP_LOGIC_ARITH_IMM  = Integer.parseInt("0010011", 2)        // Logic and arithmetic with immediate number
     val OP_MEM_LOAD         = Integer.parseInt("0000011", 2)        // Load instruction
@@ -77,8 +78,9 @@ class CPU_PARAM {
     val OP_LUI              = Integer.parseInt("0110111", 2)        // LUI instruction
     val OP_JAL              = Integer.parseInt("1101111", 2)        // JAL
     val OP_JALR             = Integer.parseInt("1100111", 2)        // JALR
-    val OP_FEANCE           = Integer.parseInt("0001111", 2)        // FANCE
-    val OP_EXT_CSR          = Integer.parseInt("1110011", 2)        // Zicsr CSR instruction
+    // RV32 Extension
+    val OP_EXT_FEANCE       = Integer.parseInt("0001111", 2)        // FANCE
+    val OP_EXT_SYS          = Integer.parseInt("1110011", 2)        // System Instruction: Zicsr, Trap RET
 
     // == func3 == //
     // Logic arithmetic func3 field
@@ -116,6 +118,8 @@ class CPU_PARAM {
     val CSR_F3_RWI  = Integer.parseInt("101", 2)    // CSRRW
     val CSR_F3_RSI  = Integer.parseInt("110", 2)    // CSRRS
     val CSR_F3_RCI  = Integer.parseInt("111", 2)    // CSRRC
+    // Pirvileged Instruction
+    val SYS_F3_PRIV = Integer.parseInt("000", 2)
 
     // == func7 == //
     // Logic arithmetic func7 field
@@ -123,6 +127,11 @@ class CPU_PARAM {
     val LA_F7_SRA   = Integer.parseInt("0100000", 2) // SRA, SRAT
     val LA_F7_ADD   = Integer.parseInt("0000000", 2) // ADD
     val LA_F7_SUB   = Integer.parseInt("0100000", 2) // SUB
+
+    // == func12 == //
+    val F12_MRET    = Integer.parseInt("001100000010", 2) // MRET
+    val F12_ECALL   = Integer.parseInt("000000000000", 2) // ECALL
+    val F12_EBREAK  = Integer.parseInt("000000000001", 2) // EBREAK
 
     // ========================== //
     //        Macro define        //
@@ -133,6 +142,7 @@ class CPU_PARAM {
     val EXCEP_CODE_illegal_instr        = 2
     val EXCEP_CODE_load_addr_misalign   = 4
     val EXCEP_CODE_store_addr_misalign  = 6
+    val EXCEP_CODE_mecall               = 11
 
     val EXCEP_CODE_M_software_interrupt = 3
     val EXCEP_CODE_M_timer_interrupt    = 7

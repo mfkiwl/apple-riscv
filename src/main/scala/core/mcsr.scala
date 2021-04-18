@@ -44,11 +44,12 @@ case class mcsr_io(param: CPU_PARAM) extends Bundle {
 
 
   // trap related output
-  val mtrap_mtvec  = out Bits(param.PC_WIDTH bits)
+  val mtvec        = out Bits(param.PC_WIDTH bits)
   val mie_meie     = out Bool
   val mie_mtie     = out Bool
   val mie_msie     = out Bool
   val mstatus_mie  = out Bool
+  val mepc         = out Bits(param.MXLEN bits)
 
   // other
   val hartId       = in Bits(param.MXLEN bits)
@@ -197,9 +198,10 @@ case class mcsr(param: CPU_PARAM) extends Component {
   // ============================================
   // Trap related
   // ============================================
-  io.mtrap_mtvec := mtvec
+  io.mtvec       := mtvec
   io.mie_meie    := mie_meie
   io.mie_mtie    := mie_mtie
   io.mie_msie    := mie_msie
   io.mstatus_mie := mstatus_mie
+  io.mepc        := mepc
 }

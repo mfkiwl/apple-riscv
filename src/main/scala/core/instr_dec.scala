@@ -24,17 +24,15 @@ case class instr_dec_io(param: CPU_PARAM) extends Bundle{
 
     // Instruction field
     val rd_idx  = out UInt(5 bits)
-    val func3   = out Bits(3 bits)
     val rs1_idx = out UInt(5 bits)
     val rs2_idx = out UInt(5 bits)
-    val func7   = out Bits(7 bits)
     val imm_value = out SInt(param.DATA_WIDTH bits)     // Immediate value
     val jump_imm_value = out SInt(21 bits)              // Immediate value for jump instruction only
 
     // Register file control
-    val register_wr        = out Bool
-    val register_rs1_rd    = out Bool
-    val register_rs2_rd    = out Bool
+    val rd_wr        = out Bool
+    val rs1_rd    = out Bool
+    val rs2_rd    = out Bool
 
     // Memory control signal
     val data_ram_wr         = out Bool
@@ -74,7 +72,10 @@ case class instr_dec_io(param: CPU_PARAM) extends Bundle{
     val branch_op    = out Bool
     val jal_op       = out Bool
     val jalr_op      = out Bool
-    val invld_instr = out Bool
+    val mret         = out Bool
+    val ecall        = out Bool
+    val ebreak       = out Bool
+    val invld_instr  = out Bool
 }
 
 case class instr_dec(param: CPU_PARAM) extends Component {
@@ -86,6 +87,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     val opcode  = io.instr(6 downto 0)
     val func3   = io.instr(14 downto 12)
     val func7   = io.instr(31 downto 25)
+    val func12  = io.instr(31 downto 20)
 
     io.rd_idx   := io.instr(11 downto 7).asUInt
     io.rs1_idx  := io.instr(19 downto 15).asUInt
@@ -120,9 +122,9 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     val rs1_isnot_x0 = io.rs1_idx =/= 0
 
     // default value
-    io.register_wr        := False
-    io.register_rs1_rd    := False
-    io.register_rs2_rd    := False
+    io.rd_wr              := False
+    io.rs1_rd             := False
+    io.rs2_rd             := False
     io.data_ram_wr        := False
     io.data_ram_rd        := False
     io.data_ram_ld_byte   := False
@@ -146,13 +148,16 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     io.branch_op          := False
     io.jal_op             := False
     io.jalr_op            := False
+    io.mret               := False
+    io.ecall              := False
+    io.ebreak             := False
     io.invld_instr        := False
     io.csr_rd             := False
     io.csr_wr             := False
     io.csr_rw             := False
     io.csr_rs             := False
     io.csr_rc             := False
-    io.csr_sel_imm            := False
+    io.csr_sel_imm        := False
     // The big switch for the opcode decode
     switch(opcode) {
         // LUI
@@ -160,7 +165,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
             io.alu_op_add   := True
             io.op2_sel_imm  := True
             io.op1_sel_zero := True
-            io.register_wr  := True
+            io.rd_wr        := True
             alu_imm_type    := alu_imm_type_e.UTYPE
         }
         // AUIPC
@@ -168,7 +173,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
             io.alu_op_add   := True
             io.op1_sel_pc   := True
             io.op2_sel_imm  := True
-            io.register_wr  := True
+            io.rd_wr        := True
             alu_imm_type    := alu_imm_type_e.UTYPE
         }
         // JAL
@@ -176,26 +181,26 @@ case class instr_dec(param: CPU_PARAM) extends Component {
             io.alu_op_add   := True
             io.op1_sel_pc   := True
             io.op2_sel_imm  := True
-            io.register_wr  := True
+            io.rd_wr        := True
             io.jal_op       := True
             br_imm_type     := br_imm_type_e.JTYPE
         }
         // JALR
         is(param.OP_JALR) {
-            io.jalr_op          := True
-            io.alu_op_add       := True
-            io.op1_sel_pc       := True
-            io.op2_sel_imm      := True
-            io.register_wr      := True
-            io.register_rs1_rd  := True
-            br_imm_type         := br_imm_type_e.ITYPE
+            io.jalr_op      := True
+            io.alu_op_add   := True
+            io.op1_sel_pc   := True
+            io.op2_sel_imm  := True
+            io.rd_wr        := True
+            io.rs1_rd       := True
+            br_imm_type     := br_imm_type_e.ITYPE
         }
         // Branch Instruction
         is(param.OP_BRANCH) {
-            io.branch_op        := True
-            io.register_rs1_rd  := True
-            io.register_rs2_rd  := True
-            br_imm_type         := br_imm_type_e.BTYPE
+            io.branch_op    := True
+            io.rs1_rd       := True
+            io.rs2_rd       := True
+            br_imm_type     := br_imm_type_e.BTYPE
             switch(func3) {
                 // BEQ
                 is(param.BR_F3_BEQ) {
@@ -231,12 +236,12 @@ case class instr_dec(param: CPU_PARAM) extends Component {
         } // End of Branch Instruction
         // Memory Load Instruction
         is(param.OP_MEM_LOAD) {
-            io.op2_sel_imm := True
-            io.data_ram_rd := True
-            io.register_rs1_rd := True
-            io.register_wr := True
-            io.alu_op_add  := True
-            alu_imm_type   := alu_imm_type_e.ITYPE
+            io.op2_sel_imm  := True
+            io.data_ram_rd  := True
+            io.rs1_rd       := True
+            io.rd_wr        := True
+            io.alu_op_add   := True
+            alu_imm_type    := alu_imm_type_e.ITYPE
             switch(func3) {
                 // LB
                 is(param.LW_F3_LB) {
@@ -267,12 +272,12 @@ case class instr_dec(param: CPU_PARAM) extends Component {
         } // End of Memory Load Instruction
         // Memory Store Instruction
         is(param.OP_MEM_STORE) {
-            io.alu_op_add       := True
-            io.op2_sel_imm      := True
-            io.register_rs1_rd  := True
-            io.register_rs2_rd  := True
-            io.data_ram_wr      := True
-            alu_imm_type        := alu_imm_type_e.STYPE
+            io.alu_op_add   := True
+            io.op2_sel_imm  := True
+            io.rs1_rd       := True
+            io.rs2_rd       := True
+            io.data_ram_wr  := True
+            alu_imm_type    := alu_imm_type_e.STYPE
             switch(func3) {
                 // SB
                 is(param.SW_F3_SB) {
@@ -293,10 +298,10 @@ case class instr_dec(param: CPU_PARAM) extends Component {
         } // End of Memory Store Instruction
         // I-Type Logic/Arithmetic  Instruction
         is(param.OP_LOGIC_ARITH_IMM) {
-            io.op2_sel_imm      := True
-            alu_imm_type        := alu_imm_type_e.ITYPE
-            io.register_rs1_rd  := True
-            io.register_wr      := True
+            io.op2_sel_imm  := True
+            alu_imm_type    := alu_imm_type_e.ITYPE
+            io.rs1_rd       := True
+            io.rd_wr        := True
             switch(func3) {
                 // ADDI
                 is(param.LA_F3_ADD_SUB) {
@@ -347,9 +352,9 @@ case class instr_dec(param: CPU_PARAM) extends Component {
         } // End of I-Type Logic/Arithmetic Instruction
         // R-Type Logic/Arithmetic  Instruction
         is(param.OP_LOGIC_ARITH) {
-            io.register_rs1_rd  := True
-            io.register_rs2_rd  := True
-            io.register_wr      := True
+            io.rs1_rd  := True
+            io.rs2_rd  := True
+            io.rd_wr   := True
             switch(func3) {
                 // ADD/SUB
                 is(param.LA_F3_ADD_SUB) {
@@ -416,21 +421,23 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 // No default required. Complete switch statement
             }
         } // End of R-Type Logic/Arithmetic Instruction
-        // ZICSR Instruction
-        is(param.OP_EXT_CSR) {
-            io.register_wr := True
+        // SYSTEM Instruction
+        is(param.OP_EXT_SYS) {
             switch(func3) {
                 is(param.CSR_F3_RW) {
+                    io.rd_wr := True
                     io.csr_rd := rd_isnot_x0
                     io.csr_rw := True
                     io.csr_wr := True
                 }
                 is(param.CSR_F3_RS) {
+                    io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rs := True
                     io.csr_wr := rs1_isnot_x0
                 }
                 is(param.CSR_F3_RC) {
+                    io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rc := True
                     io.csr_wr := rs1_isnot_x0
@@ -439,29 +446,43 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 // the uimm value is in the same location as rs1 in the instruction
                 // so we can reuse rs1_idx value as the uimm value
                 is(param.CSR_F3_RWI) {
+                    io.rd_wr := True
                     io.csr_rd := rd_isnot_x0
                     io.csr_rw := True
                     io.csr_wr := True
                     io.csr_sel_imm := True
                 }
                 is(param.CSR_F3_RSI) {
+                    io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rs := True
                     io.csr_wr := rs1_isnot_x0
                     io.csr_sel_imm := True
                 }
                 is(param.CSR_F3_RCI) {
+                    io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rc := True
                     io.csr_wr := rs1_isnot_x0
                     io.csr_sel_imm := True
                 }
+                // SYSTEM Privileged Instruction
+                is(param.SYS_F3_PRIV) {
+                    when (func12 === param.F12_MRET) {
+                        io.mret := True
+                        io.invld_instr := rs1_isnot_x0 & rd_isnot_x0
+                    }.elsewhen(func12 === param.F12_ECALL) {
+                        io.ecall := True
+                        io.invld_instr := rs1_isnot_x0 & rd_isnot_x0
+                    }.otherwise {
+                        io.invld_instr := True
+                    }
+                }
                 default {
                     io.invld_instr := True
                 }
             }
-        } // End of ZICSR Instruction
-
+        } // End of SYSTEM Instruction
     }
 
 

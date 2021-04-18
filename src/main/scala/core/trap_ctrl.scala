@@ -36,6 +36,10 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   val software_interrupt  = in Bool
   val debug_interrupt     = in Bool
 
+  // system input
+  val mret                = in Bool
+  val ecall               = in Bool
+
   // info
   val wb_pc         = in UInt(param.PC_WIDTH bits)
   val wb_instr      = in Bits(param.XLEN bits)
@@ -46,6 +50,9 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   val mie_mtie    = in Bool
   val mie_msie    = in Bool
   val mstatus_mie = in Bool
+  val mepc        = in Bits(param.PC_WIDTH bits)
+  val mtvec       = in  Bits(param.PC_WIDTH bits)
+
 
   // mcsr output
   val mtrap_enter  = out Bool
@@ -53,7 +60,6 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   val mtrap_mepc   = out Bits(param.PC_WIDTH bits)
   val mtrap_mcause = out Bits(param.MXLEN bits)
   val mtrap_mtval  = out Bits(param.MXLEN bits)
-  val mtrap_mtvec  = in  Bits(param.PC_WIDTH bits)
 
   // pc control
   val pc_trap     = out Bool
@@ -96,25 +102,29 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   val store_addr_misalign_mask  = Bits(param.MXLEN - 1 bits)
   val illegal_instr_mask        = Bits(param.MXLEN - 1 bits)
   val instr_addr_misalign_mask  = Bits(param.MXLEN - 1 bits)
+  val ecall_mask                = Bits(param.MXLEN - 1 bits)
   load_addr_misalign_mask.setAllTo(io.load_addr_misalign)
   store_addr_misalign_mask.setAllTo(io.store_addr_misalign)
   illegal_instr_mask.setAllTo(io.instr_addr_misalign_exception)
   instr_addr_misalign_mask.setAllTo(io.instr_addr_misalign_exception)
+  ecall_mask.setAllTo(io.ecall)
 
   val exceptions_code = load_addr_misalign_mask  & param.EXCEP_CODE_load_addr_misalign  |
                         store_addr_misalign_mask & param.EXCEP_CODE_store_addr_misalign |
                         illegal_instr_mask       & param.EXCEP_CODE_illegal_instr       |
-                        instr_addr_misalign_mask & param.EXCEP_CODE_instr_addr_misalign
+                        instr_addr_misalign_mask & param.EXCEP_CODE_instr_addr_misalign |
+                        ecall_mask               & param.EXCEP_CODE_mecall // only support Machine ecall
 
   val exception_code = interrupt_code | exceptions_code
 
   // == mcsr == //
-  io.mtrap_enter  := exception | interrupt
-  io.mtrap_exit   := False // FIXME
-  io.mtrap_mepc   := Mux(exception, io.wb_pc.asBits, pc_plus_4.asBits)
+  io.mtrap_enter  := exception | interrupt | io.ecall
+  io.mtrap_exit   := io.mret
+  io.mtrap_mepc   := Mux(exception | io.ecall, io.wb_pc.asBits, pc_plus_4.asBits)
   io.mtrap_mcause := interrupt ## exception_code
   io.mtrap_mtval  := Mux(io.illegal_instr_exception, io.wb_instr, dmem_addr_extended.asBits)
 
-  io.pc_trap      := exception
-  io.pc_value     := io.mtrap_mtvec.asUInt.resized
+  io.pc_trap      := exception | io.mret
+  val mtvec_base  =  io.mtvec(param.MXLEN-1 downto 2)
+  io.pc_value     := Mux(io.mret, io.mepc.asUInt, mtvec_base.asUInt.resized)
 }

@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 9f93fdc3af7c576fa99869a790d4b7c2e3848838
+// Git hash  : 915b966068043ccf0e535ffc3ce43816e82ff9f5
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -362,15 +362,13 @@ module apple_riscv (
   wire                imem_ctrl_inst_imem_ahb_HREADY;
   wire                imem_ctrl_inst_imem_ahb_HSEL;
   wire       [4:0]    instr_dec_inst_io_rd_idx;
-  wire       [2:0]    instr_dec_inst_io_func3;
   wire       [4:0]    instr_dec_inst_io_rs1_idx;
   wire       [4:0]    instr_dec_inst_io_rs2_idx;
-  wire       [6:0]    instr_dec_inst_io_func7;
   wire       [31:0]   instr_dec_inst_io_imm_value;
   wire       [20:0]   instr_dec_inst_io_jump_imm_value;
-  wire                instr_dec_inst_io_register_wr;
-  wire                instr_dec_inst_io_register_rs1_rd;
-  wire                instr_dec_inst_io_register_rs2_rd;
+  wire                instr_dec_inst_io_rd_wr;
+  wire                instr_dec_inst_io_rs1_rd;
+  wire                instr_dec_inst_io_rs2_rd;
   wire                instr_dec_inst_io_data_ram_wr;
   wire                instr_dec_inst_io_data_ram_rd;
   wire                instr_dec_inst_io_data_ram_ld_byte;
@@ -402,6 +400,9 @@ module apple_riscv (
   wire                instr_dec_inst_io_branch_op;
   wire                instr_dec_inst_io_jal_op;
   wire                instr_dec_inst_io_jalr_op;
+  wire                instr_dec_inst_io_mret;
+  wire                instr_dec_inst_io_ecall;
+  wire                instr_dec_inst_io_ebreak;
   wire                instr_dec_inst_io_invld_instr;
   wire       [31:0]   regfile_inst_io_rs1_data_out;
   wire       [31:0]   regfile_inst_io_rs2_data_out;
@@ -423,11 +424,12 @@ module apple_riscv (
   wire                dmem_ctrl_isnt_dmem_ahb_HREADY;
   wire                dmem_ctrl_isnt_dmem_ahb_HSEL;
   wire       [31:0]   mcsr_inst_io_mcsr_dout;
-  wire       [31:0]   mcsr_inst_io_mtrap_mtvec;
+  wire       [31:0]   mcsr_inst_io_mtvec;
   wire                mcsr_inst_io_mie_meie;
   wire                mcsr_inst_io_mie_mtie;
   wire                mcsr_inst_io_mie_msie;
   wire                mcsr_inst_io_mstatus_mie;
+  wire       [31:0]   mcsr_inst_io_mepc;
   wire                trap_ctrl_inst_io_mtrap_enter;
   wire                trap_ctrl_inst_io_mtrap_exit;
   wire       [31:0]   trap_ctrl_inst_io_mtrap_mepc;
@@ -472,7 +474,7 @@ module apple_riscv (
   reg        [31:0]   if2id_pc;
   reg                 if2id_instr_valid;
   reg                 id2ex_instr_valid;
-  reg                 id2ex_register_wr;
+  reg                 id2ex_rd_wr;
   reg                 id2ex_data_ram_wr;
   reg                 id2ex_data_ram_rd;
   reg                 id2ex_rs1_rd;
@@ -480,11 +482,19 @@ module apple_riscv (
   reg                 id2ex_branch_op;
   reg                 id2ex_jal_op;
   reg                 id2ex_jalr_op;
+  reg                 id2ex_mret;
+  reg                 id2ex_ecall;
+  reg                 id2ex_ebreak;
+  reg                 id2ex_csr_wr;
+  reg                 id2ex_csr_rd;
+  reg                 id2ex_csr_rw;
+  reg                 id2ex_csr_rs;
+  reg                 id2ex_csr_rc;
+  reg                 id2ex_csr_sel_imm;
+  reg        [11:0]   id2ex_csr_idx;
   reg        [4:0]    id2ex_rd_idx;
-  reg        [2:0]    id2ex_func3;
   reg        [4:0]    id2ex_rs1_idx;
   reg        [4:0]    id2ex_rs2_idx;
-  reg        [6:0]    id2ex_func7;
   reg                 id2ex_alu_op_and;
   reg                 id2ex_alu_op_or;
   reg                 id2ex_alu_op_xor;
@@ -497,13 +507,6 @@ module apple_riscv (
   reg                 id2ex_alu_op_sltu;
   reg                 id2ex_alu_op_eqt;
   reg                 id2ex_alu_op_invb0;
-  reg                 id2ex_csr_wr;
-  reg                 id2ex_csr_rd;
-  reg                 id2ex_csr_rw;
-  reg                 id2ex_csr_rs;
-  reg                 id2ex_csr_rc;
-  reg                 id2ex_csr_sel_imm;
-  reg        [11:0]   id2ex_csr_idx;
   reg                 id2ex_data_ram_ld_byte;
   reg                 id2ex_data_ram_ld_hword;
   reg                 id2ex_data_ram_ld_unsign;
@@ -526,9 +529,16 @@ module apple_riscv (
   reg                 ex2mem_rd_wr;
   reg                 ex2mem_data_ram_wr;
   reg                 ex2mem_data_ram_rd;
-  reg                 ex2mem_data_ram_ld_byte;
-  reg                 ex2mem_data_ram_ld_hword;
-  reg                 ex2mem_data_ram_ld_unsign;
+  reg                 ex2mem_mret;
+  reg                 ex2mem_ecall;
+  reg                 ex2mem_ebreak;
+  reg                 ex2mem_csr_wr;
+  reg                 ex2mem_csr_rd;
+  reg                 ex2mem_csr_rw;
+  reg                 ex2mem_csr_rs;
+  reg                 ex2mem_csr_rc;
+  reg                 ex2mem_csr_sel_imm;
+  reg        [11:0]   ex2mem_csr_idx;
   reg        [31:0]   ex2mem_rs1_value;
   reg        [31:0]   ex2mem_alu_out;
   reg        [4:0]    ex2mem_rs1_idx;
@@ -537,13 +547,9 @@ module apple_riscv (
   reg        [31:0]   ex2mem_rs2_value;
   reg        [31:0]   ex2mem_pc;
   reg        [31:0]   ex2mem_instr;
-  reg                 ex2mem_csr_wr;
-  reg                 ex2mem_csr_rd;
-  reg                 ex2mem_csr_rw;
-  reg                 ex2mem_csr_rs;
-  reg                 ex2mem_csr_rc;
-  reg                 ex2mem_csr_sel_imm;
-  reg        [11:0]   ex2mem_csr_idx;
+  reg                 ex2mem_data_ram_ld_byte;
+  reg                 ex2mem_data_ram_ld_hword;
+  reg                 ex2mem_data_ram_ld_unsign;
   reg                 ex2mem_illegal_instr_exception;
   reg                 ex2mem_instr_addr_misalign_exception;
   wire       [15:0]   dmem_addr;
@@ -551,13 +557,9 @@ module apple_riscv (
   reg                 mem2wb_instr_valid;
   reg                 mem2wb_rd_wr;
   reg                 mem2wb_data_ram_rd;
-  reg        [4:0]    mem2wb_rs1_idx;
-  reg        [31:0]   mem2wb_rs1_value;
-  reg        [31:0]   mem2wb_alu_out;
-  reg        [4:0]    mem2wb_rd_idx;
-  reg        [31:0]   mem2wb_pc;
-  reg        [31:0]   mem2wb_instr;
-  reg        [15:0]   mem2wb_dmem_addr;
+  reg                 mem2wb_mret;
+  reg                 mem2wb_ecall;
+  reg                 mem2wb_ebreak;
   reg                 mem2wb_csr_wr;
   reg                 mem2wb_csr_rd;
   reg                 mem2wb_csr_rw;
@@ -565,6 +567,13 @@ module apple_riscv (
   reg                 mem2wb_csr_rc;
   reg                 mem2wb_csr_sel_imm;
   reg        [11:0]   mem2wb_csr_idx;
+  reg        [4:0]    mem2wb_rs1_idx;
+  reg        [31:0]   mem2wb_rs1_value;
+  reg        [31:0]   mem2wb_alu_out;
+  reg        [4:0]    mem2wb_rd_idx;
+  reg        [31:0]   mem2wb_pc;
+  reg        [31:0]   mem2wb_instr;
+  reg        [15:0]   mem2wb_dmem_addr;
   reg                 mem2wb_illegal_instr_exception;
   reg                 mem2wb_instr_addr_misalign_exception;
   reg                 mem2wb_load_addr_misalign;
@@ -574,6 +583,7 @@ module apple_riscv (
   wire       [31:0]   mcsr_masked_clear;
   wire                from_csr;
   wire       [31:0]   wb_rd_wr_data;
+  wire                wb_exception;
 
   assign _zz_5 = mem2wb_rs1_idx;
   assign _zz_6 = {27'd0, _zz_5};
@@ -609,15 +619,13 @@ module apple_riscv (
   instr_dec instr_dec_inst (
     .io_instr                 (imem_ctrl_inst_io_mc2cpu_data[31:0]     ), //i
     .io_rd_idx                (instr_dec_inst_io_rd_idx[4:0]           ), //o
-    .io_func3                 (instr_dec_inst_io_func3[2:0]            ), //o
     .io_rs1_idx               (instr_dec_inst_io_rs1_idx[4:0]          ), //o
     .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]          ), //o
-    .io_func7                 (instr_dec_inst_io_func7[6:0]            ), //o
     .io_imm_value             (instr_dec_inst_io_imm_value[31:0]       ), //o
     .io_jump_imm_value        (instr_dec_inst_io_jump_imm_value[20:0]  ), //o
-    .io_register_wr           (instr_dec_inst_io_register_wr           ), //o
-    .io_register_rs1_rd       (instr_dec_inst_io_register_rs1_rd       ), //o
-    .io_register_rs2_rd       (instr_dec_inst_io_register_rs2_rd       ), //o
+    .io_rd_wr                 (instr_dec_inst_io_rd_wr                 ), //o
+    .io_rs1_rd                (instr_dec_inst_io_rs1_rd                ), //o
+    .io_rs2_rd                (instr_dec_inst_io_rs2_rd                ), //o
     .io_data_ram_wr           (instr_dec_inst_io_data_ram_wr           ), //o
     .io_data_ram_rd           (instr_dec_inst_io_data_ram_rd           ), //o
     .io_data_ram_ld_byte      (instr_dec_inst_io_data_ram_ld_byte      ), //o
@@ -649,6 +657,9 @@ module apple_riscv (
     .io_branch_op             (instr_dec_inst_io_branch_op             ), //o
     .io_jal_op                (instr_dec_inst_io_jal_op                ), //o
     .io_jalr_op               (instr_dec_inst_io_jalr_op               ), //o
+    .io_mret                  (instr_dec_inst_io_mret                  ), //o
+    .io_ecall                 (instr_dec_inst_io_ecall                 ), //o
+    .io_ebreak                (instr_dec_inst_io_ebreak                ), //o
     .io_invld_instr           (instr_dec_inst_io_invld_instr           )  //o
   );
   regfile regfile_inst (
@@ -731,11 +742,12 @@ module apple_riscv (
     .io_external_interrupt    (io_external_interrupt                 ), //i
     .io_timer_interrupt       (io_timer_interrupt                    ), //i
     .io_software_interrupt    (io_software_interrupt                 ), //i
-    .io_mtrap_mtvec           (mcsr_inst_io_mtrap_mtvec[31:0]        ), //o
+    .io_mtvec                 (mcsr_inst_io_mtvec[31:0]              ), //o
     .io_mie_meie              (mcsr_inst_io_mie_meie                 ), //o
     .io_mie_mtie              (mcsr_inst_io_mie_mtie                 ), //o
     .io_mie_msie              (mcsr_inst_io_mie_msie                 ), //o
     .io_mstatus_mie           (mcsr_inst_io_mstatus_mie              ), //o
+    .io_mepc                  (mcsr_inst_io_mepc[31:0]               ), //o
     .io_hartId                (_zz_4[31:0]                           ), //i
     .clk                      (clk                                   ), //i
     .reset                    (reset                                 )  //i
@@ -749,6 +761,8 @@ module apple_riscv (
     .io_timer_interrupt                  (io_timer_interrupt                    ), //i
     .io_software_interrupt               (io_software_interrupt                 ), //i
     .io_debug_interrupt                  (io_debug_interrupt                    ), //i
+    .io_mret                             (mem2wb_mret                           ), //i
+    .io_ecall                            (mem2wb_ecall                          ), //i
     .io_wb_pc                            (mem2wb_pc[31:0]                       ), //i
     .io_wb_instr                         (mem2wb_instr[31:0]                    ), //i
     .io_wb_dmem_addr                     (mem2wb_dmem_addr[15:0]                ), //i
@@ -756,12 +770,13 @@ module apple_riscv (
     .io_mie_mtie                         (mcsr_inst_io_mie_mtie                 ), //i
     .io_mie_msie                         (mcsr_inst_io_mie_msie                 ), //i
     .io_mstatus_mie                      (mcsr_inst_io_mstatus_mie              ), //i
+    .io_mepc                             (mcsr_inst_io_mepc[31:0]               ), //i
+    .io_mtvec                            (mcsr_inst_io_mtvec[31:0]              ), //i
     .io_mtrap_enter                      (trap_ctrl_inst_io_mtrap_enter         ), //o
     .io_mtrap_exit                       (trap_ctrl_inst_io_mtrap_exit          ), //o
     .io_mtrap_mepc                       (trap_ctrl_inst_io_mtrap_mepc[31:0]    ), //o
     .io_mtrap_mcause                     (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //o
     .io_mtrap_mtval                      (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //o
-    .io_mtrap_mtvec                      (mcsr_inst_io_mtrap_mtvec[31:0]        ), //i
     .io_pc_trap                          (trap_ctrl_inst_io_pc_trap             ), //o
     .io_pc_value                         (trap_ctrl_inst_io_pc_value[31:0]      )  //o
   );
@@ -780,26 +795,36 @@ module apple_riscv (
     .io_forward_rs2_from_wb     (fu_inst_io_forward_rs2_from_wb   )  //o
   );
   hdu hdu_inst (
-    .io_if_valid          (hdu_inst_io_if_valid               ), //o
-    .io_id_valid          (hdu_inst_io_id_valid               ), //o
-    .io_ex_valid          (hdu_inst_io_ex_valid               ), //o
-    .io_mem_valid         (hdu_inst_io_mem_valid              ), //o
-    .io_wb_valid          (hdu_inst_io_wb_valid               ), //o
-    .io_if_pipe_stall     (hdu_inst_io_if_pipe_stall          ), //o
-    .io_id_pipe_stall     (hdu_inst_io_id_pipe_stall          ), //o
-    .io_ex_pipe_stall     (hdu_inst_io_ex_pipe_stall          ), //o
-    .io_mem_pipe_stall    (hdu_inst_io_mem_pipe_stall         ), //o
-    .io_wb_pipe_stall     (hdu_inst_io_wb_pipe_stall          ), //o
-    .io_branch_taken      (branch_taken                       ), //i
-    .io_id_rs1_rd         (instr_dec_inst_io_register_rs1_rd  ), //i
-    .io_id_rs2_rd         (instr_dec_inst_io_register_rs2_rd  ), //i
-    .io_ex_dmem_rd        (id2ex_data_ram_rd                  ), //i
-    .io_id_rs1_idx        (instr_dec_inst_io_rs1_idx[4:0]     ), //i
-    .io_id_rs2_idx        (instr_dec_inst_io_rs2_idx[4:0]     ), //i
-    .io_ex_rd_idx         (id2ex_rd_idx[4:0]                  ), //i
-    .io_id_exception      (instr_dec_inst_io_invld_instr      ), //i
-    .io_ex_exception      (ex_exception                       ), //i
-    .io_mem_exception     (mem_exception                      )  //i
+    .io_if_valid          (hdu_inst_io_if_valid            ), //o
+    .io_id_valid          (hdu_inst_io_id_valid            ), //o
+    .io_ex_valid          (hdu_inst_io_ex_valid            ), //o
+    .io_mem_valid         (hdu_inst_io_mem_valid           ), //o
+    .io_wb_valid          (hdu_inst_io_wb_valid            ), //o
+    .io_if_pipe_stall     (hdu_inst_io_if_pipe_stall       ), //o
+    .io_id_pipe_stall     (hdu_inst_io_id_pipe_stall       ), //o
+    .io_ex_pipe_stall     (hdu_inst_io_ex_pipe_stall       ), //o
+    .io_mem_pipe_stall    (hdu_inst_io_mem_pipe_stall      ), //o
+    .io_wb_pipe_stall     (hdu_inst_io_wb_pipe_stall       ), //o
+    .io_branch_taken      (branch_taken                    ), //i
+    .io_id_rs1_rd         (instr_dec_inst_io_rs1_rd        ), //i
+    .io_id_rs2_rd         (instr_dec_inst_io_rs2_rd        ), //i
+    .io_ex_dmem_rd        (id2ex_data_ram_rd               ), //i
+    .io_id_rs1_idx        (instr_dec_inst_io_rs1_idx[4:0]  ), //i
+    .io_id_rs2_idx        (instr_dec_inst_io_rs2_idx[4:0]  ), //i
+    .io_ex_rd_idx         (id2ex_rd_idx[4:0]               ), //i
+    .io_id_exception      (instr_dec_inst_io_invld_instr   ), //i
+    .io_ex_exception      (ex_exception                    ), //i
+    .io_mem_exception     (mem_exception                   ), //i
+    .io_wb_exception      (wb_exception                    ), //i
+    .io_ex_mret           (id2ex_mret                      ), //i
+    .io_mem_mret          (ex2mem_mret                     ), //i
+    .io_wb_mret           (mem2wb_mret                     ), //i
+    .io_ex_ecall          (id2ex_mret                      ), //i
+    .io_mem_ecall         (ex2mem_mret                     ), //i
+    .io_wb_ecall          (mem2wb_mret                     ), //i
+    .io_ex_ebreak         (id2ex_mret                      ), //i
+    .io_mem_ebreak        (ex2mem_mret                     ), //i
+    .io_wb_ebreak         (mem2wb_mret                     )  //i
   );
   assign if_pipe_run = (! if_pipe_stall);
   assign id_pipe_run = (! id_pipe_stall);
@@ -842,6 +867,7 @@ module apple_riscv (
   assign _zz_4 = {31'd0, _zz_7};
   assign from_csr = ((mem2wb_csr_rw || mem2wb_csr_rs) || mem2wb_csr_rc);
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dmem_ctrl_isnt_io_mc2cpu_data : (from_csr ? mcsr_inst_io_mcsr_dout : mem2wb_alu_out));
+  assign wb_exception = (((mem2wb_illegal_instr_exception || mem2wb_instr_addr_misalign_exception) || mem2wb_load_addr_misalign) || mem2wb_store_addr_misalign);
   assign ex_rs1_value_forwarded = (fu_inst_io_forward_rs1_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs1_from_wb ? wb_rd_wr_data : id2ex_rs1_value));
   assign ex_rs2_value_forwarded = (fu_inst_io_forward_rs2_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs2_from_wb ? wb_rd_wr_data : id2ex_rs2_value));
   assign if_instr_valid = (hdu_inst_io_if_valid && (! branch_unit_inst_io_instr_addr_misalign_exception));
@@ -859,7 +885,7 @@ module apple_riscv (
       if2id_pc <= 32'h0;
       if2id_instr_valid <= 1'b0;
       id2ex_instr_valid <= 1'b0;
-      id2ex_register_wr <= 1'b0;
+      id2ex_rd_wr <= 1'b0;
       id2ex_data_ram_wr <= 1'b0;
       id2ex_data_ram_rd <= 1'b0;
       id2ex_rs1_rd <= 1'b0;
@@ -867,16 +893,31 @@ module apple_riscv (
       id2ex_branch_op <= 1'b0;
       id2ex_jal_op <= 1'b0;
       id2ex_jalr_op <= 1'b0;
+      id2ex_mret <= 1'b0;
+      id2ex_ecall <= 1'b0;
+      id2ex_ebreak <= 1'b0;
+      id2ex_csr_wr <= 1'b0;
+      id2ex_csr_rd <= 1'b0;
       id2ex_illegal_instr_exception <= 1'b0;
       ex2mem_instr_valid <= 1'b0;
       ex2mem_rd_wr <= 1'b0;
       ex2mem_data_ram_wr <= 1'b0;
       ex2mem_data_ram_rd <= 1'b0;
+      ex2mem_mret <= 1'b0;
+      ex2mem_ecall <= 1'b0;
+      ex2mem_ebreak <= 1'b0;
+      ex2mem_csr_wr <= 1'b0;
+      ex2mem_csr_rd <= 1'b0;
       ex2mem_illegal_instr_exception <= 1'b0;
       ex2mem_instr_addr_misalign_exception <= 1'b0;
       mem2wb_instr_valid <= 1'b0;
       mem2wb_rd_wr <= 1'b0;
       mem2wb_data_ram_rd <= 1'b0;
+      mem2wb_mret <= 1'b0;
+      mem2wb_ecall <= 1'b0;
+      mem2wb_ebreak <= 1'b0;
+      mem2wb_csr_wr <= 1'b0;
+      mem2wb_csr_rd <= 1'b0;
       mem2wb_illegal_instr_exception <= 1'b0;
       mem2wb_instr_addr_misalign_exception <= 1'b0;
       mem2wb_load_addr_misalign <= 1'b0;
@@ -892,7 +933,7 @@ module apple_riscv (
         id2ex_instr_valid <= id_instr_valid;
       end
       if(ex_pipe_run)begin
-        id2ex_register_wr <= (instr_dec_inst_io_register_wr && id_instr_valid);
+        id2ex_rd_wr <= (instr_dec_inst_io_rd_wr && id_instr_valid);
       end
       if(ex_pipe_run)begin
         id2ex_data_ram_wr <= (instr_dec_inst_io_data_ram_wr && id_instr_valid);
@@ -901,10 +942,10 @@ module apple_riscv (
         id2ex_data_ram_rd <= (instr_dec_inst_io_data_ram_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id2ex_rs1_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
+        id2ex_rs1_rd <= (instr_dec_inst_io_rs1_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id2ex_rs2_rd <= (instr_dec_inst_io_register_rs1_rd && id_instr_valid);
+        id2ex_rs2_rd <= (instr_dec_inst_io_rs2_rd && id_instr_valid);
       end
       if(ex_pipe_run)begin
         id2ex_branch_op <= (instr_dec_inst_io_branch_op && id_instr_valid);
@@ -916,13 +957,28 @@ module apple_riscv (
         id2ex_jalr_op <= (instr_dec_inst_io_jalr_op && id_instr_valid);
       end
       if(ex_pipe_run)begin
-        id2ex_illegal_instr_exception <= instr_dec_inst_io_invld_instr;
+        id2ex_mret <= (instr_dec_inst_io_mret && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_ecall <= (instr_dec_inst_io_ecall && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_ebreak <= (instr_dec_inst_io_ebreak && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_csr_wr <= (instr_dec_inst_io_csr_wr && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_csr_rd <= (instr_dec_inst_io_csr_rd && id_instr_valid);
+      end
+      if(ex_pipe_run)begin
+        id2ex_illegal_instr_exception <= (instr_dec_inst_io_invld_instr && id_instr_valid);
       end
       if(mem_pipe_run)begin
         ex2mem_instr_valid <= ex_instr_valid;
       end
       if(mem_pipe_run)begin
-        ex2mem_rd_wr <= (id2ex_register_wr && ex_instr_valid);
+        ex2mem_rd_wr <= (id2ex_rd_wr && ex_instr_valid);
       end
       if(mem_pipe_run)begin
         ex2mem_data_ram_wr <= (id2ex_data_ram_wr && ex_instr_valid);
@@ -931,10 +987,25 @@ module apple_riscv (
         ex2mem_data_ram_rd <= (id2ex_data_ram_rd && ex_instr_valid);
       end
       if(mem_pipe_run)begin
-        ex2mem_illegal_instr_exception <= id2ex_illegal_instr_exception;
+        ex2mem_mret <= (id2ex_mret && ex_instr_valid);
       end
       if(mem_pipe_run)begin
-        ex2mem_instr_addr_misalign_exception <= branch_unit_inst_io_instr_addr_misalign_exception;
+        ex2mem_ecall <= (id2ex_ecall && ex_instr_valid);
+      end
+      if(mem_pipe_run)begin
+        ex2mem_ebreak <= (id2ex_ebreak && ex_instr_valid);
+      end
+      if(mem_pipe_run)begin
+        ex2mem_csr_wr <= (id2ex_csr_wr && ex_instr_valid);
+      end
+      if(mem_pipe_run)begin
+        ex2mem_csr_rd <= (id2ex_csr_rd && ex_instr_valid);
+      end
+      if(mem_pipe_run)begin
+        ex2mem_illegal_instr_exception <= (id2ex_illegal_instr_exception && ex_instr_valid);
+      end
+      if(mem_pipe_run)begin
+        ex2mem_instr_addr_misalign_exception <= (branch_unit_inst_io_instr_addr_misalign_exception && ex_instr_valid);
       end
       if(wb_pipe_run)begin
         mem2wb_instr_valid <= mem_instr_valid;
@@ -946,35 +1017,59 @@ module apple_riscv (
         mem2wb_data_ram_rd <= (ex2mem_data_ram_rd && mem_instr_valid);
       end
       if(wb_pipe_run)begin
-        mem2wb_illegal_instr_exception <= ex2mem_illegal_instr_exception;
+        mem2wb_mret <= (ex2mem_mret && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_ecall <= (ex2mem_ecall && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_ebreak <= (ex2mem_ebreak && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_csr_wr <= (ex2mem_csr_wr && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_csr_rd <= (ex2mem_csr_rd && mem_instr_valid);
+      end
+      if(wb_pipe_run)begin
+        mem2wb_illegal_instr_exception <= (ex2mem_illegal_instr_exception && mem_instr_valid);
       end
       if(mem_pipe_run)begin
-        mem2wb_instr_addr_misalign_exception <= ex2mem_instr_addr_misalign_exception;
+        mem2wb_instr_addr_misalign_exception <= (ex2mem_instr_addr_misalign_exception && mem_instr_valid);
       end
       if(mem_pipe_run)begin
-        mem2wb_load_addr_misalign <= dmem_ctrl_isnt_io_load_addr_misalign;
+        mem2wb_load_addr_misalign <= (dmem_ctrl_isnt_io_load_addr_misalign && mem_instr_valid);
       end
       if(mem_pipe_run)begin
-        mem2wb_store_addr_misalign <= dmem_ctrl_isnt_io_store_addr_misalign;
+        mem2wb_store_addr_misalign <= (dmem_ctrl_isnt_io_store_addr_misalign && mem_instr_valid);
       end
     end
   end
 
   always @ (posedge clk) begin
     if(ex_pipe_run)begin
-      id2ex_rd_idx <= instr_dec_inst_io_rd_idx;
+      id2ex_csr_rw <= instr_dec_inst_io_csr_rw;
     end
     if(ex_pipe_run)begin
-      id2ex_func3 <= instr_dec_inst_io_func3;
+      id2ex_csr_rs <= instr_dec_inst_io_csr_rs;
+    end
+    if(ex_pipe_run)begin
+      id2ex_csr_rc <= instr_dec_inst_io_csr_rc;
+    end
+    if(ex_pipe_run)begin
+      id2ex_csr_sel_imm <= instr_dec_inst_io_csr_sel_imm;
+    end
+    if(ex_pipe_run)begin
+      id2ex_csr_idx <= instr_dec_inst_io_csr_idx;
+    end
+    if(ex_pipe_run)begin
+      id2ex_rd_idx <= instr_dec_inst_io_rd_idx;
     end
     if(ex_pipe_run)begin
       id2ex_rs1_idx <= instr_dec_inst_io_rs1_idx;
     end
     if(ex_pipe_run)begin
       id2ex_rs2_idx <= instr_dec_inst_io_rs2_idx;
-    end
-    if(ex_pipe_run)begin
-      id2ex_func7 <= instr_dec_inst_io_func7;
     end
     if(ex_pipe_run)begin
       id2ex_alu_op_and <= instr_dec_inst_io_alu_op_and;
@@ -1013,27 +1108,6 @@ module apple_riscv (
       id2ex_alu_op_invb0 <= instr_dec_inst_io_alu_op_invb0;
     end
     if(ex_pipe_run)begin
-      id2ex_csr_wr <= instr_dec_inst_io_csr_wr;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_rd <= instr_dec_inst_io_csr_rd;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_rw <= instr_dec_inst_io_csr_rw;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_rs <= instr_dec_inst_io_csr_rs;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_rc <= instr_dec_inst_io_csr_rc;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_sel_imm <= instr_dec_inst_io_csr_sel_imm;
-    end
-    if(ex_pipe_run)begin
-      id2ex_csr_idx <= instr_dec_inst_io_csr_idx;
-    end
-    if(ex_pipe_run)begin
       id2ex_data_ram_ld_byte <= instr_dec_inst_io_data_ram_ld_byte;
     end
     if(ex_pipe_run)begin
@@ -1070,13 +1144,19 @@ module apple_riscv (
       id2ex_instr <= imem_ctrl_inst_io_mc2cpu_data;
     end
     if(mem_pipe_run)begin
-      ex2mem_data_ram_ld_byte <= (id2ex_data_ram_ld_byte && ex_instr_valid);
+      ex2mem_csr_rw <= id2ex_csr_rw;
     end
     if(mem_pipe_run)begin
-      ex2mem_data_ram_ld_hword <= (id2ex_data_ram_ld_hword && ex_instr_valid);
+      ex2mem_csr_rs <= id2ex_csr_rs;
     end
     if(mem_pipe_run)begin
-      ex2mem_data_ram_ld_unsign <= (id2ex_data_ram_ld_unsign && ex_instr_valid);
+      ex2mem_csr_rc <= id2ex_csr_rc;
+    end
+    if(mem_pipe_run)begin
+      ex2mem_csr_sel_imm <= id2ex_csr_sel_imm;
+    end
+    if(mem_pipe_run)begin
+      ex2mem_csr_idx <= id2ex_csr_idx;
     end
     if(mem_pipe_run)begin
       ex2mem_rs1_value <= ex_rs1_value_forwarded;
@@ -1103,25 +1183,28 @@ module apple_riscv (
       ex2mem_instr <= id2ex_instr;
     end
     if(mem_pipe_run)begin
-      ex2mem_csr_wr <= id2ex_csr_wr;
+      ex2mem_data_ram_ld_byte <= id2ex_data_ram_ld_byte;
     end
     if(mem_pipe_run)begin
-      ex2mem_csr_rd <= id2ex_csr_rd;
+      ex2mem_data_ram_ld_hword <= id2ex_data_ram_ld_hword;
     end
     if(mem_pipe_run)begin
-      ex2mem_csr_rw <= id2ex_csr_rw;
+      ex2mem_data_ram_ld_unsign <= id2ex_data_ram_ld_unsign;
     end
-    if(mem_pipe_run)begin
-      ex2mem_csr_rs <= id2ex_csr_rs;
+    if(wb_pipe_run)begin
+      mem2wb_csr_rw <= ex2mem_csr_rw;
     end
-    if(mem_pipe_run)begin
-      ex2mem_csr_rc <= id2ex_csr_rc;
+    if(wb_pipe_run)begin
+      mem2wb_csr_rs <= ex2mem_csr_rs;
     end
-    if(mem_pipe_run)begin
-      ex2mem_csr_sel_imm <= id2ex_csr_sel_imm;
+    if(wb_pipe_run)begin
+      mem2wb_csr_rc <= ex2mem_csr_rc;
     end
-    if(mem_pipe_run)begin
-      ex2mem_csr_idx <= id2ex_csr_idx;
+    if(wb_pipe_run)begin
+      mem2wb_csr_sel_imm <= ex2mem_csr_sel_imm;
+    end
+    if(wb_pipe_run)begin
+      mem2wb_csr_idx <= ex2mem_csr_idx;
     end
     if(wb_pipe_run)begin
       mem2wb_rs1_idx <= ex2mem_rs1_idx;
@@ -1143,27 +1226,6 @@ module apple_riscv (
     end
     if(wb_pipe_run)begin
       mem2wb_dmem_addr <= dmem_addr;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_wr <= ex2mem_csr_wr;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_rd <= ex2mem_csr_rd;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_rw <= ex2mem_csr_rw;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_rs <= ex2mem_csr_rs;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_rc <= ex2mem_csr_rc;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_sel_imm <= ex2mem_csr_sel_imm;
-    end
-    if(wb_pipe_run)begin
-      mem2wb_csr_idx <= ex2mem_csr_idx;
     end
   end
 
@@ -1190,28 +1252,54 @@ module hdu (
   input      [4:0]    io_ex_rd_idx,
   input               io_id_exception,
   input               io_ex_exception,
-  input               io_mem_exception
+  input               io_mem_exception,
+  input               io_wb_exception,
+  input               io_ex_mret,
+  input               io_mem_mret,
+  input               io_wb_mret,
+  input               io_ex_ecall,
+  input               io_mem_ecall,
+  input               io_wb_ecall,
+  input               io_ex_ebreak,
+  input               io_mem_ebreak,
+  input               io_wb_ebreak
 );
   wire                id_rs1_depends_on_ex_rd;
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
-  wire                exception_flush_if;
+  wire                exception_flush_ex;
   wire                exception_flush_id;
+  wire                exception_flush_if;
+  wire                sys_flush_mem;
+  wire                sys_flush_ex;
+  wire                sys_flush_id;
+  wire                trap_flush_if;
+  wire                trap_flush_id;
+  wire                trap_flush_ex;
+  wire                trap_flush_mem;
 
   assign id_rs1_depends_on_ex_rd = ((io_id_rs1_idx == io_ex_rd_idx) && io_id_rs1_rd);
   assign id_rs2_depends_on_ex_rd = ((io_id_rs2_idx == io_ex_rd_idx) && io_id_rs2_rd);
   assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && io_ex_dmem_rd);
-  assign exception_flush_if = ((io_id_exception || io_ex_exception) || io_mem_exception);
-  assign exception_flush_id = (io_ex_exception || io_mem_exception);
+  assign exception_flush_ex = (io_mem_exception || io_wb_exception);
+  assign exception_flush_id = (io_ex_exception || exception_flush_ex);
+  assign exception_flush_if = (io_id_exception || exception_flush_id);
+  assign sys_flush_mem = ((io_wb_mret || io_wb_ebreak) || io_wb_ecall);
+  assign sys_flush_ex = (((io_mem_mret || io_mem_ebreak) || io_mem_ecall) || sys_flush_mem);
+  assign sys_flush_id = (((io_ex_mret || io_ex_ebreak) || io_ex_ecall) || sys_flush_ex);
+  assign trap_flush_if = (sys_flush_id || exception_flush_if);
+  assign trap_flush_id = (sys_flush_id || exception_flush_id);
+  assign trap_flush_ex = (sys_flush_ex || exception_flush_ex);
+  assign trap_flush_mem = (sys_flush_mem || io_wb_exception);
   assign io_if_pipe_stall = stall_on_load_dependence;
   assign io_id_pipe_stall = stall_on_load_dependence;
   assign io_ex_pipe_stall = 1'b0;
   assign io_mem_pipe_stall = 1'b0;
   assign io_wb_pipe_stall = 1'b0;
-  assign io_if_valid = ((! io_branch_taken) && (! exception_flush_if));
-  assign io_id_valid = ((! io_branch_taken) && (! stall_on_load_dependence));
-  assign io_ex_valid = 1'b1;
-  assign io_mem_valid = 1'b1;
+  assign io_if_valid = ((! io_branch_taken) && (! trap_flush_if));
+  assign io_id_valid = (((! io_branch_taken) && (! stall_on_load_dependence)) && (! trap_flush_id));
+  assign io_ex_valid = (! trap_flush_ex);
+  assign io_mem_valid = (! trap_flush_mem);
   assign io_wb_valid = 1'b1;
 
 endmodule
@@ -1259,6 +1347,8 @@ module trap_ctrl (
   input               io_timer_interrupt,
   input               io_software_interrupt,
   input               io_debug_interrupt,
+  input               io_mret,
+  input               io_ecall,
   input      [31:0]   io_wb_pc,
   input      [31:0]   io_wb_instr,
   input      [15:0]   io_wb_dmem_addr,
@@ -1266,15 +1356,18 @@ module trap_ctrl (
   input               io_mie_mtie,
   input               io_mie_msie,
   input               io_mstatus_mie,
+  input      [31:0]   io_mepc,
+  input      [31:0]   io_mtvec,
   output              io_mtrap_enter,
   output              io_mtrap_exit,
   output     [31:0]   io_mtrap_mepc,
   output     [31:0]   io_mtrap_mcause,
   output     [31:0]   io_mtrap_mtval,
-  input      [31:0]   io_mtrap_mtvec,
   output              io_pc_trap,
   output     [31:0]   io_pc_value
 );
+  wire       [29:0]   _zz_1;
+  wire       [31:0]   _zz_2;
   wire                dmem_addr_exception;
   wire                exception;
   wire       [31:0]   dmem_addr_extended;
@@ -1292,9 +1385,13 @@ module trap_ctrl (
   wire       [30:0]   store_addr_misalign_mask;
   wire       [30:0]   illegal_instr_mask;
   wire       [30:0]   instr_addr_misalign_mask;
+  wire       [30:0]   ecall_mask;
   wire       [30:0]   exceptions_code;
   wire       [30:0]   exception_code;
+  wire       [29:0]   mtvec_base;
 
+  assign _zz_1 = mtvec_base;
+  assign _zz_2 = {2'd0, _zz_1};
   assign dmem_addr_exception = (io_load_addr_misalign || io_store_addr_misalign);
   assign exception = ((dmem_addr_exception || io_illegal_instr_exception) || io_instr_addr_misalign_exception);
   assign dmem_addr_extended = {16'd0, io_wb_dmem_addr};
@@ -1312,15 +1409,17 @@ module trap_ctrl (
   assign store_addr_misalign_mask = (io_store_addr_misalign ? 31'h7fffffff : 31'h0);
   assign illegal_instr_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
   assign instr_addr_misalign_mask = (io_instr_addr_misalign_exception ? 31'h7fffffff : 31'h0);
-  assign exceptions_code = ((((load_addr_misalign_mask & 31'h00000004) | (store_addr_misalign_mask & 31'h00000006)) | (illegal_instr_mask & 31'h00000002)) | (instr_addr_misalign_mask & 31'h0));
+  assign ecall_mask = (io_ecall ? 31'h7fffffff : 31'h0);
+  assign exceptions_code = (((((load_addr_misalign_mask & 31'h00000004) | (store_addr_misalign_mask & 31'h00000006)) | (illegal_instr_mask & 31'h00000002)) | (instr_addr_misalign_mask & 31'h0)) | (ecall_mask & 31'h0000000b));
   assign exception_code = (interrupt_code | exceptions_code);
-  assign io_mtrap_enter = (exception || interrupt);
-  assign io_mtrap_exit = 1'b0;
-  assign io_mtrap_mepc = (exception ? io_wb_pc : pc_plus_4);
+  assign io_mtrap_enter = ((exception || interrupt) || io_ecall);
+  assign io_mtrap_exit = io_mret;
+  assign io_mtrap_mepc = ((exception || io_ecall) ? io_wb_pc : pc_plus_4);
   assign io_mtrap_mcause = {interrupt,exception_code};
   assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : dmem_addr_extended);
-  assign io_pc_trap = exception;
-  assign io_pc_value = io_mtrap_mtvec;
+  assign io_pc_trap = (exception || io_mret);
+  assign mtvec_base = io_mtvec[31 : 2];
+  assign io_pc_value = (io_mret ? io_mepc : _zz_2);
 
 endmodule
 
@@ -1337,11 +1436,12 @@ module mcsr (
   input               io_external_interrupt,
   input               io_timer_interrupt,
   input               io_software_interrupt,
-  output     [31:0]   io_mtrap_mtvec,
+  output     [31:0]   io_mtvec,
   output              io_mie_meie,
   output              io_mie_mtie,
   output              io_mie_msie,
   output              io_mstatus_mie,
+  output     [31:0]   io_mepc,
   input      [31:0]   io_hartId,
   input               clk,
   input               reset
@@ -1429,11 +1529,12 @@ module mcsr (
   assign mepc_wen = ((io_mcsr_addr == 12'h341) && io_mcsr_wen);
   assign mcause_wen = ((io_mcsr_addr == 12'h342) && io_mcsr_wen);
   assign mtval_wen = ((io_mcsr_addr == 12'h343) && io_mcsr_wen);
-  assign io_mtrap_mtvec = mtvec;
+  assign io_mtvec = mtvec;
   assign io_mie_meie = mie[11];
   assign io_mie_mtie = mie[7];
   assign io_mie_msie = mie[3];
   assign io_mstatus_mie = mstatus[3];
+  assign io_mepc = mepc;
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
       mstatus <= 32'h0;
@@ -1854,15 +1955,13 @@ endmodule
 module instr_dec (
   input      [31:0]   io_instr,
   output     [4:0]    io_rd_idx,
-  output     [2:0]    io_func3,
   output     [4:0]    io_rs1_idx,
   output     [4:0]    io_rs2_idx,
-  output     [6:0]    io_func7,
   output reg [31:0]   io_imm_value,
   output reg [20:0]   io_jump_imm_value,
-  output reg          io_register_wr,
-  output reg          io_register_rs1_rd,
-  output reg          io_register_rs2_rd,
+  output reg          io_rd_wr,
+  output reg          io_rs1_rd,
+  output reg          io_rs2_rd,
   output reg          io_data_ram_wr,
   output reg          io_data_ram_rd,
   output reg          io_data_ram_ld_byte,
@@ -1894,14 +1993,20 @@ module instr_dec (
   output reg          io_branch_op,
   output reg          io_jal_op,
   output reg          io_jalr_op,
+  output reg          io_mret,
+  output reg          io_ecall,
+  output              io_ebreak,
   output reg          io_invld_instr
 );
-  wire       [11:0]   _zz_1;
-  wire       [11:0]   _zz_2;
-  wire       [12:0]   _zz_3;
+  wire                _zz_1;
+  wire                _zz_2;
+  wire       [11:0]   _zz_3;
+  wire       [11:0]   _zz_4;
+  wire       [12:0]   _zz_5;
   wire       [6:0]    opcode;
   wire       [2:0]    func3;
   wire       [6:0]    func7;
+  wire       [11:0]   func12;
   reg        `br_imm_type_e_binary_sequential_type br_imm_type;
   reg        `alu_imm_type_e_binary_sequential_type alu_imm_type;
   wire                func7_not_all_zero;
@@ -1918,9 +2023,11 @@ module instr_dec (
   `endif
 
 
-  assign _zz_1 = io_instr[31 : 20];
-  assign _zz_2 = {io_instr[31 : 25],io_instr[11 : 7]};
-  assign _zz_3 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
+  assign _zz_1 = (func12 == 12'h302);
+  assign _zz_2 = (func12 == 12'h0);
+  assign _zz_3 = io_instr[31 : 20];
+  assign _zz_4 = {io_instr[31 : 25],io_instr[11 : 7]};
+  assign _zz_5 = {{{{io_instr[31],io_instr[7]},io_instr[30 : 25]},io_instr[11 : 8]},1'b0};
   `ifndef SYNTHESIS
   always @(*) begin
     case(br_imm_type)
@@ -1945,6 +2052,7 @@ module instr_dec (
   assign opcode = io_instr[6 : 0];
   assign func3 = io_instr[14 : 12];
   assign func7 = io_instr[31 : 25];
+  assign func12 = io_instr[31 : 20];
   assign io_rd_idx = io_instr[11 : 7];
   assign io_rs1_idx = io_instr[19 : 15];
   assign io_rs2_idx = io_instr[24 : 20];
@@ -1993,31 +2101,54 @@ module instr_dec (
   assign rd_isnot_x0 = (io_rd_idx != 5'h0);
   assign rs1_isnot_x0 = (io_rs1_idx != 5'h0);
   always @ (*) begin
-    io_register_wr = 1'b0;
+    io_rd_wr = 1'b0;
     case(opcode)
       7'h37 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h17 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h6f : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h67 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h03 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h13 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h33 : begin
-        io_register_wr = 1'b1;
+        io_rd_wr = 1'b1;
       end
       7'h73 : begin
-        io_register_wr = 1'b1;
+        case(func3)
+          3'b001 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b010 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b011 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b101 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b110 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b111 : begin
+            io_rd_wr = 1'b1;
+          end
+          3'b000 : begin
+          end
+          default : begin
+          end
+        endcase
       end
       default : begin
       end
@@ -2025,25 +2156,25 @@ module instr_dec (
   end
 
   always @ (*) begin
-    io_register_rs1_rd = 1'b0;
+    io_rs1_rd = 1'b0;
     case(opcode)
       7'h67 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       7'h63 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       7'h03 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       7'h23 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       7'h13 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       7'h33 : begin
-        io_register_rs1_rd = 1'b1;
+        io_rs1_rd = 1'b1;
       end
       default : begin
       end
@@ -2051,16 +2182,16 @@ module instr_dec (
   end
 
   always @ (*) begin
-    io_register_rs2_rd = 1'b0;
+    io_rs2_rd = 1'b0;
     case(opcode)
       7'h63 : begin
-        io_register_rs2_rd = 1'b1;
+        io_rs2_rd = 1'b1;
       end
       7'h23 : begin
-        io_register_rs2_rd = 1'b1;
+        io_rs2_rd = 1'b1;
       end
       7'h33 : begin
-        io_register_rs2_rd = 1'b1;
+        io_rs2_rd = 1'b1;
       end
       default : begin
       end
@@ -2926,6 +3057,71 @@ module instr_dec (
   end
 
   always @ (*) begin
+    io_mret = 1'b0;
+    case(opcode)
+      7'h73 : begin
+        case(func3)
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b000 : begin
+            if(_zz_1)begin
+              io_mret = 1'b1;
+            end
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_ecall = 1'b0;
+    case(opcode)
+      7'h73 : begin
+        case(func3)
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b000 : begin
+            if(! _zz_1) begin
+              if(_zz_2)begin
+                io_ecall = 1'b1;
+              end
+            end
+          end
+          default : begin
+          end
+        endcase
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign io_ebreak = 1'b0;
+  always @ (*) begin
     io_invld_instr = 1'b0;
     case(opcode)
       7'h63 : begin
@@ -3064,6 +3260,17 @@ module instr_dec (
           end
           3'b111 : begin
           end
+          3'b000 : begin
+            if(_zz_1)begin
+              io_invld_instr = (rs1_isnot_x0 && rd_isnot_x0);
+            end else begin
+              if(_zz_2)begin
+                io_invld_instr = (rs1_isnot_x0 && rd_isnot_x0);
+              end else begin
+                io_invld_instr = 1'b1;
+              end
+            end
+          end
           default : begin
             io_invld_instr = 1'b1;
           end
@@ -3097,6 +3304,8 @@ module instr_dec (
           3'b111 : begin
             io_csr_rd = 1'b1;
           end
+          3'b000 : begin
+          end
           default : begin
           end
         endcase
@@ -3129,6 +3338,8 @@ module instr_dec (
           3'b111 : begin
             io_csr_wr = rs1_isnot_x0;
           end
+          3'b000 : begin
+          end
           default : begin
           end
         endcase
@@ -3156,6 +3367,8 @@ module instr_dec (
           3'b110 : begin
           end
           3'b111 : begin
+          end
+          3'b000 : begin
           end
           default : begin
           end
@@ -3185,6 +3398,8 @@ module instr_dec (
           end
           3'b111 : begin
           end
+          3'b000 : begin
+          end
           default : begin
           end
         endcase
@@ -3212,6 +3427,8 @@ module instr_dec (
           end
           3'b111 : begin
             io_csr_rc = 1'b1;
+          end
+          3'b000 : begin
           end
           default : begin
           end
@@ -3242,6 +3459,8 @@ module instr_dec (
           3'b111 : begin
             io_csr_sel_imm = 1'b1;
           end
+          3'b000 : begin
+          end
           default : begin
           end
         endcase
@@ -3251,10 +3470,10 @@ module instr_dec (
     endcase
   end
 
-  assign i_type_imm = {{20{_zz_1[11]}}, _zz_1};
-  assign s_type_imm = {{20{_zz_2[11]}}, _zz_2};
+  assign i_type_imm = {{20{_zz_3[11]}}, _zz_3};
+  assign s_type_imm = {{20{_zz_4[11]}}, _zz_4};
   assign u_type_imm = {io_instr[31 : 12],12'h0};
-  assign b_type_imm = {{8{_zz_3[12]}}, _zz_3};
+  assign b_type_imm = {{8{_zz_5[12]}}, _zz_5};
   assign j_type_imm = {{{{io_instr[31],io_instr[19 : 12]},io_instr[20]},io_instr[30 : 21]},1'b0};
   always @ (*) begin
     case(alu_imm_type)
