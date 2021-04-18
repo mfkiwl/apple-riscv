@@ -4,6 +4,7 @@
 
 - 04/17/2021
   - Designed the csr module and exception logic
+  - Implemented the 'Zicsr' csr related instructions
 
 - 04/14/2021
   - Updated instruction decoder logic.

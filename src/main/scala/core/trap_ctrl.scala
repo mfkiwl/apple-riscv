@@ -54,7 +54,7 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   val dmem_addr_exception = io.load_addr_misalign | io.store_addr_misalign
   val exception = dmem_addr_exception | io.illegal_instr_exception | io.instr_addr_misalign_exception
 
-  // logic for exception code
+
   val exception_code = Bits(param.MXLEN - 1 bits)
 
   io.mtrap_enter  := exception
@@ -66,4 +66,19 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   io.pc_trap      := exception
   io.pc_value     := io.mtrap_mtvec.asUInt.resized
 
+
+  // logic for exception code
+  val load_addr_misalign_mask   = Bits(param.MXLEN - 1 bits)
+  val store_addr_misalign_mask  = Bits(param.MXLEN - 1 bits)
+  val illegal_instr_mask        = Bits(param.MXLEN - 1 bits)
+  val instr_addr_misalign_mask  = Bits(param.MXLEN - 1 bits)
+  load_addr_misalign_mask.setAllTo(io.load_addr_misalign)
+  store_addr_misalign_mask.setAllTo(io.store_addr_misalign)
+  illegal_instr_mask.setAllTo(io.instr_addr_misalign_exception)
+  instr_addr_misalign_mask.setAllTo(io.instr_addr_misalign_exception)
+
+  exception_code := load_addr_misalign_mask & param.EXCEP_CODE_load_addr_misalign |
+    store_addr_misalign_mask & param.EXCEP_CODE_store_addr_misalign |
+    illegal_instr_mask & param.EXCEP_CODE_illegal_instr |
+    instr_addr_misalign_mask & param.EXCEP_CODE_instr_addr_misalign
 }

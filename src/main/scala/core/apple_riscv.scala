@@ -107,6 +107,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val rs1_data_out = regfile_inst.io.rs1_data_out
     val rs2_data_out = regfile_inst.io.rs2_data_out
 
+
     // == exception == //
     val id_exception = instr_dec_inst.io.invld_instr
 
@@ -148,6 +149,16 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val id2ex_alu_op_eqt  = RegNextWhen(instr_dec_inst.io.alu_op_eqt  , ex_pipe_run)
     val id2ex_alu_op_invb0 = RegNextWhen(instr_dec_inst.io.alu_op_invb0, ex_pipe_run)
 
+    // CSR control signal
+    val id2ex_csr_wr = RegNextWhen(instr_dec_inst.io.csr_wr, ex_pipe_run)
+    val id2ex_csr_rd = RegNextWhen(instr_dec_inst.io.csr_rd, ex_pipe_run)
+    val id2ex_csr_rw = RegNextWhen(instr_dec_inst.io.csr_rw, ex_pipe_run)
+    val id2ex_csr_rs = RegNextWhen(instr_dec_inst.io.csr_rs, ex_pipe_run)
+    val id2ex_csr_rc = RegNextWhen(instr_dec_inst.io.csr_rc, ex_pipe_run)
+    val id2ex_csr_sel_imm = RegNextWhen(instr_dec_inst.io.csr_sel_imm, ex_pipe_run)
+    val id2ex_csr_idx = RegNextWhen(instr_dec_inst.io.csr_idx, ex_pipe_run)
+
+    
     // Data RAM signal
     val id2ex_data_ram_ld_byte   = RegNextWhen(instr_dec_inst.io.data_ram_ld_byte  , ex_pipe_run)
     val id2ex_data_ram_ld_hword  = RegNextWhen(instr_dec_inst.io.data_ram_ld_hword , ex_pipe_run)
@@ -229,6 +240,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex2mem_data_ram_ld_unsign   = RegNextWhen(id2ex_data_ram_ld_unsign  & ex_instr_valid, mem_pipe_run)
 
     // == other signal == //
+    val ex2mem_rs1_value = RegNextWhen(ex_rs1_value_forwarded, mem_pipe_run)
     val ex2mem_alu_out   = RegNextWhen(alu_inst.io.alu_out, mem_pipe_run)
     val ex2mem_rs1_idx   = RegNextWhen(id2ex_rs1_idx, mem_pipe_run)
     val ex2mem_rs2_idx   = RegNextWhen(id2ex_rs2_idx, mem_pipe_run)
@@ -236,7 +248,16 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex2mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, mem_pipe_run)
     val ex2mem_pc        = RegNextWhen(id2ex_pc, mem_pipe_run)
     val ex2mem_instr     = RegNextWhen(id2ex_instr, mem_pipe_run)
-    
+
+    // CSR control signal
+    val ex2mem_csr_wr = RegNextWhen(id2ex_csr_wr, mem_pipe_run)
+    val ex2mem_csr_rd = RegNextWhen(id2ex_csr_rd, mem_pipe_run)
+    val ex2mem_csr_rw = RegNextWhen(id2ex_csr_rw, mem_pipe_run)
+    val ex2mem_csr_rs = RegNextWhen(id2ex_csr_rs, mem_pipe_run)
+    val ex2mem_csr_rc = RegNextWhen(id2ex_csr_rc, mem_pipe_run)
+    val ex2mem_csr_sel_imm = RegNextWhen(id2ex_csr_sel_imm, mem_pipe_run)
+    val ex2mem_csr_idx = RegNextWhen(id2ex_csr_idx, mem_pipe_run)
+
     // Exception
     val ex2mem_illegal_instr_exception = RegNextWhen(id2ex_illegal_instr_exception, mem_pipe_run) init False
     val ex2mem_instr_addr_misalign_exception = RegNextWhen(branch_unit_inst.io.instr_addr_misalign_exception, mem_pipe_run) init False
@@ -273,11 +294,22 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val mem2wb_data_ram_rd  = RegNextWhen(ex2mem_data_ram_rd & mem_instr_valid, wb_pipe_run) init False
 
     // data signal
+    val mem2wb_rs1_idx   = RegNextWhen(ex2mem_rs1_idx, wb_pipe_run)
+    val mem2wb_rs1_value = RegNextWhen(ex2mem_rs1_value, wb_pipe_run)
     val mem2wb_alu_out  = RegNextWhen(ex2mem_alu_out, wb_pipe_run)
     val mem2wb_rd_idx   = RegNextWhen(ex2mem_rd_idx, wb_pipe_run)
     val mem2wb_pc       = RegNextWhen(ex2mem_pc, wb_pipe_run)
     val mem2wb_instr    = RegNextWhen(ex2mem_instr, wb_pipe_run)
     val mem2wb_dmem_addr = RegNextWhen(dmem_addr, wb_pipe_run)
+
+    // CSR control signal                                         
+    val mem2wb_csr_wr = RegNextWhen(ex2mem_csr_wr, wb_pipe_run)
+    val mem2wb_csr_rd = RegNextWhen(ex2mem_csr_rd, wb_pipe_run)
+    val mem2wb_csr_rw = RegNextWhen(ex2mem_csr_rw, wb_pipe_run)
+    val mem2wb_csr_rs = RegNextWhen(ex2mem_csr_rs, wb_pipe_run)
+    val mem2wb_csr_rc = RegNextWhen(ex2mem_csr_rc, wb_pipe_run)
+    val mem2wb_csr_sel_imm = RegNextWhen(ex2mem_csr_sel_imm, wb_pipe_run)
+    val mem2wb_csr_idx = RegNextWhen(ex2mem_csr_idx, wb_pipe_run)
 
     // Exception
     val mem2wb_illegal_instr_exception = RegNextWhen(ex2mem_illegal_instr_exception, wb_pipe_run) init False
@@ -288,13 +320,6 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // =========================
     // WB stage
     // =========================
-
-    // == Write back to register == //
-    regfile_inst.io.register_wr := mem2wb_rd_wr
-    regfile_inst.io.register_wr_addr := mem2wb_rd_idx
-    // Select data between memory output and alu output
-    val wb_rd_wr_data = Mux(mem2wb_data_ram_rd, dmem_ctrl_isnt.io.mc2cpu_data, mem2wb_alu_out)
-    regfile_inst.io.rd_in := wb_rd_wr_data
 
     // == trap controller == //
     val trap_ctrl_inst = trap_ctrl(param)
@@ -311,19 +336,31 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // == MCSR - Machine Level CSR module == //
     val mcsr_inst = mcsr(param)  // mcsr with hart 0
-
-    mcsr_inst.io.mcsr_addr := 0
-    mcsr_inst.io.mcsr_din  := 0
-    mcsr_inst.io.mcsr_wen  := False
-    // FIXME: mcsr_inst.io.mcsr_dout
+    mcsr_inst.io.mcsr_addr := mem2wb_csr_idx
+    // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
+    val mcsr_data = Mux(mem2wb_csr_sel_imm, mem2wb_rs1_idx.asBits.resized, mem2wb_rs1_value)
+    val mcsr_masked_set = mcsr_inst.io.mcsr_dout & mcsr_data
+    val mcsr_masked_clear = mcsr_inst.io.mcsr_dout & ~mcsr_data
+    mcsr_inst.io.mcsr_din  := Mux(mem2wb_csr_rw, mcsr_data, Mux(mem2wb_csr_rs, mcsr_masked_set, mcsr_masked_clear))
+    mcsr_inst.io.mcsr_wen  := mem2wb_csr_wr
+    // mem2wb_csr_rd is not used so far
+    // trap
     mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
     mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
     mcsr_inst.io.mtrap_mepc   := trap_ctrl_inst.io.mtrap_mepc
     mcsr_inst.io.mtrap_mcause := trap_ctrl_inst.io.mtrap_mcause
     mcsr_inst.io.mtrap_mtval  := trap_ctrl_inst.io.mtrap_mtval
     mcsr_inst.io.hartId       := B"0".resized
-
     trap_ctrl_inst.io.mtrap_mtvec  := mcsr_inst.io.mtrap_mtvec
+
+    // == Write back to register == //
+    regfile_inst.io.register_wr := mem2wb_rd_wr
+    regfile_inst.io.register_wr_addr := mem2wb_rd_idx
+    // Select data between memory output and alu output
+    val from_csr = mem2wb_csr_rw | mem2wb_csr_rs | mem2wb_csr_rc
+    val wb_rd_wr_data = Mux(mem2wb_data_ram_rd, dmem_ctrl_isnt.io.mc2cpu_data,
+                            Mux(from_csr, mcsr_inst.io.mcsr_dout, mem2wb_alu_out))
+    regfile_inst.io.rd_in := wb_rd_wr_data
 
     //////////////////////////////////////////////////
     //         Other Components                     //

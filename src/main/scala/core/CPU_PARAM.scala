@@ -78,6 +78,7 @@ class CPU_PARAM {
     val OP_JAL              = Integer.parseInt("1101111", 2)        // JAL
     val OP_JALR             = Integer.parseInt("1100111", 2)        // JALR
     val OP_FEANCE           = Integer.parseInt("0001111", 2)        // FANCE
+    val OP_EXT_CSR          = Integer.parseInt("1110011", 2)        // Zicsr CSR instruction
 
     // == func3 == //
     // Logic arithmetic func3 field
@@ -108,8 +109,16 @@ class CPU_PARAM {
     // Fence func3 field
     val FE_F3_FENCE  =  Integer.parseInt("000", 2) // FENCE
     val FE_F3_FENCEI =  Integer.parseInt("001", 2) // FENCE.I
+    // ZICSR func3 field
+    val CSR_F3_RW   = Integer.parseInt("001", 2)    // CSRRW
+    val CSR_F3_RS   = Integer.parseInt("010", 2)    // CSRRS
+    val CSR_F3_RC   = Integer.parseInt("011", 2)    // CSRRC
+    val CSR_F3_RWI  = Integer.parseInt("101", 2)    // CSRRW
+    val CSR_F3_RSI  = Integer.parseInt("110", 2)    // CSRRS
+    val CSR_F3_RCI  = Integer.parseInt("111", 2)    // CSRRC
 
-    // == func3 == //
+    // == func7 == //
+    // Logic arithmetic func7 field
     val LA_F7_SRL   = Integer.parseInt("0000000", 2) // SRL, SRLT
     val LA_F7_SRA   = Integer.parseInt("0100000", 2) // SRA, SRAT
     val LA_F7_ADD   = Integer.parseInt("0000000", 2) // ADD
@@ -118,5 +127,9 @@ class CPU_PARAM {
     // ========================== //
     //        Macro define        //
     // ========================== //
+    val EXCEP_CODE_instr_addr_misalign  = 0
+    val EXCEP_CODE_illegal_instr        = 2
+    val EXCEP_CODE_load_addr_misalign   = 4
+    val EXCEP_CODE_store_addr_misalign  = 6
 
 }

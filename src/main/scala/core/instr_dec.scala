@@ -58,6 +58,15 @@ case class instr_dec_io(param: CPU_PARAM) extends Bundle{
     val alu_op_invb0 = out Bool
     val alu_branch_op = out Bits(2 bits)
 
+    // CSR control
+    val csr_rd = out Bool
+    val csr_wr = out Bool
+    val csr_rw = out Bool
+    val csr_rs = out Bool
+    val csr_rc = out Bool
+    val csr_sel_imm = out Bool
+    val csr_idx = out Bits(param.CSR_ADDR_WIDTH bits)
+
     // Other control signal
     val op2_sel_imm  = out Bool
     val op1_sel_pc   = out Bool
@@ -77,10 +86,11 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     val opcode  = io.instr(6 downto 0)
     val func3   = io.instr(14 downto 12)
     val func7   = io.instr(31 downto 25)
+
     io.rd_idx   := io.instr(11 downto 7).asUInt
     io.rs1_idx  := io.instr(19 downto 15).asUInt
     io.rs2_idx  := io.instr(24 downto 20).asUInt
-
+    io.csr_idx  := io.instr(31 downto 20)
 
     // ============================================
     // Main Decoder Logic
@@ -99,13 +109,15 @@ case class instr_dec(param: CPU_PARAM) extends Component {
 
     // alu immediate value, includes I-type, S-type, U-type
     object alu_imm_type_e extends SpinalEnum {
-        val ITYPE, STYPE, UTYPE, FOUR = newElement()
+        val ITYPE, STYPE, UTYPE, FOUR, ZERO = newElement()
     }
     val alu_imm_type = alu_imm_type_e()
     alu_imm_type := alu_imm_type_e.FOUR
 
     // intermediate logic
-    val func7_not_all_zero = (func7 =/= 0)
+    val func7_not_all_zero = func7 =/= 0
+    val rd_isnot_x0  = io.rd_idx =/= 0
+    val rs1_isnot_x0 = io.rs1_idx =/= 0
 
     // default value
     io.register_wr        := False
@@ -135,7 +147,12 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     io.jal_op             := False
     io.jalr_op            := False
     io.invld_instr        := False
-
+    io.csr_rd             := False
+    io.csr_wr             := False
+    io.csr_rw             := False
+    io.csr_rs             := False
+    io.csr_rc             := False
+    io.csr_sel_imm            := False
     // The big switch for the opcode decode
     switch(opcode) {
         // LUI
@@ -399,6 +416,52 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 // No default required. Complete switch statement
             }
         } // End of R-Type Logic/Arithmetic Instruction
+        // ZICSR Instruction
+        is(param.OP_EXT_CSR) {
+            io.register_wr := True
+            switch(func3) {
+                is(param.CSR_F3_RW) {
+                    io.csr_rd := rd_isnot_x0
+                    io.csr_rw := True
+                    io.csr_wr := True
+                }
+                is(param.CSR_F3_RS) {
+                    io.csr_rd := True
+                    io.csr_rs := True
+                    io.csr_wr := rs1_isnot_x0
+                }
+                is(param.CSR_F3_RC) {
+                    io.csr_rd := True
+                    io.csr_rc := True
+                    io.csr_wr := rs1_isnot_x0
+                }
+                // Note on Immediate operand for CSR
+                // the uimm value is in the same location as rs1 in the instruction
+                // so we can reuse rs1_idx value as the uimm value
+                is(param.CSR_F3_RWI) {
+                    io.csr_rd := rd_isnot_x0
+                    io.csr_rw := True
+                    io.csr_wr := True
+                    io.csr_sel_imm := True
+                }
+                is(param.CSR_F3_RSI) {
+                    io.csr_rd := True
+                    io.csr_rs := True
+                    io.csr_wr := rs1_isnot_x0
+                    io.csr_sel_imm := True
+                }
+                is(param.CSR_F3_RCI) {
+                    io.csr_rd := True
+                    io.csr_rc := True
+                    io.csr_wr := rs1_isnot_x0
+                    io.csr_sel_imm := True
+                }
+                default {
+                    io.invld_instr := True
+                }
+            }
+        } // End of ZICSR Instruction
+
     }
 
 
