@@ -429,18 +429,21 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                     io.csr_rd := rd_isnot_x0
                     io.csr_rw := True
                     io.csr_wr := True
+                    io.rs1_rd := True
                 }
                 is(param.CSR_F3_RS) {
                     io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rs := True
                     io.csr_wr := rs1_isnot_x0
+                    io.rs1_rd := True
                 }
                 is(param.CSR_F3_RC) {
                     io.rd_wr := True
                     io.csr_rd := True
                     io.csr_rc := True
                     io.csr_wr := rs1_isnot_x0
+                    io.rs1_rd := True
                 }
                 // Note on Immediate operand for CSR
                 // the uimm value is in the same location as rs1 in the instruction

@@ -364,7 +364,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     mcsr_inst.io.mcsr_addr := mem2wb_csr_idx
     // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
     val mcsr_data          = Mux(mem2wb_csr_sel_imm, mem2wb_rs1_idx.asBits.resized, mem2wb_rs1_value)
-    val mcsr_masked_set    = mcsr_inst.io.mcsr_dout & mcsr_data
+    val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
     val mcsr_masked_clear  = mcsr_inst.io.mcsr_dout & ~mcsr_data
     mcsr_inst.io.mcsr_din  := Mux(mem2wb_csr_rw, mcsr_data, Mux(mem2wb_csr_rs, mcsr_masked_set, mcsr_masked_clear))
     mcsr_inst.io.mcsr_wen  := mem2wb_csr_wr
@@ -428,6 +428,9 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     hdu_inst.io.id_rs2_idx   := instr_dec_inst.io.rs2_idx
     hdu_inst.io.ex_dmem_rd   := id2ex_data_ram_rd
     hdu_inst.io.ex_rd_idx    := id2ex_rd_idx
+    hdu_inst.io.mem_rd_idx   := ex2mem_rd_idx
+    hdu_inst.io.ex_csr_rd    := id2ex_csr_rd
+    hdu_inst.io.mem_csr_rd   := ex2mem_csr_rd
     hdu_inst.io.id_exception := id_exception
     hdu_inst.io.ex_exception := ex_exception
     hdu_inst.io.mem_exception := mem_exception

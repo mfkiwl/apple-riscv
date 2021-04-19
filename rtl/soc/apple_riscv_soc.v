@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 915b966068043ccf0e535ffc3ce43816e82ff9f5
+// Git hash  : 4a0210e5ea761f22f4dc99999b230dbe07fb5381
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -812,6 +812,9 @@ module apple_riscv (
     .io_id_rs1_idx        (instr_dec_inst_io_rs1_idx[4:0]  ), //i
     .io_id_rs2_idx        (instr_dec_inst_io_rs2_idx[4:0]  ), //i
     .io_ex_rd_idx         (id2ex_rd_idx[4:0]               ), //i
+    .io_mem_rd_idx        (ex2mem_rd_idx[4:0]              ), //i
+    .io_ex_csr_rd         (id2ex_csr_rd                    ), //i
+    .io_mem_csr_rd        (ex2mem_csr_rd                   ), //i
     .io_id_exception      (instr_dec_inst_io_invld_instr   ), //i
     .io_ex_exception      (ex_exception                    ), //i
     .io_mem_exception     (mem_exception                   ), //i
@@ -861,7 +864,7 @@ module apple_riscv (
   assign dmem_ahb_HWDATA = dmem_ctrl_isnt_dmem_ahb_HWDATA;
   assign mem_exception = (((ex2mem_illegal_instr_exception || ex2mem_instr_addr_misalign_exception) || dmem_ctrl_isnt_io_load_addr_misalign) || dmem_ctrl_isnt_io_store_addr_misalign);
   assign mcsr_data = (mem2wb_csr_sel_imm ? _zz_6 : mem2wb_rs1_value);
-  assign mcsr_masked_set = (mcsr_inst_io_mcsr_dout & mcsr_data);
+  assign mcsr_masked_set = (mcsr_inst_io_mcsr_dout | mcsr_data);
   assign mcsr_masked_clear = (mcsr_inst_io_mcsr_dout & (~ mcsr_data));
   assign _zz_3 = (mem2wb_csr_rw ? mcsr_data : (mem2wb_csr_rs ? mcsr_masked_set : mcsr_masked_clear));
   assign _zz_4 = {31'd0, _zz_7};
@@ -1250,6 +1253,9 @@ module hdu (
   input      [4:0]    io_id_rs1_idx,
   input      [4:0]    io_id_rs2_idx,
   input      [4:0]    io_ex_rd_idx,
+  input      [4:0]    io_mem_rd_idx,
+  input               io_ex_csr_rd,
+  input               io_mem_csr_rd,
   input               io_id_exception,
   input               io_ex_exception,
   input               io_mem_exception,
@@ -1267,6 +1273,11 @@ module hdu (
   wire                id_rs1_depends_on_ex_rd;
   wire                id_rs2_depends_on_ex_rd;
   wire                stall_on_load_dependence;
+  wire                id_rs1_depends_on_mem_rd;
+  wire                id_rs2_depends_on_mem_rd;
+  wire                id_rs1_depends_on_csr;
+  wire                id_rs2_depends_on_csr;
+  wire                stall_on_csr_dependence;
   wire                exception_flush_ex;
   wire                exception_flush_id;
   wire                exception_flush_if;
@@ -1281,6 +1292,11 @@ module hdu (
   assign id_rs1_depends_on_ex_rd = ((io_id_rs1_idx == io_ex_rd_idx) && io_id_rs1_rd);
   assign id_rs2_depends_on_ex_rd = ((io_id_rs2_idx == io_ex_rd_idx) && io_id_rs2_rd);
   assign stall_on_load_dependence = ((id_rs1_depends_on_ex_rd || id_rs2_depends_on_ex_rd) && io_ex_dmem_rd);
+  assign id_rs1_depends_on_mem_rd = ((io_id_rs1_idx == io_mem_rd_idx) && io_id_rs1_rd);
+  assign id_rs2_depends_on_mem_rd = ((io_id_rs2_idx == io_mem_rd_idx) && io_id_rs2_rd);
+  assign id_rs1_depends_on_csr = ((id_rs1_depends_on_ex_rd && io_ex_csr_rd) || (id_rs1_depends_on_mem_rd && io_mem_csr_rd));
+  assign id_rs2_depends_on_csr = ((id_rs2_depends_on_ex_rd && io_ex_csr_rd) || (id_rs2_depends_on_mem_rd && io_mem_csr_rd));
+  assign stall_on_csr_dependence = (id_rs2_depends_on_csr || id_rs1_depends_on_csr);
   assign exception_flush_ex = (io_mem_exception || io_wb_exception);
   assign exception_flush_id = (io_ex_exception || exception_flush_ex);
   assign exception_flush_if = (io_id_exception || exception_flush_id);
@@ -1291,13 +1307,13 @@ module hdu (
   assign trap_flush_id = (sys_flush_id || exception_flush_id);
   assign trap_flush_ex = (sys_flush_ex || exception_flush_ex);
   assign trap_flush_mem = (sys_flush_mem || io_wb_exception);
-  assign io_if_pipe_stall = stall_on_load_dependence;
-  assign io_id_pipe_stall = stall_on_load_dependence;
+  assign io_if_pipe_stall = (stall_on_load_dependence || stall_on_csr_dependence);
+  assign io_id_pipe_stall = (stall_on_load_dependence || stall_on_csr_dependence);
   assign io_ex_pipe_stall = 1'b0;
   assign io_mem_pipe_stall = 1'b0;
   assign io_wb_pipe_stall = 1'b0;
   assign io_if_valid = ((! io_branch_taken) && (! trap_flush_if));
-  assign io_id_valid = (((! io_branch_taken) && (! stall_on_load_dependence)) && (! trap_flush_id));
+  assign io_id_valid = ((((! io_branch_taken) && (! stall_on_load_dependence)) && (! stall_on_csr_dependence)) && (! trap_flush_id));
   assign io_ex_valid = (! trap_flush_ex);
   assign io_mem_valid = (! trap_flush_mem);
   assign io_wb_valid = 1'b1;
@@ -1503,6 +1519,9 @@ module mcsr (
       end
       12'h305 : begin
         io_mcsr_dout = mtvec;
+      end
+      12'h340 : begin
+        io_mcsr_dout = mscratch;
       end
       12'h341 : begin
         io_mcsr_dout = mepc;
@@ -2175,6 +2194,29 @@ module instr_dec (
       end
       7'h33 : begin
         io_rs1_rd = 1'b1;
+      end
+      7'h73 : begin
+        case(func3)
+          3'b001 : begin
+            io_rs1_rd = 1'b1;
+          end
+          3'b010 : begin
+            io_rs1_rd = 1'b1;
+          end
+          3'b011 : begin
+            io_rs1_rd = 1'b1;
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b000 : begin
+          end
+          default : begin
+          end
+        endcase
       end
       default : begin
       end

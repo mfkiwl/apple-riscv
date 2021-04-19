@@ -97,6 +97,7 @@ case class mcsr(param: CPU_PARAM) extends Component {
     is(B"h304") {io.mcsr_dout := mie}
     is(B"h305") {io.mcsr_dout := mtvec}
 
+    is(B"h340") {io.mcsr_dout := mscratch}
     is(B"h341") {io.mcsr_dout := mepc}
     is(B"h342") {io.mcsr_dout := mcause}
     is(B"h343") {io.mcsr_dout := mtval}

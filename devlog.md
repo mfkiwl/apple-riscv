@@ -6,6 +6,11 @@
   - Implemented interrupt logic and added few more csr register
   - Updated pipeline logic for zicsr and exception
   - Implemented mret and ecall instruction
+  - **[RTL Bug Fix]** Fixed bugs found in tests for csr instruction
+    - Fixed bug in hdu logic: there are data dependency on csr instruction, need to add stall logic
+    - Fixed bug in mcsr module: missing csr output decode for mscratch register
+    - Fixed bug in csr logic: csrrs logic is wrong. The original logic also clear other bits that are not set. It should only set bit
+    - Fixed bug in decode logic: csrrw/csrrs/csrrc also read rs1, need to set rs1_rd
 
 - 04/17/2021
   - Designed the csr module and exception logic
