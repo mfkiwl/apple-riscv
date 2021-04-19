@@ -103,6 +103,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // == instruction decoder == //
     val instr_dec_inst = instr_dec(param)
     instr_dec_inst.io.instr := imem_ctrl_inst.io.mc2cpu_data
+    instr_dec_inst.io.instr_vld := if2id_instr_valid
 
     // == register file == //
     val regfile_inst = regfile(param)
@@ -380,7 +381,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     mcsr_inst.io.hartId              := B"0".resized
 
     // == Write back to register == //
-    regfile_inst.io.register_wr := mem2wb_rd_wr
+    regfile_inst.io.register_wr := mem2wb_rd_wr & wb_instr_valid
     regfile_inst.io.register_wr_addr := mem2wb_rd_idx
     // Select data between memory output and alu output
     val from_csr = mem2wb_csr_rw | mem2wb_csr_rs | mem2wb_csr_rc
@@ -409,7 +410,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     fu_inst.io.ex_rs1_rd  := id2ex_rs1_rd
     fu_inst.io.ex_rs2_rd  := id2ex_rs2_rd
     fu_inst.io.mem_rd_wr  := ex2mem_rd_wr
-    fu_inst.io.wb_rd_wr   := mem2wb_rd_wr
+    fu_inst.io.wb_rd_wr   := mem2wb_rd_wr & wb_instr_valid
 
     ex_rs1_value_forwarded := Mux(fu_inst.io.forward_rs1_from_mem, ex2mem_alu_out,
                                   Mux(fu_inst.io.forward_rs1_from_wb, wb_rd_wr_data, id2ex_rs1_value))

@@ -124,7 +124,7 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   io.mtrap_mcause := interrupt ## exception_code
   io.mtrap_mtval  := Mux(io.illegal_instr_exception, io.wb_instr, dmem_addr_extended.asBits)
 
-  io.pc_trap      := exception | io.mret
+  io.pc_trap      := exception | io.mret | io.ecall
   val mtvec_base  =  io.mtvec(param.MXLEN-1 downto 2)
   io.pc_value     := Mux(io.mret, io.mepc.asUInt, mtvec_base.asUInt.resized)
 }

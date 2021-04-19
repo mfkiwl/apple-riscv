@@ -94,7 +94,8 @@ case class hdu(param: CPU_PARAM) extends Component {
   // Trap
   // ======================================
 
-  val exception_flush_mem = io.wb_exception
+  val exception_flush_wb = io.wb_exception
+  val exception_flush_mem = exception_flush_wb
   val exception_flush_ex = io.mem_exception | exception_flush_mem
   val exception_flush_id = io.ex_exception  | exception_flush_ex
   val exception_flush_if = io.id_exception  | exception_flush_id
@@ -108,6 +109,8 @@ case class hdu(param: CPU_PARAM) extends Component {
   val trap_flush_id  = sys_flush_id  | exception_flush_id
   val trap_flush_ex  = sys_flush_ex  | exception_flush_ex
   val trap_flush_mem = sys_flush_mem | exception_flush_mem
+  val trap_flush_wb  = exception_flush_wb
+
 
   // ======================================
   // Overall Stall Logic
@@ -125,6 +128,6 @@ case class hdu(param: CPU_PARAM) extends Component {
   io.id_valid   := ~io.branch_taken & ~stall_on_load_dependence & ~stall_on_csr_dependence & ~trap_flush_id
   io.ex_valid   := ~trap_flush_ex
   io.mem_valid  := ~trap_flush_mem
-  io.wb_valid   := True
+  io.wb_valid   := ~trap_flush_wb
 }
 

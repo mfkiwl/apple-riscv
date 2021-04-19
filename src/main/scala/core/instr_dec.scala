@@ -20,7 +20,8 @@ package core
 import spinal.core._
 
 case class instr_dec_io(param: CPU_PARAM) extends Bundle{
-    val instr = in Bits(param.DATA_WIDTH bits)   // instruction input
+    val instr     = in Bits(param.DATA_WIDTH bits)   // instruction input
+    val instr_vld = in Bool
 
     // Instruction field
     val rd_idx  = out UInt(5 bits)
@@ -120,6 +121,8 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     val func7_not_all_zero = func7 =/= 0
     val rd_isnot_x0  = io.rd_idx =/= 0
     val rs1_isnot_x0 = io.rs1_idx =/= 0
+    val invld_instr_int = False
+    io.invld_instr := invld_instr_int & io.instr_vld
 
     // default value
     io.rd_wr              := False
@@ -151,7 +154,6 @@ case class instr_dec(param: CPU_PARAM) extends Component {
     io.mret               := False
     io.ecall              := False
     io.ebreak             := False
-    io.invld_instr        := False
     io.csr_rd             := False
     io.csr_wr             := False
     io.csr_rw             := False
@@ -230,7 +232,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                     io.alu_op_invb0 := True
                 }
                 default {
-                    io.invld_instr := True
+                    invld_instr_int := True
                 }
             }
         } // End of Branch Instruction
@@ -266,7 +268,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                     io.data_ram_ld_unsign := True
                 }
                 default {
-                    io.invld_instr := True
+                    invld_instr_int := True
                 }
             }
         } // End of Memory Load Instruction
@@ -292,7 +294,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                     // Doing Nothing
                 }
                 default {
-                    io.invld_instr := True
+                    invld_instr_int := True
                 }
             }
         } // End of Memory Store Instruction
@@ -343,7 +345,7 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                             io.alu_op_sra := True
                         }
                         default {
-                            io.invld_instr := True
+                            invld_instr_int := True
                         }
                     }
                 }
@@ -368,29 +370,29 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                             io.alu_op_sub := True
                         }
                         default {
-                            io.invld_instr := True
+                            invld_instr_int := True
                         }
                     }
                 }
                 // SLL
                 is(param.LA_F3_SLL) {
                     io.alu_op_sll   := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // SLT
                 is(param.LA_F3_SLT) {
                     io.alu_op_slt   := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // SLTU
                 is(param.LA_F3_SLTU) {
                     io.alu_op_sltu  := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // XOR
                 is(param.LA_F3_XOR) {
                     io.alu_op_xor   := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // SRL/SRA
                 is(param.LA_F3_SR) {
@@ -404,19 +406,19 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                             io.alu_op_sra := True
                         }
                         default {
-                            io.invld_instr := True
+                            invld_instr_int := True
                         }
                     }
                 }
                 // ORI
                 is(param.LA_F3_OR) {
                     io.alu_op_or    := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // AND
                 is(param.LA_F3_AND) {
                     io.alu_op_and   := True
-                    io.invld_instr  := func7_not_all_zero
+                    invld_instr_int  := func7_not_all_zero
                 }
                 // No default required. Complete switch statement
             }
@@ -473,19 +475,20 @@ case class instr_dec(param: CPU_PARAM) extends Component {
                 is(param.SYS_F3_PRIV) {
                     when (func12 === param.F12_MRET) {
                         io.mret := True
-                        io.invld_instr := rs1_isnot_x0 & rd_isnot_x0
+                        invld_instr_int := rs1_isnot_x0 & rd_isnot_x0
                     }.elsewhen(func12 === param.F12_ECALL) {
                         io.ecall := True
-                        io.invld_instr := rs1_isnot_x0 & rd_isnot_x0
+                        invld_instr_int := rs1_isnot_x0 & rd_isnot_x0
                     }.otherwise {
-                        io.invld_instr := True
+                        invld_instr_int := True
                     }
                 }
                 default {
-                    io.invld_instr := True
+                    invld_instr_int := True
                 }
             }
         } // End of SYSTEM Instruction
+        default {invld_instr_int := True}
     }
 
 

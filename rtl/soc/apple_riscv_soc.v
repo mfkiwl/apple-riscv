@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 4a0210e5ea761f22f4dc99999b230dbe07fb5381
+// Git hash  : 35f4c3a15cf551bc5712b9c36f82918e1b2f3ff6
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -347,8 +347,10 @@ module apple_riscv (
 );
   wire       [15:0]   _zz_1;
   wire                _zz_2;
-  wire       [31:0]   _zz_3;
+  wire                _zz_3;
   wire       [31:0]   _zz_4;
+  wire       [31:0]   _zz_5;
+  wire                _zz_6;
   wire       [31:0]   pc_inst_io_pc_out;
   wire       [31:0]   imem_ctrl_inst_io_mc2cpu_data;
   wire       [15:0]   imem_ctrl_inst_imem_ahb_HADDR;
@@ -451,9 +453,9 @@ module apple_riscv (
   wire                hdu_inst_io_ex_pipe_stall;
   wire                hdu_inst_io_mem_pipe_stall;
   wire                hdu_inst_io_wb_pipe_stall;
-  wire       [4:0]    _zz_5;
-  wire       [31:0]   _zz_6;
-  wire       [0:0]    _zz_7;
+  wire       [4:0]    _zz_7;
+  wire       [31:0]   _zz_8;
+  wire       [0:0]    _zz_9;
   wire                if_instr_valid;
   wire                id_instr_valid;
   wire                ex_instr_valid;
@@ -585,9 +587,9 @@ module apple_riscv (
   wire       [31:0]   wb_rd_wr_data;
   wire                wb_exception;
 
-  assign _zz_5 = mem2wb_rs1_idx;
-  assign _zz_6 = {27'd0, _zz_5};
-  assign _zz_7 = 1'b0;
+  assign _zz_7 = mem2wb_rs1_idx;
+  assign _zz_8 = {27'd0, _zz_7};
+  assign _zz_9 = 1'b0;
   program_counter pc_inst (
     .io_branch_pc_in    (target_pc[31:0]                   ), //i
     .io_trap_pc_in      (trap_ctrl_inst_io_pc_value[31:0]  ), //i
@@ -618,6 +620,7 @@ module apple_riscv (
   );
   instr_dec instr_dec_inst (
     .io_instr                 (imem_ctrl_inst_io_mc2cpu_data[31:0]     ), //i
+    .io_instr_vld             (if2id_instr_valid                       ), //i
     .io_rd_idx                (instr_dec_inst_io_rd_idx[4:0]           ), //o
     .io_rs1_idx               (instr_dec_inst_io_rs1_idx[4:0]          ), //o
     .io_rs2_idx               (instr_dec_inst_io_rs2_idx[4:0]          ), //o
@@ -667,7 +670,7 @@ module apple_riscv (
     .io_rs1_data_out        (regfile_inst_io_rs1_data_out[31:0]  ), //o
     .io_rs2_rd_addr         (instr_dec_inst_io_rs2_idx[4:0]      ), //i
     .io_rs2_data_out        (regfile_inst_io_rs2_data_out[31:0]  ), //o
-    .io_register_wr         (mem2wb_rd_wr                        ), //i
+    .io_register_wr         (_zz_2                               ), //i
     .io_register_wr_addr    (mem2wb_rd_idx[4:0]                  ), //i
     .io_rd_in               (wb_rd_wr_data[31:0]                 ), //i
     .clk                    (clk                                 ), //i
@@ -691,7 +694,7 @@ module apple_riscv (
     .io_alu_op_invb0    (id2ex_alu_op_invb0         )  //i
   );
   branch_unit branch_unit_inst (
-    .io_branch_result                    (_zz_2                                              ), //i
+    .io_branch_result                    (_zz_3                                              ), //i
     .io_current_pc                       (id2ex_pc[31:0]                                     ), //i
     .io_imm_value                        (id2ex_brjp_imm_value[20:0]                         ), //i
     .io_rs1_value                        (ex_rs1_value_forwarded[31:0]                       ), //i
@@ -731,7 +734,7 @@ module apple_riscv (
   );
   mcsr mcsr_inst (
     .io_mcsr_addr             (mem2wb_csr_idx[11:0]                  ), //i
-    .io_mcsr_din              (_zz_3[31:0]                           ), //i
+    .io_mcsr_din              (_zz_4[31:0]                           ), //i
     .io_mcsr_wen              (mem2wb_csr_wr                         ), //i
     .io_mcsr_dout             (mcsr_inst_io_mcsr_dout[31:0]          ), //o
     .io_mtrap_enter           (trap_ctrl_inst_io_mtrap_enter         ), //i
@@ -748,7 +751,7 @@ module apple_riscv (
     .io_mie_msie              (mcsr_inst_io_mie_msie                 ), //o
     .io_mstatus_mie           (mcsr_inst_io_mstatus_mie              ), //o
     .io_mepc                  (mcsr_inst_io_mepc[31:0]               ), //o
-    .io_hartId                (_zz_4[31:0]                           ), //i
+    .io_hartId                (_zz_5[31:0]                           ), //i
     .clk                      (clk                                   ), //i
     .reset                    (reset                                 )  //i
   );
@@ -788,7 +791,7 @@ module apple_riscv (
     .io_ex_rs1_rd               (id2ex_rs1_rd                     ), //i
     .io_ex_rs2_rd               (id2ex_rs2_rd                     ), //i
     .io_mem_rd_wr               (ex2mem_rd_wr                     ), //i
-    .io_wb_rd_wr                (mem2wb_rd_wr                     ), //i
+    .io_wb_rd_wr                (_zz_6                            ), //i
     .io_forward_rs1_from_mem    (fu_inst_io_forward_rs1_from_mem  ), //o
     .io_forward_rs1_from_wb     (fu_inst_io_forward_rs1_from_wb   ), //o
     .io_forward_rs2_from_mem    (fu_inst_io_forward_rs2_from_mem  ), //o
@@ -847,7 +850,7 @@ module apple_riscv (
   assign _zz_1 = pc_inst_io_pc_out[15 : 0];
   assign alu_operand1_muxout = (id2ex_op1_sel_zero ? 32'h0 : (id2ex_op1_sel_pc ? id2ex_pc : ex_rs1_value_forwarded));
   assign alu_operand2_muxout = (id2ex_op2_sel_imm ? id2ex_imm_value : ex_rs2_value_forwarded);
-  assign _zz_2 = alu_inst_io_alu_out[0];
+  assign _zz_3 = alu_inst_io_alu_out[0];
   assign target_pc = branch_unit_inst_io_target_pc;
   assign branch_taken = branch_unit_inst_io_branch_taken;
   assign ex_exception = (id2ex_illegal_instr_exception || branch_unit_inst_io_instr_addr_misalign_exception);
@@ -863,14 +866,16 @@ module apple_riscv (
   assign dmem_ahb_HMASTLOCK = dmem_ctrl_isnt_dmem_ahb_HMASTLOCK;
   assign dmem_ahb_HWDATA = dmem_ctrl_isnt_dmem_ahb_HWDATA;
   assign mem_exception = (((ex2mem_illegal_instr_exception || ex2mem_instr_addr_misalign_exception) || dmem_ctrl_isnt_io_load_addr_misalign) || dmem_ctrl_isnt_io_store_addr_misalign);
-  assign mcsr_data = (mem2wb_csr_sel_imm ? _zz_6 : mem2wb_rs1_value);
+  assign mcsr_data = (mem2wb_csr_sel_imm ? _zz_8 : mem2wb_rs1_value);
   assign mcsr_masked_set = (mcsr_inst_io_mcsr_dout | mcsr_data);
   assign mcsr_masked_clear = (mcsr_inst_io_mcsr_dout & (~ mcsr_data));
-  assign _zz_3 = (mem2wb_csr_rw ? mcsr_data : (mem2wb_csr_rs ? mcsr_masked_set : mcsr_masked_clear));
-  assign _zz_4 = {31'd0, _zz_7};
+  assign _zz_4 = (mem2wb_csr_rw ? mcsr_data : (mem2wb_csr_rs ? mcsr_masked_set : mcsr_masked_clear));
+  assign _zz_5 = {31'd0, _zz_9};
+  assign _zz_2 = (mem2wb_rd_wr && wb_instr_valid);
   assign from_csr = ((mem2wb_csr_rw || mem2wb_csr_rs) || mem2wb_csr_rc);
   assign wb_rd_wr_data = (mem2wb_data_ram_rd ? dmem_ctrl_isnt_io_mc2cpu_data : (from_csr ? mcsr_inst_io_mcsr_dout : mem2wb_alu_out));
   assign wb_exception = (((mem2wb_illegal_instr_exception || mem2wb_instr_addr_misalign_exception) || mem2wb_load_addr_misalign) || mem2wb_store_addr_misalign);
+  assign _zz_6 = (mem2wb_rd_wr && wb_instr_valid);
   assign ex_rs1_value_forwarded = (fu_inst_io_forward_rs1_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs1_from_wb ? wb_rd_wr_data : id2ex_rs1_value));
   assign ex_rs2_value_forwarded = (fu_inst_io_forward_rs2_from_mem ? ex2mem_alu_out : (fu_inst_io_forward_rs2_from_wb ? wb_rd_wr_data : id2ex_rs2_value));
   assign if_instr_valid = (hdu_inst_io_if_valid && (! branch_unit_inst_io_instr_addr_misalign_exception));
@@ -1316,7 +1321,7 @@ module hdu (
   assign io_id_valid = ((((! io_branch_taken) && (! stall_on_load_dependence)) && (! stall_on_csr_dependence)) && (! trap_flush_id));
   assign io_ex_valid = (! trap_flush_ex);
   assign io_mem_valid = (! trap_flush_mem);
-  assign io_wb_valid = 1'b1;
+  assign io_wb_valid = (! io_wb_exception);
 
 endmodule
 
@@ -1433,7 +1438,7 @@ module trap_ctrl (
   assign io_mtrap_mepc = ((exception || io_ecall) ? io_wb_pc : pc_plus_4);
   assign io_mtrap_mcause = {interrupt,exception_code};
   assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : dmem_addr_extended);
-  assign io_pc_trap = (exception || io_mret);
+  assign io_pc_trap = ((exception || io_mret) || io_ecall);
   assign mtvec_base = io_mtvec[31 : 2];
   assign io_pc_value = (io_mret ? io_mepc : _zz_2);
 
@@ -1542,8 +1547,8 @@ module mcsr (
   end
 
   assign mstatus_wen = ((io_mcsr_addr == 12'h300) && io_mcsr_wen);
-  assign mie_wen = ((io_mcsr_addr == 12'h302) && io_mcsr_wen);
-  assign mtvec_wen = ((io_mcsr_addr == 12'h303) && io_mcsr_wen);
+  assign mie_wen = ((io_mcsr_addr == 12'h304) && io_mcsr_wen);
+  assign mtvec_wen = ((io_mcsr_addr == 12'h305) && io_mcsr_wen);
   assign mscratch_wen = ((io_mcsr_addr == 12'h340) && io_mcsr_wen);
   assign mepc_wen = ((io_mcsr_addr == 12'h341) && io_mcsr_wen);
   assign mcause_wen = ((io_mcsr_addr == 12'h342) && io_mcsr_wen);
@@ -1657,7 +1662,6 @@ module dmem_ctrl (
   wire       [31:0]   _zz_10;
   wire       [15:0]   _zz_11;
   wire       [31:0]   _zz_12;
-  wire                imem_data_vld;
   wire       [1:0]    mem_byte_addr;
   reg                 LW_unsigned_s1;
   reg                 LS_byte_s1;
@@ -1685,6 +1689,9 @@ module dmem_ctrl (
   wire       [31:0]   mem2mc_data_hw1_sign_ext;
   wire                halfword_addr_misalign;
   wire                word_address_misalign;
+  wire                wen;
+  wire                ren;
+  wire                imem_data_vld;
 
   assign _zz_1 = mem2mc_data_byte0;
   assign _zz_2 = {{24{_zz_1[7]}}, _zz_1};
@@ -1698,15 +1705,6 @@ module dmem_ctrl (
   assign _zz_10 = {{16{_zz_9[15]}}, _zz_9};
   assign _zz_11 = mem2mc_data_hw1;
   assign _zz_12 = {{16{_zz_11[15]}}, _zz_11};
-  assign dmem_ahb_HSEL = (io_cpu2mc_wr || io_cpu2mc_rd);
-  assign dmem_ahb_HADDR = io_cpu2mc_addr;
-  assign dmem_ahb_HBURST = 3'b000;
-  assign dmem_ahb_HMASTLOCK = 1'b0;
-  assign dmem_ahb_HPROT = 4'b0011;
-  assign dmem_ahb_HSIZE = (io_cpu2mc_mem_LS_byte ? 3'b000 : (io_cpu2mc_mem_LS_halfword ? 3'b001 : 3'b010));
-  assign dmem_ahb_HTRANS = 2'b10;
-  assign dmem_ahb_HWRITE = io_cpu2mc_wr;
-  assign imem_data_vld = (dmem_ahb_HREADY && (! dmem_ahb_HRESP));
   assign mem_byte_addr = io_cpu2mc_addr[1 : 0];
   assign cpu2mc_data_7_0 = io_cpu2mc_data[7 : 0];
   assign cpu2mc_data_15_0 = io_cpu2mc_data[15 : 0];
@@ -1776,6 +1774,17 @@ module dmem_ctrl (
   assign word_address_misalign = ((! (io_cpu2mc_mem_LS_byte || io_cpu2mc_mem_LS_halfword)) && (io_cpu2mc_addr[1 : 0] != 2'b00));
   assign io_load_addr_misalign = (io_cpu2mc_rd && (halfword_addr_misalign || word_address_misalign));
   assign io_store_addr_misalign = (io_cpu2mc_wr && (halfword_addr_misalign || word_address_misalign));
+  assign wen = (io_cpu2mc_wr && (! io_store_addr_misalign));
+  assign ren = (io_cpu2mc_rd && (! io_load_addr_misalign));
+  assign dmem_ahb_HSEL = (wen || ren);
+  assign dmem_ahb_HADDR = io_cpu2mc_addr;
+  assign dmem_ahb_HBURST = 3'b000;
+  assign dmem_ahb_HMASTLOCK = 1'b0;
+  assign dmem_ahb_HPROT = 4'b0011;
+  assign dmem_ahb_HSIZE = (io_cpu2mc_mem_LS_byte ? 3'b000 : (io_cpu2mc_mem_LS_halfword ? 3'b001 : 3'b010));
+  assign dmem_ahb_HTRANS = 2'b10;
+  assign dmem_ahb_HWRITE = wen;
+  assign imem_data_vld = (dmem_ahb_HREADY && (! dmem_ahb_HRESP));
   always @ (posedge clk) begin
     if(io_cpu2mc_rd)begin
       LW_unsigned_s1 <= io_cpu2mc_mem_LW_unsigned;
@@ -1973,6 +1982,7 @@ endmodule
 
 module instr_dec (
   input      [31:0]   io_instr,
+  input               io_instr_vld,
   output     [4:0]    io_rd_idx,
   output     [4:0]    io_rs1_idx,
   output     [4:0]    io_rs2_idx,
@@ -2015,7 +2025,7 @@ module instr_dec (
   output reg          io_mret,
   output reg          io_ecall,
   output              io_ebreak,
-  output reg          io_invld_instr
+  output              io_invld_instr
 );
   wire                _zz_1;
   wire                _zz_2;
@@ -2031,6 +2041,7 @@ module instr_dec (
   wire                func7_not_all_zero;
   wire                rd_isnot_x0;
   wire                rs1_isnot_x0;
+  reg                 invld_instr_int;
   wire       [31:0]   i_type_imm;
   wire       [31:0]   s_type_imm;
   wire       [31:0]   u_type_imm;
@@ -2079,6 +2090,10 @@ module instr_dec (
   always @ (*) begin
     br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
       7'h6f : begin
         br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
       end
@@ -2087,6 +2102,16 @@ module instr_dec (
       end
       7'h63 : begin
         br_imm_type = `br_imm_type_e_binary_sequential_BTYPE;
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2102,6 +2127,12 @@ module instr_dec (
       7'h17 : begin
         alu_imm_type = `alu_imm_type_e_binary_sequential_UTYPE;
       end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
       7'h03 : begin
         alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
       end
@@ -2111,6 +2142,10 @@ module instr_dec (
       7'h13 : begin
         alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
       end
+      7'h33 : begin
+      end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2119,6 +2154,176 @@ module instr_dec (
   assign func7_not_all_zero = (func7 != 7'h0);
   assign rd_isnot_x0 = (io_rd_idx != 5'h0);
   assign rs1_isnot_x0 = (io_rs1_idx != 5'h0);
+  always @ (*) begin
+    invld_instr_int = 1'b0;
+    case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          default : begin
+            invld_instr_int = 1'b1;
+          end
+        endcase
+      end
+      7'h03 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b100 : begin
+          end
+          3'b101 : begin
+          end
+          default : begin
+            invld_instr_int = 1'b1;
+          end
+        endcase
+      end
+      7'h23 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          default : begin
+            invld_instr_int = 1'b1;
+          end
+        endcase
+      end
+      7'h13 : begin
+        case(func3)
+          3'b000 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b100 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b001 : begin
+          end
+          default : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                invld_instr_int = 1'b1;
+              end
+            endcase
+          end
+        endcase
+      end
+      7'h33 : begin
+        case(func3)
+          3'b000 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                invld_instr_int = 1'b1;
+              end
+            endcase
+          end
+          3'b001 : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+          3'b010 : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+          3'b011 : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+          3'b100 : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+          3'b101 : begin
+            case(func7)
+              7'h0 : begin
+              end
+              7'h20 : begin
+              end
+              default : begin
+                invld_instr_int = 1'b1;
+              end
+            endcase
+          end
+          3'b110 : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+          default : begin
+            invld_instr_int = func7_not_all_zero;
+          end
+        endcase
+      end
+      7'h73 : begin
+        case(func3)
+          3'b001 : begin
+          end
+          3'b010 : begin
+          end
+          3'b011 : begin
+          end
+          3'b101 : begin
+          end
+          3'b110 : begin
+          end
+          3'b111 : begin
+          end
+          3'b000 : begin
+            if(_zz_1)begin
+              invld_instr_int = (rs1_isnot_x0 && rd_isnot_x0);
+            end else begin
+              if(_zz_2)begin
+                invld_instr_int = (rs1_isnot_x0 && rd_isnot_x0);
+              end else begin
+                invld_instr_int = 1'b1;
+              end
+            end
+          end
+          default : begin
+            invld_instr_int = 1'b1;
+          end
+        endcase
+      end
+      default : begin
+        invld_instr_int = 1'b1;
+      end
+    endcase
+  end
+
+  assign io_invld_instr = (invld_instr_int && io_instr_vld);
   always @ (*) begin
     io_rd_wr = 1'b0;
     case(opcode)
@@ -2134,8 +2339,12 @@ module instr_dec (
       7'h67 : begin
         io_rd_wr = 1'b1;
       end
+      7'h63 : begin
+      end
       7'h03 : begin
         io_rd_wr = 1'b1;
+      end
+      7'h23 : begin
       end
       7'h13 : begin
         io_rd_wr = 1'b1;
@@ -2177,6 +2386,12 @@ module instr_dec (
   always @ (*) begin
     io_rs1_rd = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
       7'h67 : begin
         io_rs1_rd = 1'b1;
       end
@@ -2226,14 +2441,28 @@ module instr_dec (
   always @ (*) begin
     io_rs2_rd = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         io_rs2_rd = 1'b1;
+      end
+      7'h03 : begin
       end
       7'h23 : begin
         io_rs2_rd = 1'b1;
       end
+      7'h13 : begin
+      end
       7'h33 : begin
         io_rs2_rd = 1'b1;
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2243,8 +2472,26 @@ module instr_dec (
   always @ (*) begin
     io_data_ram_wr = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
       7'h23 : begin
         io_data_ram_wr = 1'b1;
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2254,8 +2501,26 @@ module instr_dec (
   always @ (*) begin
     io_data_ram_rd = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
       7'h03 : begin
         io_data_ram_rd = 1'b1;
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2265,6 +2530,16 @@ module instr_dec (
   always @ (*) begin
     io_data_ram_ld_byte = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
       7'h03 : begin
         case(func3)
           3'b000 : begin
@@ -2295,6 +2570,12 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2304,6 +2585,16 @@ module instr_dec (
   always @ (*) begin
     io_data_ram_ld_hword = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
       7'h03 : begin
         case(func3)
           3'b000 : begin
@@ -2335,6 +2626,12 @@ module instr_dec (
           end
         endcase
       end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2343,6 +2640,16 @@ module instr_dec (
   always @ (*) begin
     io_data_ram_ld_unsign = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
       7'h03 : begin
         case(func3)
           3'b000 : begin
@@ -2361,6 +2668,14 @@ module instr_dec (
           end
         endcase
       end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2369,6 +2684,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_and = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2410,6 +2739,8 @@ module instr_dec (
             io_alu_op_and = 1'b1;
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2419,6 +2750,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_or = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2460,6 +2805,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2469,6 +2816,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_xor = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2510,6 +2871,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2530,6 +2893,8 @@ module instr_dec (
       end
       7'h67 : begin
         io_alu_op_add = 1'b1;
+      end
+      7'h63 : begin
       end
       7'h03 : begin
         io_alu_op_add = 1'b1;
@@ -2587,6 +2952,8 @@ module instr_dec (
           end
         endcase
       end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2595,6 +2962,22 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_sub = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
       7'h33 : begin
         case(func3)
           3'b000 : begin
@@ -2624,6 +3007,8 @@ module instr_dec (
           end
         endcase
       end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2632,6 +3017,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_sra = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2689,6 +3088,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2698,6 +3099,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_srl = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2755,6 +3170,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2764,6 +3181,20 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_sll = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
       7'h13 : begin
         case(func3)
           3'b000 : begin
@@ -2805,6 +3236,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2814,6 +3247,14 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_slt = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         case(func3)
           3'b000 : begin
@@ -2833,6 +3274,10 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
       end
       7'h13 : begin
         case(func3)
@@ -2875,6 +3320,8 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2884,6 +3331,14 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_sltu = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         case(func3)
           3'b000 : begin
@@ -2903,6 +3358,10 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
       end
       7'h13 : begin
         case(func3)
@@ -2946,6 +3405,8 @@ module instr_dec (
           end
         endcase
       end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -2954,6 +3415,14 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_eqt = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         case(func3)
           3'b000 : begin
@@ -2973,6 +3442,16 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -2982,6 +3461,14 @@ module instr_dec (
   always @ (*) begin
     io_alu_op_invb0 = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         case(func3)
           3'b000 : begin
@@ -3002,6 +3489,16 @@ module instr_dec (
           default : begin
           end
         endcase
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -3023,6 +3520,8 @@ module instr_dec (
       7'h67 : begin
         io_op2_sel_imm = 1'b1;
       end
+      7'h63 : begin
+      end
       7'h03 : begin
         io_op2_sel_imm = 1'b1;
       end
@@ -3032,6 +3531,10 @@ module instr_dec (
       7'h13 : begin
         io_op2_sel_imm = 1'b1;
       end
+      7'h33 : begin
+      end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -3040,6 +3543,8 @@ module instr_dec (
   always @ (*) begin
     io_op1_sel_pc = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
       7'h17 : begin
         io_op1_sel_pc = 1'b1;
       end
@@ -3048,6 +3553,18 @@ module instr_dec (
       end
       7'h67 : begin
         io_op1_sel_pc = 1'b1;
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -3060,6 +3577,24 @@ module instr_dec (
       7'h37 : begin
         io_op1_sel_zero = 1'b1;
       end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
+      end
       default : begin
       end
     endcase
@@ -3068,8 +3603,26 @@ module instr_dec (
   always @ (*) begin
     io_branch_op = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
       7'h63 : begin
         io_branch_op = 1'b1;
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -3079,8 +3632,26 @@ module instr_dec (
   always @ (*) begin
     io_jal_op = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
       7'h6f : begin
         io_jal_op = 1'b1;
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -3090,8 +3661,26 @@ module instr_dec (
   always @ (*) begin
     io_jalr_op = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
       7'h67 : begin
         io_jalr_op = 1'b1;
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
+      7'h73 : begin
       end
       default : begin
       end
@@ -3101,6 +3690,24 @@ module instr_dec (
   always @ (*) begin
     io_mret = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3132,6 +3739,24 @@ module instr_dec (
   always @ (*) begin
     io_ecall = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3164,168 +3789,26 @@ module instr_dec (
 
   assign io_ebreak = 1'b0;
   always @ (*) begin
-    io_invld_instr = 1'b0;
-    case(opcode)
-      7'h63 : begin
-        case(func3)
-          3'b000 : begin
-          end
-          3'b001 : begin
-          end
-          3'b100 : begin
-          end
-          3'b101 : begin
-          end
-          3'b110 : begin
-          end
-          3'b111 : begin
-          end
-          default : begin
-            io_invld_instr = 1'b1;
-          end
-        endcase
-      end
-      7'h03 : begin
-        case(func3)
-          3'b000 : begin
-          end
-          3'b001 : begin
-          end
-          3'b010 : begin
-          end
-          3'b100 : begin
-          end
-          3'b101 : begin
-          end
-          default : begin
-            io_invld_instr = 1'b1;
-          end
-        endcase
-      end
-      7'h23 : begin
-        case(func3)
-          3'b000 : begin
-          end
-          3'b001 : begin
-          end
-          3'b010 : begin
-          end
-          default : begin
-            io_invld_instr = 1'b1;
-          end
-        endcase
-      end
-      7'h13 : begin
-        case(func3)
-          3'b000 : begin
-          end
-          3'b010 : begin
-          end
-          3'b011 : begin
-          end
-          3'b100 : begin
-          end
-          3'b110 : begin
-          end
-          3'b111 : begin
-          end
-          3'b001 : begin
-          end
-          default : begin
-            case(func7)
-              7'h0 : begin
-              end
-              7'h20 : begin
-              end
-              default : begin
-                io_invld_instr = 1'b1;
-              end
-            endcase
-          end
-        endcase
-      end
-      7'h33 : begin
-        case(func3)
-          3'b000 : begin
-            case(func7)
-              7'h0 : begin
-              end
-              7'h20 : begin
-              end
-              default : begin
-                io_invld_instr = 1'b1;
-              end
-            endcase
-          end
-          3'b001 : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-          3'b010 : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-          3'b011 : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-          3'b100 : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-          3'b101 : begin
-            case(func7)
-              7'h0 : begin
-              end
-              7'h20 : begin
-              end
-              default : begin
-                io_invld_instr = 1'b1;
-              end
-            endcase
-          end
-          3'b110 : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-          default : begin
-            io_invld_instr = func7_not_all_zero;
-          end
-        endcase
-      end
-      7'h73 : begin
-        case(func3)
-          3'b001 : begin
-          end
-          3'b010 : begin
-          end
-          3'b011 : begin
-          end
-          3'b101 : begin
-          end
-          3'b110 : begin
-          end
-          3'b111 : begin
-          end
-          3'b000 : begin
-            if(_zz_1)begin
-              io_invld_instr = (rs1_isnot_x0 && rd_isnot_x0);
-            end else begin
-              if(_zz_2)begin
-                io_invld_instr = (rs1_isnot_x0 && rd_isnot_x0);
-              end else begin
-                io_invld_instr = 1'b1;
-              end
-            end
-          end
-          default : begin
-            io_invld_instr = 1'b1;
-          end
-        endcase
-      end
-      default : begin
-      end
-    endcase
-  end
-
-  always @ (*) begin
     io_csr_rd = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3360,6 +3843,24 @@ module instr_dec (
   always @ (*) begin
     io_csr_wr = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3394,6 +3895,24 @@ module instr_dec (
   always @ (*) begin
     io_csr_rw = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3424,6 +3943,24 @@ module instr_dec (
   always @ (*) begin
     io_csr_rs = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3454,6 +3991,24 @@ module instr_dec (
   always @ (*) begin
     io_csr_rc = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin
@@ -3484,6 +4039,24 @@ module instr_dec (
   always @ (*) begin
     io_csr_sel_imm = 1'b0;
     case(opcode)
+      7'h37 : begin
+      end
+      7'h17 : begin
+      end
+      7'h6f : begin
+      end
+      7'h67 : begin
+      end
+      7'h63 : begin
+      end
+      7'h03 : begin
+      end
+      7'h23 : begin
+      end
+      7'h13 : begin
+      end
+      7'h33 : begin
+      end
       7'h73 : begin
         case(func3)
           3'b001 : begin

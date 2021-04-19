@@ -49,22 +49,6 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
   val io = dmem_ctrl_io(param)
   val dmem_ahb = master(AhbLite3(param.dmem_ahbCfg))
 
-  // == Control Signal == //
-  dmem_ahb.HSEL       := io.cpu2mc_wr | io.cpu2mc_rd
-  dmem_ahb.HADDR      := io.cpu2mc_addr
-  dmem_ahb.HBURST     := B"000"   // Single burst
-  dmem_ahb.HMASTLOCK  := False
-  dmem_ahb.HPROT      := B"0011"  // Set to 0011 as recommended by the AHB-lite SPEC:
-                                  // the master sets HPROT to b0011 to correspond to a non-cacheable,
-                                  // non-bufferable, privileged, data access
-  dmem_ahb.HSIZE      := Mux(io.cpu2mc_mem_LS_byte, B"000", Mux(io.cpu2mc_mem_LS_halfword, B"001", B"010"))
-  dmem_ahb.HTRANS     := B"10"    // Set to NONSEQ
-  dmem_ahb.HWRITE     := io.cpu2mc_wr
-
-  val imem_hready     = dmem_ahb.HREADY    // This should always be 1
-  val imem_hresp      = dmem_ahb.HRESP     // This should always be 0
-  val imem_data_vld   = imem_hready & ~imem_hresp
-
   // == Store the information for read data process == //
   val mem_byte_addr   = io.cpu2mc_addr(1 downto 0)
   val LW_unsigned_s1  = RegNextWhen(io.cpu2mc_mem_LW_unsigned, io.cpu2mc_rd)
@@ -192,4 +176,22 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
   val word_address_misalign  = ~(io.cpu2mc_mem_LS_byte | io.cpu2mc_mem_LS_halfword) & (io.cpu2mc_addr(1 downto 0) =/= 0)
   io.load_addr_misalign  := io.cpu2mc_rd & (halfword_addr_misalign | word_address_misalign)
   io.store_addr_misalign := io.cpu2mc_wr & (halfword_addr_misalign | word_address_misalign)
+
+  // == Control Signal == //
+  val wen = io.cpu2mc_wr & ~io.store_addr_misalign
+  val ren = io.cpu2mc_rd & ~io.load_addr_misalign
+  dmem_ahb.HSEL       := wen | ren
+  dmem_ahb.HADDR      := io.cpu2mc_addr
+  dmem_ahb.HBURST     := B"000"   // Single burst
+  dmem_ahb.HMASTLOCK  := False
+  dmem_ahb.HPROT      := B"0011"  // Set to 0011 as recommended by the AHB-lite SPEC:
+  // the master sets HPROT to b0011 to correspond to a non-cacheable,
+  // non-bufferable, privileged, data access
+  dmem_ahb.HSIZE      := Mux(io.cpu2mc_mem_LS_byte, B"000", Mux(io.cpu2mc_mem_LS_halfword, B"001", B"010"))
+  dmem_ahb.HTRANS     := B"10"    // Set to NONSEQ
+  dmem_ahb.HWRITE     := wen
+
+  val imem_hready     = dmem_ahb.HREADY    // This should always be 1
+  val imem_hresp      = dmem_ahb.HRESP     // This should always be 0
+  val imem_data_vld   = imem_hready & ~imem_hresp
 }

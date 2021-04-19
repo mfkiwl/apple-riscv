@@ -109,8 +109,8 @@ case class mcsr(param: CPU_PARAM) extends Component {
   // Write Logic
   // Write logic only does write enable decode, the actual write is in HW access section
   val mstatus_wen = (io.mcsr_addr === B"h300") & io.mcsr_wen
-  val mie_wen     = (io.mcsr_addr === B"h302") & io.mcsr_wen
-  val mtvec_wen   = (io.mcsr_addr === B"h303") & io.mcsr_wen
+  val mie_wen     = (io.mcsr_addr === B"h304") & io.mcsr_wen
+  val mtvec_wen   = (io.mcsr_addr === B"h305") & io.mcsr_wen
 
   val mscratch_wen = (io.mcsr_addr === B"h340") & io.mcsr_wen
   val mepc_wen    = (io.mcsr_addr === B"h341") & io.mcsr_wen

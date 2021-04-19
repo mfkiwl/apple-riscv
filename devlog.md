@@ -2,6 +2,14 @@
 
 ## Milestone 0.1
 
+- 04/19/2021
+  - **[RTL Bug Fix]** Fixed bugs found in tests for csr instruction and exception
+    - Fixed bug in mcsr module: wrong mie and mtvec address
+    - Fixed bug in dmem_ctrl module: do not read/store memory when there is address misalign exception
+    - Fixed bug in cpu: wb stage also need flushing when there are exception happends at mem stage. For example, we need to disable rd_wr when there is load_addr misalign in mem stage
+    - Fixed bug in decode logic: corrected logic for invalid instruction detection
+    - Fixed bug in trap ctrl module: ecall should trigger pc_trap too.
+
 - 04/18/2021
   - Implemented interrupt logic and added few more csr register
   - Updated pipeline logic for zicsr and exception
