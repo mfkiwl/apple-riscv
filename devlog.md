@@ -9,6 +9,7 @@
     - Fixed bug in cpu: wb stage also need flushing when there are exception happends at mem stage. For example, we need to disable rd_wr when there is load_addr misalign in mem stage
     - Fixed bug in decode logic: corrected logic for invalid instruction detection
     - Fixed bug in trap ctrl module: ecall should trigger pc_trap too.
+  - Added more isa tests for csr instruction and exception.
 
 - 04/18/2021
   - Implemented interrupt logic and added few more csr register

@@ -8,6 +8,9 @@
 // 32 bits cpu
 #define __riscv_xlen 32
 
+// enable machine mode
+#define __MACHINE_MODE
+
 //-----------------------------------------------------------------------
 // Begin Macro
 //-----------------------------------------------------------------------
@@ -18,6 +21,16 @@
 
 #define RVTEST_RV32U                                                    \
   .macro init;                                                          \
+  .endm
+
+#define RVTEST_RV64M                                                    \
+  .macro init;                                                          \
+  RVTEST_ENABLE_MACHINE;                                                \
+  .endm
+
+#define RVTEST_RV64S                                                    \
+  .macro init;                                                          \
+  RVTEST_ENABLE_SUPERVISOR;                                             \
   .endm
 
 #define INIT_XREG                                                       \

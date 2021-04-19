@@ -65,9 +65,22 @@ rv32ui_isa = [
     ['xori'  , 3000 ],
 ]
 
+rv32mi_isa = [
+    ['mcsr', 3000],
+    ['ma_addr', 10000],
+	['illegal', 10000]
+]
+
+rv32si_isa = [
+    ['csr', 6000],
+    ['scall', 6000],
+]
+
 # architecture
 ARCH = {
-    'rv32ui': rv32ui_isa
+    'rv32ui': rv32ui_isa,
+    'rv32mi': rv32mi_isa,
+    'rv32si': rv32si_isa,
 }
 
 #####################################
@@ -149,7 +162,7 @@ def print_result(results):
     print("              Tests Result             ")
     print("=======================================")
     for arch in results.keys():
-        print("ISA: " + arch)
+        print("## ISA: " + arch + " ##")
         tests = results[arch]
         for test in tests.keys():
             rst = translate[tests[test]]
