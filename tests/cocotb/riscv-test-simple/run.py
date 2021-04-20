@@ -28,17 +28,34 @@ REPO_ROOT = subprocess_return.decode().rstrip()
 # Common function
 ###############################
 
-def link_rom_file(name):
-    """ Link the instruction rom file to the tb directory """
+def process_rom_file(name):
+    """ Split the text and data section for the generated verilog file """
+
+    # Link the instruction rom file to the tb directory
     SRC_FILE = REPO_ROOT + '/tests/riscv-tests-simple/generated/' + name + ".verilog"
-    INSTR_ROM_FILE = os.getcwd() + '/instr_ram.rom' # need to link the instruction ram file the the current directory
-    if os.path.isfile(INSTR_ROM_FILE):
-        os.remove(INSTR_ROM_FILE)
-    os.symlink(SRC_FILE, INSTR_ROM_FILE)
-    DATA_ROM_FILE = os.getcwd() + '/data_ram.rom' # need to link the instruction ram file the the current directory
-    if os.path.isfile(DATA_ROM_FILE):
-        os.remove(DATA_ROM_FILE)
-    os.symlink(SRC_FILE, DATA_ROM_FILE)
+    ROM_FILE = os.getcwd() + '/verilog.rom' # need to link the instruction ram file the the current directory
+    if os.path.isfile(ROM_FILE):
+        os.remove(ROM_FILE)
+    os.symlink(SRC_FILE, ROM_FILE)
+
+    FP = open('verilog.rom', "r")
+    IRAM_FP = open('instr_ram.rom', "w")
+    DRAM_FP = open('data_ram.rom', "w")
+
+    iram = True
+    for line in FP.readlines():
+        if line.rstrip() == "@01000000":
+            iram = False
+            continue
+        if iram:
+            IRAM_FP.write(line)
+        else:
+            DRAM_FP.write(line)
+
+
+    FP.close()
+    IRAM_FP.close()
+    DRAM_FP.close()
 
 def print_register(dut, size=32):
     """ Print the register value """
@@ -74,7 +91,7 @@ async def reset(dut, time=20):
 async def run_test(dut):
     runtime = int(os.getenv('RUN_TIME'))
     test = os.getenv('RISCV_ARCH') + '-' + os.getenv('TEST_NAME')
-    link_rom_file(test)
+    process_rom_file(test)
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)

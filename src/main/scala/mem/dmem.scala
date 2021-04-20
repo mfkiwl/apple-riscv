@@ -61,6 +61,6 @@ case class dmem(param: CPU_PARAM) extends Component {
 
   dmem_ahb.HRDATA := ram.readSync(
     address = word_addr,
-    enable = ~dmem_ahb.HWRITE
+    enable = ~dmem_ahb.HWRITE & read_en
   )
 }

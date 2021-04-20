@@ -10,6 +10,10 @@
     - Fixed bug in decode logic: corrected logic for invalid instruction detection
     - Fixed bug in trap ctrl module: ecall should trigger pc_trap too.
   - Added more isa tests for csr instruction and exception.
+  - Designed soc bus
+    - Only imem and dmem bus are connected. Other bus will be added in future
+    - now instruction memory and data memory are in separate address range and are connected to cpu core though the bus controller
+    - updated all the tests related to this change
 
 - 04/18/2021
   - Implemented interrupt logic and added few more csr register

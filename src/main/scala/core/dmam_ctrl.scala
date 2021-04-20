@@ -32,7 +32,7 @@ case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
   // CPU side
   val cpu2mc_wr              = in Bool
   val cpu2mc_rd              = in Bool
-  val cpu2mc_addr            = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
+  val cpu2mc_addr            = in UInt(param.XLEN bits)
   val cpu2mc_data            = in Bits(param.DATA_RAM_DATA_WIDTH bits)
   val mc2cpu_data            = out Bits(param.DATA_RAM_DATA_WIDTH bits)
   val cpu2mc_mem_LS_byte     = in Bool

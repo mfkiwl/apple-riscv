@@ -50,11 +50,11 @@ class CPU_PARAM {
     //       AHB Bus Config       //
     // ========================== //
     val imem_ahbCfg = AhbLite3Config(
-        addressWidth = INSTR_RAM_ADDR_WIDTH,
+        addressWidth = XLEN,
         dataWidth    = INSTR_RAM_DATA_WIDTH
     )
     val dmem_ahbCfg = AhbLite3Config(
-        addressWidth = DATA_RAM_ADDR_WIDTH,
+        addressWidth = XLEN,
         dataWidth    = DATA_RAM_DATA_WIDTH
     )
 

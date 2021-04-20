@@ -96,7 +96,7 @@ Disassembly of section .text.init:
 00000124 <test_9>:
  124:	00000093          	li	ra,0
  128:	00008137          	lui	sp,0x8
- 12c:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x6fff>
+ 12c:	fff10113          	addi	sp,sp,-1 # 7fff <pass_loop+0x7a9f>
  130:	0020a733          	slt	a4,ra,sp
  134:	00100393          	li	t2,1
  138:	00900193          	li	gp,9
@@ -104,7 +104,7 @@ Disassembly of section .text.init:
 
 00000140 <test_10>:
  140:	800000b7          	lui	ra,0x80000
- 144:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 144:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  148:	00000113          	li	sp,0
  14c:	0020a733          	slt	a4,ra,sp
  150:	00000393          	li	t2,0
@@ -113,9 +113,9 @@ Disassembly of section .text.init:
 
 0000015c <test_11>:
  15c:	800000b7          	lui	ra,0x80000
- 160:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 160:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  164:	00008137          	lui	sp,0x8
- 168:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x6fff>
+ 168:	fff10113          	addi	sp,sp,-1 # 7fff <pass_loop+0x7a9f>
  16c:	0020a733          	slt	a4,ra,sp
  170:	00000393          	li	t2,0
  174:	00b00193          	li	gp,11
@@ -124,7 +124,7 @@ Disassembly of section .text.init:
 0000017c <test_12>:
  17c:	800000b7          	lui	ra,0x80000
  180:	00008137          	lui	sp,0x8
- 184:	fff10113          	addi	sp,sp,-1 # 7fff <_end+0x6fff>
+ 184:	fff10113          	addi	sp,sp,-1 # 7fff <pass_loop+0x7a9f>
  188:	0020a733          	slt	a4,ra,sp
  18c:	00100393          	li	t2,1
  190:	00c00193          	li	gp,12
@@ -132,7 +132,7 @@ Disassembly of section .text.init:
 
 00000198 <test_13>:
  198:	800000b7          	lui	ra,0x80000
- 19c:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 19c:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  1a0:	ffff8137          	lui	sp,0xffff8
  1a4:	0020a733          	slt	a4,ra,sp
  1a8:	00000393          	li	t2,0

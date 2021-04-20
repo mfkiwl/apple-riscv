@@ -24,9 +24,9 @@ import spinal.lib.{master, slave}
 case class imem_ctrl_io(param: CPU_PARAM) extends Bundle {
 
   // CPU side
-  val cpu2mc_addr = in UInt(param.INSTR_RAM_ADDR_WIDTH bits)
+  val cpu2mc_addr = in UInt(param.XLEN bits)
   val cpu2mc_en   = in Bool
-  val mc2cpu_data = out Bits(param.INSTR_RAM_DATA_WIDTH bits)
+  val mc2cpu_data = out Bits(param.XLEN bits)
 }
 
 case class imem_ctrl(param: CPU_PARAM) extends Component {

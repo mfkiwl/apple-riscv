@@ -85,7 +85,7 @@ Disassembly of section .text.init:
 
 000000fc <test_6>:
   fc:	0bad2537          	lui	a0,0xbad2
- 100:	dea50513          	addi	a0,a0,-534 # bad1dea <_end+0xbad0dda>
+ 100:	dea50513          	addi	a0,a0,-534 # bad1dea <_end+0xaad1dda>
  104:	340515f3          	csrrw	a1,mscratch,a0
  108:	00200393          	li	t2,2
  10c:	00600193          	li	gp,6
@@ -93,16 +93,16 @@ Disassembly of section .text.init:
 
 00000114 <test_7>:
  114:	00002537          	lui	a0,0x2
- 118:	dea50513          	addi	a0,a0,-534 # 1dea <_end+0xdda>
+ 118:	dea50513          	addi	a0,a0,-534 # 1dea <privileged+0x1b8a>
  11c:	340535f3          	csrrc	a1,mscratch,a0
  120:	0bad23b7          	lui	t2,0xbad2
- 124:	dea38393          	addi	t2,t2,-534 # bad1dea <_end+0xbad0dda>
+ 124:	dea38393          	addi	t2,t2,-534 # bad1dea <_end+0xaad1dda>
  128:	00700193          	li	gp,7
  12c:	0e759c63          	bne	a1,t2,224 <fail>
 
 00000130 <test_8>:
  130:	0000c537          	lui	a0,0xc
- 134:	eef50513          	addi	a0,a0,-273 # beef <_end+0xaedf>
+ 134:	eef50513          	addi	a0,a0,-273 # beef <privileged+0xbc8f>
  138:	340525f3          	csrrs	a1,mscratch,a0
  13c:	0bad03b7          	lui	t2,0xbad0
  140:	00800193          	li	gp,8
@@ -110,25 +110,25 @@ Disassembly of section .text.init:
 
 00000148 <test_9>:
  148:	0bad2537          	lui	a0,0xbad2
- 14c:	dea50513          	addi	a0,a0,-534 # bad1dea <_end+0xbad0dda>
+ 14c:	dea50513          	addi	a0,a0,-534 # bad1dea <_end+0xaad1dda>
  150:	34051573          	csrrw	a0,mscratch,a0
  154:	0badc3b7          	lui	t2,0xbadc
- 158:	eef38393          	addi	t2,t2,-273 # badbeef <_end+0xbadaedf>
+ 158:	eef38393          	addi	t2,t2,-273 # badbeef <_end+0xaadbedf>
  15c:	00900193          	li	gp,9
  160:	0c751263          	bne	a0,t2,224 <fail>
 
 00000164 <test_10>:
  164:	00002537          	lui	a0,0x2
- 168:	dea50513          	addi	a0,a0,-534 # 1dea <_end+0xdda>
+ 168:	dea50513          	addi	a0,a0,-534 # 1dea <privileged+0x1b8a>
  16c:	34053573          	csrrc	a0,mscratch,a0
  170:	0bad23b7          	lui	t2,0xbad2
- 174:	dea38393          	addi	t2,t2,-534 # bad1dea <_end+0xbad0dda>
+ 174:	dea38393          	addi	t2,t2,-534 # bad1dea <_end+0xaad1dda>
  178:	00a00193          	li	gp,10
  17c:	0a751463          	bne	a0,t2,224 <fail>
 
 00000180 <test_11>:
  180:	0000c537          	lui	a0,0xc
- 184:	eef50513          	addi	a0,a0,-273 # beef <_end+0xaedf>
+ 184:	eef50513          	addi	a0,a0,-273 # beef <privileged+0xbc8f>
  188:	34052573          	csrrs	a0,mscratch,a0
  18c:	0bad03b7          	lui	t2,0xbad0
  190:	00b00193          	li	gp,11
@@ -137,7 +137,7 @@ Disassembly of section .text.init:
 00000198 <test_12>:
  198:	34002573          	csrr	a0,mscratch
  19c:	0badc3b7          	lui	t2,0xbadc
- 1a0:	eef38393          	addi	t2,t2,-273 # badbeef <_end+0xbadaedf>
+ 1a0:	eef38393          	addi	t2,t2,-273 # badbeef <_end+0xaadbedf>
  1a4:	00c00193          	li	gp,12
  1a8:	06751e63          	bne	a0,t2,224 <fail>
  1ac:	30102573          	csrr	a0,misa
@@ -155,7 +155,7 @@ Disassembly of section .text.init:
  1d4:	00157513          	andi	a0,a0,1
  1d8:	04050463          	beqz	a0,220 <finish>
  1dc:	000022b7          	lui	t0,0x2
- 1e0:	80028293          	addi	t0,t0,-2048 # 1800 <_end+0x7f0>
+ 1e0:	80028293          	addi	t0,t0,-2048 # 1800 <privileged+0x15a0>
  1e4:	3002b073          	csrc	mstatus,t0
  1e8:	00000297          	auipc	t0,0x0
  1ec:	01028293          	addi	t0,t0,16 # 1f8 <test_14>
@@ -218,6 +218,6 @@ Disassembly of section .text.init:
 
 Disassembly of section .data:
 
-00001000 <fsw_data>:
-    1000:	0001                	nop
+01000000 <fsw_data>:
+ 1000000:	0001                	nop
 	...

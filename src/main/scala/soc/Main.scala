@@ -24,9 +24,10 @@ import core._
 
 object Main{
   def main(args: Array[String]) {
-    val param = new CPU_PARAM()
+    val cpu_param = new CPU_PARAM()
+    val soc_param = new SOC_PARAM()
     SpinalConfig(
       targetDirectory = "rtl/soc"
-    ).generateVerilog(new apple_riscv_soc(param))
+    ).generateVerilog(apple_riscv_soc(soc_param, cpu_param))
   }
 }

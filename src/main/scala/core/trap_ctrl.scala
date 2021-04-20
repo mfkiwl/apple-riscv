@@ -43,7 +43,7 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   // info
   val wb_pc         = in UInt(param.PC_WIDTH bits)
   val wb_instr      = in Bits(param.XLEN bits)
-  val wb_dmem_addr  = in UInt(param.DATA_RAM_ADDR_WIDTH bits)
+  val wb_dmem_addr  = in UInt(param.XLEN bits)
 
   // mcsr input
   val mie_meie    = in Bool

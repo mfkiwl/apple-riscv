@@ -95,7 +95,7 @@ Disassembly of section .text.init:
 
 0000011c <test_10>:
  11c:	800000b7          	lui	ra,0x80000
- 120:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 120:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  124:	0000a713          	slti	a4,ra,0
  128:	00000393          	li	t2,0
  12c:	00a00193          	li	gp,10
@@ -103,7 +103,7 @@ Disassembly of section .text.init:
 
 00000134 <test_11>:
  134:	800000b7          	lui	ra,0x80000
- 138:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 138:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  13c:	7ff0a713          	slti	a4,ra,2047
  140:	00000393          	li	t2,0
  144:	00b00193          	li	gp,11
@@ -118,7 +118,7 @@ Disassembly of section .text.init:
 
 00000160 <test_13>:
  160:	800000b7          	lui	ra,0x80000
- 164:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 164:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  168:	8000a713          	slti	a4,ra,-2048
  16c:	00000393          	li	t2,0
  170:	00d00193          	li	gp,13
@@ -235,7 +235,7 @@ Disassembly of section .text.init:
 
 000002d4 <test_25>:
  2d4:	00ff00b7          	lui	ra,0xff0
- 2d8:	0ff08093          	addi	ra,ra,255 # ff00ff <_end+0xfef0ff>
+ 2d8:	0ff08093          	addi	ra,ra,255 # ff00ff <pass_loop+0xfefdf3>
  2dc:	fff0a013          	slti	zero,ra,-1
  2e0:	00000393          	li	t2,0
  2e4:	01900193          	li	gp,25

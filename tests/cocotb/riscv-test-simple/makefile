@@ -59,5 +59,5 @@ clean_rom:
 	rm -rf *.rom
 
 clean_all: clean clean_rom
-	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build instr_ram.rom
+	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build
 

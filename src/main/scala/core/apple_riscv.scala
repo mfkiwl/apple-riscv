@@ -85,7 +85,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // == instruction RAM Controller == //
     val imem_ctrl_inst = imem_ctrl(param)
     imem_ahb <> imem_ctrl_inst.imem_ahb
-    imem_ctrl_inst.io.cpu2mc_addr   := pc_inst.io.pc_out(param.INSTR_RAM_ADDR_WIDTH-1 downto 0)
+    imem_ctrl_inst.io.cpu2mc_addr   := pc_inst.io.pc_out
     imem_ctrl_inst.io.cpu2mc_en     := if_pipe_run
 
 
@@ -276,7 +276,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     // Mem stage
     // =========================
 
-    val dmem_addr = ex2mem_alu_out(param.DATA_RAM_ADDR_WIDTH - 1 downto 0).asUInt
+    val dmem_addr = ex2mem_alu_out.asUInt
 
     // == Memory Controller == //
     val dmem_ctrl_isnt = dmem_ctrl(param)

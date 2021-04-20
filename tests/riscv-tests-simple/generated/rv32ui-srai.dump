@@ -67,7 +67,7 @@ Disassembly of section .text.init:
 
 000000cc <test_6>:
   cc:	800000b7          	lui	ra,0x80000
-  d0:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7ffff001>
+  d0:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7f000001>
   d4:	41f0d713          	srai	a4,ra,0x1f
   d8:	fff00393          	li	t2,-1
   dc:	00600193          	li	gp,6
@@ -75,43 +75,43 @@ Disassembly of section .text.init:
 
 000000e4 <test_7>:
   e4:	800000b7          	lui	ra,0x80000
-  e8:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+  e8:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
   ec:	4000d713          	srai	a4,ra,0x0
   f0:	800003b7          	lui	t2,0x80000
-  f4:	fff38393          	addi	t2,t2,-1 # 7fffffff <_end+0x7fffefff>
+  f4:	fff38393          	addi	t2,t2,-1 # 7fffffff <_end+0x7effffff>
   f8:	00700193          	li	gp,7
   fc:	22771c63          	bne	a4,t2,334 <fail>
 
 00000100 <test_8>:
  100:	800000b7          	lui	ra,0x80000
- 104:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 104:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  108:	4010d713          	srai	a4,ra,0x1
  10c:	400003b7          	lui	t2,0x40000
- 110:	fff38393          	addi	t2,t2,-1 # 3fffffff <_end+0x3fffefff>
+ 110:	fff38393          	addi	t2,t2,-1 # 3fffffff <_end+0x3effffff>
  114:	00800193          	li	gp,8
  118:	20771e63          	bne	a4,t2,334 <fail>
 
 0000011c <test_9>:
  11c:	800000b7          	lui	ra,0x80000
- 120:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 120:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  124:	4070d713          	srai	a4,ra,0x7
  128:	010003b7          	lui	t2,0x1000
- 12c:	fff38393          	addi	t2,t2,-1 # ffffff <_end+0xffefff>
+ 12c:	fff38393          	addi	t2,t2,-1 # ffffff <pass_loop+0xfffcaf>
  130:	00900193          	li	gp,9
  134:	20771063          	bne	a4,t2,334 <fail>
 
 00000138 <test_10>:
  138:	800000b7          	lui	ra,0x80000
- 13c:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 13c:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  140:	40e0d713          	srai	a4,ra,0xe
  144:	000203b7          	lui	t2,0x20
- 148:	fff38393          	addi	t2,t2,-1 # 1ffff <_end+0x1efff>
+ 148:	fff38393          	addi	t2,t2,-1 # 1ffff <pass_loop+0x1fcaf>
  14c:	00a00193          	li	gp,10
  150:	1e771263          	bne	a4,t2,334 <fail>
 
 00000154 <test_11>:
  154:	800000b7          	lui	ra,0x80000
- 158:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7fffefff>
+ 158:	fff08093          	addi	ra,ra,-1 # 7fffffff <_end+0x7effffff>
  15c:	41f0d713          	srai	a4,ra,0x1f
  160:	00000393          	li	t2,0
  164:	00b00193          	li	gp,11
@@ -119,43 +119,43 @@ Disassembly of section .text.init:
 
 0000016c <test_12>:
  16c:	818180b7          	lui	ra,0x81818
- 170:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x81817181>
+ 170:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x80818181>
  174:	4000d713          	srai	a4,ra,0x0
  178:	818183b7          	lui	t2,0x81818
- 17c:	18138393          	addi	t2,t2,385 # 81818181 <_end+0x81817181>
+ 17c:	18138393          	addi	t2,t2,385 # 81818181 <_end+0x80818181>
  180:	00c00193          	li	gp,12
  184:	1a771863          	bne	a4,t2,334 <fail>
 
 00000188 <test_13>:
  188:	818180b7          	lui	ra,0x81818
- 18c:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x81817181>
+ 18c:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x80818181>
  190:	4010d713          	srai	a4,ra,0x1
  194:	c0c0c3b7          	lui	t2,0xc0c0c
- 198:	0c038393          	addi	t2,t2,192 # c0c0c0c0 <_end+0xc0c0b0c0>
+ 198:	0c038393          	addi	t2,t2,192 # c0c0c0c0 <_end+0xbfc0c0c0>
  19c:	00d00193          	li	gp,13
  1a0:	18771a63          	bne	a4,t2,334 <fail>
 
 000001a4 <test_14>:
  1a4:	818180b7          	lui	ra,0x81818
- 1a8:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x81817181>
+ 1a8:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x80818181>
  1ac:	4070d713          	srai	a4,ra,0x7
  1b0:	ff0303b7          	lui	t2,0xff030
- 1b4:	30338393          	addi	t2,t2,771 # ff030303 <_end+0xff02f303>
+ 1b4:	30338393          	addi	t2,t2,771 # ff030303 <_end+0xfe030303>
  1b8:	00e00193          	li	gp,14
  1bc:	16771c63          	bne	a4,t2,334 <fail>
 
 000001c0 <test_15>:
  1c0:	818180b7          	lui	ra,0x81818
- 1c4:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x81817181>
+ 1c4:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x80818181>
  1c8:	40e0d713          	srai	a4,ra,0xe
  1cc:	fffe03b7          	lui	t2,0xfffe0
- 1d0:	60638393          	addi	t2,t2,1542 # fffe0606 <_end+0xfffdf606>
+ 1d0:	60638393          	addi	t2,t2,1542 # fffe0606 <_end+0xfefe0606>
  1d4:	00f00193          	li	gp,15
  1d8:	14771e63          	bne	a4,t2,334 <fail>
 
 000001dc <test_16>:
  1dc:	818180b7          	lui	ra,0x81818
- 1e0:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x81817181>
+ 1e0:	18108093          	addi	ra,ra,385 # 81818181 <_end+0x80818181>
  1e4:	41f0d713          	srai	a4,ra,0x1f
  1e8:	fff00393          	li	t2,-1
  1ec:	01000193          	li	gp,16
@@ -196,7 +196,7 @@ Disassembly of section .text.init:
 0000025c <test_20>:
  25c:	00000213          	li	tp,0
  260:	800000b7          	lui	ra,0x80000
- 264:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7ffff001>
+ 264:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7f000001>
  268:	41f0d713          	srai	a4,ra,0x1f
  26c:	00000013          	nop
  270:	00000013          	nop
@@ -234,7 +234,7 @@ Disassembly of section .text.init:
 000002dc <test_23>:
  2dc:	00000213          	li	tp,0
  2e0:	800000b7          	lui	ra,0x80000
- 2e4:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7ffff001>
+ 2e4:	00108093          	addi	ra,ra,1 # 80000001 <_end+0x7f000001>
  2e8:	00000013          	nop
  2ec:	00000013          	nop
  2f0:	41f0d713          	srai	a4,ra,0x1f

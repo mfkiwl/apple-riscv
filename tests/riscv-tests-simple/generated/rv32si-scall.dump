@@ -43,14 +43,14 @@ Disassembly of section .text.init:
   8c:	00200193          	li	gp,2
   90:	00800313          	li	t1,8
   94:	000022b7          	lui	t0,0x2
-  98:	80028293          	addi	t0,t0,-2048 # 1800 <_end+0x800>
+  98:	80028293          	addi	t0,t0,-2048 # 1800 <mtvec_handler+0x1704>
   9c:	3002b073          	csrc	mstatus,t0
   a0:	300023f3          	csrr	t2,mstatus
   a4:	0072f2b3          	and	t0,t0,t2
   a8:	00028463          	beqz	t0,b0 <_start+0xb0>
   ac:	00b00313          	li	t1,11
   b0:	000022b7          	lui	t0,0x2
-  b4:	80028293          	addi	t0,t0,-2048 # 1800 <_end+0x800>
+  b4:	80028293          	addi	t0,t0,-2048 # 1800 <mtvec_handler+0x1704>
   b8:	3002b073          	csrc	mstatus,t0
   bc:	00000297          	auipc	t0,0x0
   c0:	01028293          	addi	t0,t0,16 # cc <_start+0xcc>

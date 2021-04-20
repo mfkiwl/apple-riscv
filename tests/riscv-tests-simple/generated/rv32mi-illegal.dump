@@ -43,7 +43,7 @@ Disassembly of section .text.init:
   82:	0000                	unimp
   84:	0e40006f          	j	168 <fail>
   88:	000022b7          	lui	t0,0x2
-  8c:	80028293          	addi	t0,t0,-2048 # 1800 <_end+0x800>
+  8c:	80028293          	addi	t0,t0,-2048 # 1800 <synchronous_exception+0x15c0>
   90:	3002b073          	csrc	mstatus,t0
   94:	00001337          	lui	t1,0x1
   98:	80030313          	addi	t1,t1,-2048 # 800 <synchronous_exception+0x5c0>
@@ -71,7 +71,7 @@ Disassembly of section .text.init:
   e0:	02828293          	addi	t0,t0,40 # 104 <msip+0x30>
   e4:	34129073          	csrw	mepc,t0
   e8:	000022b7          	lui	t0,0x2
-  ec:	80028293          	addi	t0,t0,-2048 # 1800 <_end+0x800>
+  ec:	80028293          	addi	t0,t0,-2048 # 1800 <synchronous_exception+0x15c0>
   f0:	3002b073          	csrc	mstatus,t0
   f4:	00001337          	lui	t1,0x1
   f8:	80030313          	addi	t1,t1,-2048 # 800 <synchronous_exception+0x5c0>
