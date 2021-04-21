@@ -21,14 +21,14 @@ Apple RISCV has the following features:
 
 ## Architecture
 
-Here is a brief introduction of the design micro-architecture. For more details, check [micro_arch.md](doc/img/micro_arch.md)
+Here is a brief introduction of the design micro-architecture. For more details, check [micro_arch.md](doc/micro_arch.md)
 
 ### apple riscv core
 
-The cpu core is designed as classic 5 stage pipeline, with other supporting logic such as csr (config and status register) module and trap controller. 
+The cpu core is designed as classic 5 stage pipeline, with other supporting logic such as csr (config and status register) module and trap controller.
 
 ### apple riscv soc
 
 The apple riscv soc contains necessary peripherals for the cpu core to run basic embedded task.
 
-![soc](doc/img/soc.png)
+![soc](doc/assets/img/soc.png)
