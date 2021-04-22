@@ -17,6 +17,7 @@
 
 package core
 
+import sib._
 import spinal.core._
 import spinal.lib.bus.amba3.ahblite._
 
@@ -37,25 +38,17 @@ class CPU_PARAM {
     val RF_WIDTH   = DATA_WIDTH                 // Register File width
     val RF_SIZE    = 32                         // Register File size
     val RF_ADDR_WDITH   = log2Up(RF_SIZE)       // Register File address width
-    val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
-    val INSTR_RAM_ADDR_WIDTH = 16               // 64KB Instruction RAM for now
-    val DATA_RAM_DATA_WIDTH = DATA_WIDTH
-    val DATA_RAM_ADDR_WIDTH = 16                // 64KB Data RAM for now
 
     // CSR related
     val MXLEN       = XLEN                      // MCSR register length
     val CSR_ADDR_WIDTH = 12
 
     // ========================== //
-    //       AHB Bus Config       //
+    //       SIB Bus Config       //
     // ========================== //
-    val imem_ahbCfg = AhbLite3Config(
+    val sibCfg = SibConfig(
         addressWidth = XLEN,
-        dataWidth    = INSTR_RAM_DATA_WIDTH
-    )
-    val dmem_ahbCfg = AhbLite3Config(
-        addressWidth = XLEN,
-        dataWidth    = DATA_RAM_DATA_WIDTH
+        dataWidth    = XLEN
     )
 
     //////////////////////////////////////////////////////////////////////////////////

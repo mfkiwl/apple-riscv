@@ -18,14 +18,13 @@
 package soc
 
 import spinal.core._
+import spinal.lib._
+import sib._
 import core._
-import mem._
-import spinal.lib.bus.amba3.ahblite.AhbLite3
-import spinal.lib.slave
+
+
 
 case class apple_riscv_soc(soc_param: SOC_PARAM, cpu_param: CPU_PARAM) extends Component {
-
-    val imem_dbg_ahb = slave(AhbLite3(cpu_param.imem_ahbCfg))
 
     // CPU core
     val cpu_core = apple_riscv(cpu_param)
@@ -34,17 +33,27 @@ case class apple_riscv_soc(soc_param: SOC_PARAM, cpu_param: CPU_PARAM) extends C
     cpu_core.io.software_interrupt  := False
     cpu_core.io.debug_interrupt     := False
 
-    // bus controller
-    val soc_bus_ctrl_inst = soc_bus_ctrl(soc_param, cpu_param)
-    soc_bus_ctrl_inst.imem_from_cpu_ahb <> cpu_core.imem_ahb
-    soc_bus_ctrl_inst.dmem_from_cpu_ahb <> cpu_core.dmem_ahb
+    // imem & dmem
+    val imem_inst = imem(soc_param)
+    val dmem_inst = dmem(soc_param)
 
-    // Instruction RAM
-    val imem_inst = imem(cpu_param)
-    soc_bus_ctrl_inst.bus_ctrl_to_imem_ahb <> imem_inst.imem_cpu_ahb
-    imem_dbg_ahb <> imem_inst.imem_dbg_ahb
+    // Imem debug bus
+    val imem_dbg_sib = slave(Sib(soc_param.imemSibCfg))
+    imem_dbg_sib <> imem_inst.imem_dbg_sib
 
-    // Data RAM
-    val dmem_inst = dmem(cpu_param)
-    soc_bus_ctrl_inst.bus_ctrl_to_dmem_ahb <> dmem_inst.dmem_ahb
+    // imem switch
+    val imemClientSibCfg = Array(soc_param.imemSibCfg)
+    val imem_switch = Sib_switch1tN(soc_param.cpuSibCfg, imemClientSibCfg)
+
+    // imem bus connection
+    imem_switch.hostSib <> cpu_core.imem_sib
+    imem_switch.clientSib(0) <> imem_inst.imem_cpu_sib
+
+    // dmem bus switch
+    val dmemClientSibCfg = Array(soc_param.dmemSibCfg)
+    val dmem_switch = Sib_switch1tN(soc_param.cpuSibCfg, dmemClientSibCfg)
+
+    // dmem bus connection
+    dmem_switch.hostSib <> cpu_core.dmem_sib
+    dmem_switch.clientSib(0) <> dmem_inst.dmem_sib
 }

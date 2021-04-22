@@ -18,8 +18,8 @@
 package core
 
 import spinal.core._
-import spinal.lib.bus.amba3.ahblite._
-import spinal.lib.{master, slave}
+import sib._
+import spinal.lib.master
 
 case class imem_ctrl_io(param: CPU_PARAM) extends Bundle {
 
@@ -31,25 +31,20 @@ case class imem_ctrl_io(param: CPU_PARAM) extends Bundle {
 
 case class imem_ctrl(param: CPU_PARAM) extends Component {
   val io = imem_ctrl_io(param)
-  val imem_ahb = master(AhbLite3(param.imem_ahbCfg))
+  val imem_sib = master(Sib(param.sibCfg))
 
+  // FIXME: Need to cycle to complete the xfer
   // Master signals
-  imem_ahb.HSEL       := io.cpu2mc_en
-  imem_ahb.HADDR      := io.cpu2mc_addr
-  imem_ahb.HBURST     := B"000"   // Single burst
-  imem_ahb.HMASTLOCK  := False
-  imem_ahb.HPROT      := B"0011"  // Set to 0011 as recommended by the AHB-lite SPEC:
-                                  // the master sets HPROT to b0011 to correspond to a non-cacheable,
-                                  // non-bufferable, privileged, data access
-  imem_ahb.HSIZE      := B"010"   // Word - 32 bits
-  imem_ahb.HTRANS     := B"10"    // Set to NONSEQ
-  imem_ahb.HWDATA     := 0        // Fixed to zero, We are not writing to I-mem through this port
-  imem_ahb.HWRITE     := False    // Fixed to zero, We are not writing to I-mem through this port
+  imem_sib.sel       := True     // We always want to read instruction memory
+  imem_sib.enable    := io.cpu2mc_en
+  imem_sib.addr      := io.cpu2mc_addr
+  imem_sib.wdata     := 0        // Fixed to zero, We are not writing to I-mem through this port
+  imem_sib.write     := False    // Fixed to zero, We are not writing to I-mem through this port
 
   // Slave signals
-  io.mc2cpu_data      := imem_ahb.HRDATA
+  io.mc2cpu_data      := imem_sib.rdata
 
-  val imem_hready     = imem_ahb.HREADY    // This should always be 1
-  val imem_hresp      = imem_ahb.HRESP     // This should always be 0
-  val imem_data_vld   = imem_hready & ~imem_hresp
+  //val imem_ready      = imem_sib.ready    // This should always 1
+  //val imem_resp       = imem_sib.resp     // This should always 1
+  //val imem_data_vld   = imem_ready & imem_resp
 }

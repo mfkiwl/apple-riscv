@@ -21,8 +21,8 @@
 
 package core
 
+import sib._
 import spinal.core._
-import spinal.lib.bus.amba3.ahblite._
 import spinal.lib.master
 
 case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
@@ -35,8 +35,8 @@ case class apple_riscv_io(param: CPU_PARAM) extends Bundle {
 case class apple_riscv (param: CPU_PARAM) extends Component {
 
     val io = apple_riscv_io(param)
-    val imem_ahb = master(AhbLite3(param.imem_ahbCfg))
-    val dmem_ahb = master(AhbLite3(param.dmem_ahbCfg))
+    val imem_sib = master(Sib(param.sibCfg))
+    val dmem_sib = master(Sib(param.sibCfg))
 
     //////////////////////////////////////////////////////
     //     Pipeline Stage and Component Instantiation   //
@@ -84,7 +84,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // == instruction RAM Controller == //
     val imem_ctrl_inst = imem_ctrl(param)
-    imem_ahb <> imem_ctrl_inst.imem_ahb
+    imem_sib <> imem_ctrl_inst.imem_sib
     imem_ctrl_inst.io.cpu2mc_addr   := pc_inst.io.pc_out
     imem_ctrl_inst.io.cpu2mc_en     := if_pipe_run
 
@@ -243,7 +243,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex2mem_mret        = RegNextWhen(id2ex_mret        & ex_instr_valid, mem_pipe_run) init False
     val ex2mem_ecall       = RegNextWhen(id2ex_ecall       & ex_instr_valid, mem_pipe_run) init False
     val ex2mem_ebreak      = RegNextWhen(id2ex_ebreak      & ex_instr_valid, mem_pipe_run) init False
-    // CSR control signal                                                
+    // CSR control signal
     val ex2mem_csr_wr       = RegNextWhen(id2ex_csr_wr & ex_instr_valid, mem_pipe_run) init False
     val ex2mem_csr_rd       = RegNextWhen(id2ex_csr_rd & ex_instr_valid, mem_pipe_run) init False
     val ex2mem_csr_rw       = RegNextWhen(id2ex_csr_rw, mem_pipe_run)
@@ -262,7 +262,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val ex2mem_rs2_value = RegNextWhen(ex_rs2_value_forwarded, mem_pipe_run)
     val ex2mem_pc        = RegNextWhen(id2ex_pc, mem_pipe_run)
     val ex2mem_instr     = RegNextWhen(id2ex_instr, mem_pipe_run)
-    
+
     val ex2mem_data_ram_ld_byte     = RegNextWhen(id2ex_data_ram_ld_byte, mem_pipe_run)
     val ex2mem_data_ram_ld_hword    = RegNextWhen(id2ex_data_ram_ld_hword, mem_pipe_run)
     val ex2mem_data_ram_ld_unsign   = RegNextWhen(id2ex_data_ram_ld_unsign, mem_pipe_run)
@@ -280,7 +280,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
 
     // == Memory Controller == //
     val dmem_ctrl_isnt = dmem_ctrl(param)
-    dmem_ctrl_isnt.dmem_ahb <> dmem_ahb
+    dmem_ctrl_isnt.dmem_sib <> dmem_sib
     // CPU side
     dmem_ctrl_isnt.io.cpu2mc_wr                 := ex2mem_data_ram_wr
     dmem_ctrl_isnt.io.cpu2mc_rd                 := ex2mem_data_ram_rd
@@ -305,14 +305,14 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     val mem2wb_mret         = RegNextWhen(ex2mem_mret        & mem_instr_valid, wb_pipe_run) init False
     val mem2wb_ecall        = RegNextWhen(ex2mem_ecall       & mem_instr_valid, wb_pipe_run) init False
     val mem2wb_ebreak       = RegNextWhen(ex2mem_ebreak      & mem_instr_valid, wb_pipe_run) init False
-    // CSR control signal                                                
+    // CSR control signal
     val mem2wb_csr_wr = RegNextWhen(ex2mem_csr_wr & mem_instr_valid, wb_pipe_run) init False
     val mem2wb_csr_rd = RegNextWhen(ex2mem_csr_rd & mem_instr_valid, wb_pipe_run) init False
     val mem2wb_csr_rw = RegNextWhen(ex2mem_csr_rw, wb_pipe_run)
     val mem2wb_csr_rs = RegNextWhen(ex2mem_csr_rs, wb_pipe_run)
     val mem2wb_csr_rc = RegNextWhen(ex2mem_csr_rc, wb_pipe_run)
     val mem2wb_csr_sel_imm = RegNextWhen(ex2mem_csr_sel_imm, wb_pipe_run)
-    val mem2wb_csr_idx = RegNextWhen(ex2mem_csr_idx, wb_pipe_run)            
+    val mem2wb_csr_idx = RegNextWhen(ex2mem_csr_idx, wb_pipe_run)
 
     // data signal
     val mem2wb_rs1_idx   = RegNextWhen(ex2mem_rs1_idx, wb_pipe_run)
@@ -341,7 +341,7 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     trap_ctrl_inst.io.external_interrupt            := io.external_interrupt
     trap_ctrl_inst.io.timer_interrupt               := io.timer_interrupt
     trap_ctrl_inst.io.software_interrupt            := io.software_interrupt
-    trap_ctrl_inst.io.debug_interrupt               := io.debug_interrupt   
+    trap_ctrl_inst.io.debug_interrupt               := io.debug_interrupt
     trap_ctrl_inst.io.illegal_instr_exception       := mem2wb_illegal_instr_exception
     trap_ctrl_inst.io.instr_addr_misalign_exception := mem2wb_instr_addr_misalign_exception
     trap_ctrl_inst.io.load_addr_misalign            := mem2wb_load_addr_misalign

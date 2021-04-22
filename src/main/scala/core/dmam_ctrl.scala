@@ -23,8 +23,8 @@
 
 package core
 
+import sib._
 import spinal.core._
-import spinal.lib.bus.amba3.ahblite.AhbLite3
 import spinal.lib.master
 
 case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
@@ -33,8 +33,8 @@ case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
   val cpu2mc_wr              = in Bool
   val cpu2mc_rd              = in Bool
   val cpu2mc_addr            = in UInt(param.XLEN bits)
-  val cpu2mc_data            = in Bits(param.DATA_RAM_DATA_WIDTH bits)
-  val mc2cpu_data            = out Bits(param.DATA_RAM_DATA_WIDTH bits)
+  val cpu2mc_data            = in Bits(param.XLEN bits)
+  val mc2cpu_data            = out Bits(param.XLEN bits)
   val cpu2mc_mem_LS_byte     = in Bool
   val cpu2mc_mem_LS_halfword = in Bool
   val cpu2mc_mem_LW_unsigned = in Bool
@@ -47,7 +47,7 @@ case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
 case class dmem_ctrl(param: CPU_PARAM) extends Component {
 
   val io = dmem_ctrl_io(param)
-  val dmem_ahb = master(AhbLite3(param.dmem_ahbCfg))
+  val dmem_sib = master(Sib(param.sibCfg))
 
   // == Store the information for read data process == //
   val mem_byte_addr   = io.cpu2mc_addr(1 downto 0)
@@ -60,27 +60,27 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
   val cpu2mc_data_7_0  = io.cpu2mc_data(7 downto 0)
   val cpu2mc_data_15_0 = io.cpu2mc_data(15 downto 0)
 
-  val mem2mc_data_byte0 = dmem_ahb.HRDATA(7 downto 0)
-  val mem2mc_data_byte1 = dmem_ahb.HRDATA(15 downto 8)
-  val mem2mc_data_byte2 = dmem_ahb.HRDATA(23 downto 16)
-  val mem2mc_data_byte3 = dmem_ahb.HRDATA(31 downto 24)
-  val mem2mc_data_hw0   = dmem_ahb.HRDATA(15 downto 0)
-  val mem2mc_data_hw1   = dmem_ahb.HRDATA(31 downto 16)
+  val mem2mc_data_byte0 = dmem_sib.rdata(7 downto 0)
+  val mem2mc_data_byte1 = dmem_sib.rdata(15 downto 8)
+  val mem2mc_data_byte2 = dmem_sib.rdata(23 downto 16)
+  val mem2mc_data_byte3 = dmem_sib.rdata(31 downto 24)
+  val mem2mc_data_hw0   = dmem_sib.rdata(15 downto 0)
+  val mem2mc_data_hw1   = dmem_sib.rdata(31 downto 16)
 
   // == extend the data in advance == //
-  val mem2mc_data_byte0_unsign_ext = mem2mc_data_byte0.resize(param.DATA_RAM_DATA_WIDTH)
-  val mem2mc_data_byte1_unsign_ext = mem2mc_data_byte1.resize(param.DATA_RAM_DATA_WIDTH)
-  val mem2mc_data_byte2_unsign_ext = mem2mc_data_byte2.resize(param.DATA_RAM_DATA_WIDTH)
-  val mem2mc_data_byte3_unsign_ext = mem2mc_data_byte3.resize(param.DATA_RAM_DATA_WIDTH)
-  val mem2mc_data_hw0_unsign_ext   = mem2mc_data_hw0.resize(param.DATA_RAM_DATA_WIDTH)
-  val mem2mc_data_hw1_unsign_ext   = mem2mc_data_hw1.resize(param.DATA_RAM_DATA_WIDTH)
+  val mem2mc_data_byte0_unsign_ext = mem2mc_data_byte0.resize(param.XLEN)
+  val mem2mc_data_byte1_unsign_ext = mem2mc_data_byte1.resize(param.XLEN)
+  val mem2mc_data_byte2_unsign_ext = mem2mc_data_byte2.resize(param.XLEN)
+  val mem2mc_data_byte3_unsign_ext = mem2mc_data_byte3.resize(param.XLEN)
+  val mem2mc_data_hw0_unsign_ext   = mem2mc_data_hw0.resize(param.XLEN)
+  val mem2mc_data_hw1_unsign_ext   = mem2mc_data_hw1.resize(param.XLEN)
 
-  val mem2mc_data_byte0_sign_ext = mem2mc_data_byte0.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
-  val mem2mc_data_byte1_sign_ext = mem2mc_data_byte1.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
-  val mem2mc_data_byte2_sign_ext = mem2mc_data_byte2.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
-  val mem2mc_data_byte3_sign_ext = mem2mc_data_byte3.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
-  val mem2mc_data_hw0_sign_ext   = mem2mc_data_hw0.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
-  val mem2mc_data_hw1_sign_ext   = mem2mc_data_hw1.asSInt.resize(param.DATA_RAM_DATA_WIDTH).asBits
+  val mem2mc_data_byte0_sign_ext = mem2mc_data_byte0.asSInt.resize(param.XLEN).asBits
+  val mem2mc_data_byte1_sign_ext = mem2mc_data_byte1.asSInt.resize(param.XLEN).asBits
+  val mem2mc_data_byte2_sign_ext = mem2mc_data_byte2.asSInt.resize(param.XLEN).asBits
+  val mem2mc_data_byte3_sign_ext = mem2mc_data_byte3.asSInt.resize(param.XLEN).asBits
+  val mem2mc_data_hw0_sign_ext   = mem2mc_data_hw0.asSInt.resize(param.XLEN).asBits
+  val mem2mc_data_hw1_sign_ext   = mem2mc_data_hw1.asSInt.resize(param.XLEN).asBits
 
   // == Process the write/read data == //
   /* From RISC-V Spec:
@@ -96,49 +96,49 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
   //       is the entire word, we need to extract the corresponding byte from the word and extends it.
 
   // Write Data
-  dmem_ahb.HWDATA := io.cpu2mc_data
+  dmem_sib.wdata := io.cpu2mc_data
   when(io.cpu2mc_mem_LS_byte) {
     // For simplicity, just set all the byte to the same data
-    dmem_ahb.HWDATA := cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0
+    dmem_sib.wdata := cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0 ## cpu2mc_data_7_0
     /* TODO: Not sure if using the select logic is faster? Can we run synthesis in Quartus to test out?
     switch(mem_byte_addr) {
       // Byte 0
       is(0) {
-        dmem_ahb.HWDATA(7 downto 0) := cpu2mc_data_7_0
+        dmem_sib.wdata(7 downto 0) := cpu2mc_data_7_0
       }
       // Byte 1
       is(1) {
-        dmem_ahb.HWDATA(15 downto 8) := cpu2mc_data_7_0
+        dmem_sib.wdata(15 downto 8) := cpu2mc_data_7_0
       }
       // Byte 2
       is(2) {
-        dmem_ahb.HWDATA(23 downto 16) := cpu2mc_data_7_0
+        dmem_sib.wdata(23 downto 16) := cpu2mc_data_7_0
       }
       // Byte 3
       is(3) {
-        dmem_ahb.HWDATA(31 downto 24) := cpu2mc_data_7_0
+        dmem_sib.wdata(31 downto 24) := cpu2mc_data_7_0
       }
     }
      */
   }.elsewhen(io.cpu2mc_mem_LS_halfword) {
     // For simplicity, just set all the byte to the same data
-    dmem_ahb.HWDATA := cpu2mc_data_15_0 ## cpu2mc_data_15_0
+    dmem_sib.wdata := cpu2mc_data_15_0 ## cpu2mc_data_15_0
     /*
     switch(mem_byte_addr) {
       // HW 0
       is(0) {
-        dmem_ahb.HWDATA(15 downto 0) := cpu2mc_data_15_0
+        dmem_sib.wdata(15 downto 0) := cpu2mc_data_15_0
       }
       // HW 1
       is(2) {
-        dmem_ahb.HWDATA(31 downto 16) := cpu2mc_data_15_0
+        dmem_sib.wdata(31 downto 16) := cpu2mc_data_15_0
       }
     }
      */
   }
 
   // Read Data
-  io.mc2cpu_data := dmem_ahb.HRDATA // Default value
+  io.mc2cpu_data := dmem_sib.rdata // Default value
   when(LS_byte_s1) {
     switch(mem_byte_addr_s1) {
       // Byte 0
@@ -180,18 +180,18 @@ case class dmem_ctrl(param: CPU_PARAM) extends Component {
   // == Control Signal == //
   val wen = io.cpu2mc_wr & ~io.store_addr_misalign
   val ren = io.cpu2mc_rd & ~io.load_addr_misalign
-  dmem_ahb.HSEL       := wen | ren
-  dmem_ahb.HADDR      := io.cpu2mc_addr
-  dmem_ahb.HBURST     := B"000"   // Single burst
-  dmem_ahb.HMASTLOCK  := False
-  dmem_ahb.HPROT      := B"0011"  // Set to 0011 as recommended by the AHB-lite SPEC:
-  // the master sets HPROT to b0011 to correspond to a non-cacheable,
-  // non-bufferable, privileged, data access
-  dmem_ahb.HSIZE      := Mux(io.cpu2mc_mem_LS_byte, B"000", Mux(io.cpu2mc_mem_LS_halfword, B"001", B"010"))
-  dmem_ahb.HTRANS     := B"10"    // Set to NONSEQ
-  dmem_ahb.HWRITE     := wen
+  dmem_sib.sel       := wen | ren
+  dmem_sib.enable    := dmem_sib.sel
+  dmem_sib.addr      := io.cpu2mc_addr
+  dmem_sib.write     := wen
 
-  val imem_hready     = dmem_ahb.HREADY    // This should always be 1
-  val imem_hresp      = dmem_ahb.HRESP     // This should always be 0
-  val imem_data_vld   = imem_hready & ~imem_hresp
+  // Decode logic for write byte enable
+  val byte_mask     = B"0001" |<< io.cpu2mc_addr(1 downto 0)
+  val halfword_mask = Mux(io.cpu2mc_addr(1), B"1100", B"0011")
+  dmem_sib.mask     := Mux(io.cpu2mc_mem_LS_byte, byte_mask, Mux(io.cpu2mc_mem_LS_halfword, halfword_mask, B"1111"))
+
+
+  //val dmem_ready     = dmem_sib.ready    // This should be 1
+  //val dmem_resp      = dmem_sib.resp     // This should be 1
+  //val dmem_data_vld  = dmem_ready & dmem_resp
 }

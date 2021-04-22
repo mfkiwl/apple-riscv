@@ -18,7 +18,7 @@
 
 package soc
 
-import spinal.core._
+import sib._
 
 class SOC_PARAM {
   val NAME = "apple-riscv-soc"
@@ -26,13 +26,23 @@ class SOC_PARAM {
   ////////////////////////////////////////////////////////////////////////////
   //                              Bus Address                               //
   ////////////////////////////////////////////////////////////////////////////
-  val ADDR_SIZE = 32
+  val XLEN = 32
+  val ADDR_WIDTH = XLEN
+  val DATA_WIDTH = XLEN
 
-  val AHB_IMEM_LO = Integer.parseInt("00000000", 16)
-  val AHB_IMEM_HI = Integer.parseInt("00FFFFFF", 16)
+  val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
+  val INSTR_RAM_ADDR_WIDTH = 16                // 64KB Instruction RAM for now
+  val DATA_RAM_DATA_WIDTH  = DATA_WIDTH
+  val DATA_RAM_ADDR_WIDTH  = 16                // 64KB Data RAM for now
 
-  val AHB_DMEM_LO = Integer.parseInt("01000000", 16)
-  val AHB_DMEM_HI = Integer.parseInt("01FFFFFF", 16)
+  val SIB_CPU_LO  = Integer.parseInt("00000000", 16)
+  val SIB_CPU_HI  = Integer.parseInt("7FFFFFFF", 16)  // Integer can only hold upto 7FFFFFFFF
+
+  val SIB_IMEM_LO = Integer.parseInt("00000000", 16)
+  val SIB_IMEM_HI = Integer.parseInt("00FFFFFF", 16)
+
+  val SIB_DMEM_LO = Integer.parseInt("01000000", 16)
+  val SIB_DMEM_HI = Integer.parseInt("01FFFFFF", 16)
 
   /*
   val APB_CLIC_LO = B"32'h02000000"
@@ -46,7 +56,36 @@ class SOC_PARAM {
   val APB_UART_LO = B"32'h02004000"
   val APB_UART_HI = B"32'h02004FFF"
 
-  val AHB2APB_BRDG1_LO = B"32'h02000000"
+  val SIB2APB_BRDG1_LO = B"32'h02000000"
   */
 
+  // ========================== //
+  //       SIB Bus Config       //
+  // ========================== //
+  val imemSibCfg = SibConfig(
+    addressWidth = INSTR_RAM_ADDR_WIDTH,
+    dataWidth    = INSTR_RAM_DATA_WIDTH,
+    addr_lo      = SIB_IMEM_LO,
+    addr_hi      = SIB_IMEM_HI
+  )
+
+  val dmemSibCfg = SibConfig(
+    addressWidth = DATA_RAM_ADDR_WIDTH,
+    dataWidth    = DATA_RAM_DATA_WIDTH,
+    addr_lo      = SIB_DMEM_LO,
+    addr_hi      = SIB_DMEM_HI
+  )
+
+  val cpuSibCfg = SibConfig(
+    addressWidth = XLEN,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_CPU_LO,
+    addr_hi      = SIB_CPU_HI
+  )
+
+  // FIXME
+  val clicSibCfg = SibConfig(
+    addressWidth = DATA_RAM_ADDR_WIDTH,
+    dataWidth    = DATA_RAM_DATA_WIDTH
+  )
 }

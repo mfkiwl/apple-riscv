@@ -50,19 +50,16 @@ initial begin
 end
 `endif
 
-  reg      [15:0]   imem_dbg_ahb_HADDR      = 'b0;
-  reg               imem_dbg_ahb_HSEL       = 'b0;
-  reg               imem_dbg_ahb_HREADY     = 'b0;
-  reg               imem_dbg_ahb_HWRITE     = 'b0;
-  reg      [2:0]    imem_dbg_ahb_HSIZE      = 'b0;
-  reg      [2:0]    imem_dbg_ahb_HBURST     = 'b0;
-  reg      [3:0]    imem_dbg_ahb_HPROT      = 'b0;
-  reg      [1:0]    imem_dbg_ahb_HTRANS     = 'b0;
-  reg               imem_dbg_ahb_HMASTLOCK  = 'b0;
-  reg      [31:0]   imem_dbg_ahb_HWDATA     = 'b0;
-  wire     [31:0]   imem_dbg_ahb_HRDATA;
-  wire              imem_dbg_ahb_HREADYOUT;
-  wire              imem_dbg_ahb_HRESP;
+  reg      [15:0]   imem_dbg_sib_addr      = 'b0;
+  reg               imem_dbg_sib_sel       = 'b0;
+  reg               imem_dbg_sib_enable    = 'b0;
+  reg               imem_dbg_sib_write     = 'b0;
+  reg      [31:0]   imem_dbg_sib_wdata     = 'b0;
+  reg      [3:0]    imem_dbg_sib_mask      = 'b0;
+  wire     [31:0]   imem_dbg_sib_rdata;
+  wire              imem_dbg_sib_ready;
+  wire              imem_dbg_sib_resp;
+
 
 endmodule
 

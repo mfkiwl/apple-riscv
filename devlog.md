@@ -2,6 +2,11 @@
 
 ## Milestone 0.2
 
+- 04/21/2021
+  - Designed a sib switch with 1 to N topology
+  - Replaced the AHB bus with the SIB bus
+  - Moved memory into soc folder
+
 - 04/20/2021
   - Designed the sib (simple internal bus)
     - sib will be replacing the AHB and used for the SOC inter-connection
