@@ -156,12 +156,14 @@ case class Sib_switch1tN(mainSibCfg: SibConfig, targetSibCfg: Array[SibConfig]) 
 
   val num = targetSibCfg.length
   val dec_sel = Bits(num bits)
+  val dec_sel_ff = RegNext(dec_sel)
   val dec_good = dec_sel.orR
   for (i <- 0 until num) {
     dec_sel(i) := (hostSib.addr >= clientSib(i).config.addr_lo) & (hostSib.addr <= clientSib(i).config.addr_hi)
   }
 
-  hostSib.rdata := MuxOH(dec_sel, clientSib.map(_.rdata))
+  // need to delay the sel for one cycle as data come at the next cycle
+  hostSib.rdata := MuxOH(dec_sel_ff, clientSib.map(_.rdata))
   hostSib.resp  := MuxOH(dec_sel, clientSib.map(_.resp)) & dec_good
   hostSib.ready := MuxOH(dec_sel, clientSib.map(_.ready))
 

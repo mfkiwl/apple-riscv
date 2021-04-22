@@ -44,9 +44,11 @@ class SOC_PARAM {
   val SIB_DMEM_LO = Integer.parseInt("01000000", 16)
   val SIB_DMEM_HI = Integer.parseInt("01FFFFFF", 16)
 
+
+  val SIB_CLIC_LO = Integer.parseInt("02000000", 16)
+  val SIB_CLIC_HI = Integer.parseInt("02000FFF", 16)
+  val SIB_ADDR_WIDTH = 12
   /*
-  val APB_CLIC_LO = B"32'h02000000"
-  val APB_CLIC_HI = B"32'h02000FFF"
   val APB_PLIC_LO = B"32'h02001000"
   val APB_PLIC_HI = B"32'h02001FFF"
   val APB_TMR_LO  = B"32'h02002000"
@@ -64,14 +66,14 @@ class SOC_PARAM {
   // ========================== //
   val imemSibCfg = SibConfig(
     addressWidth = INSTR_RAM_ADDR_WIDTH,
-    dataWidth    = INSTR_RAM_DATA_WIDTH,
+    dataWidth    = XLEN,
     addr_lo      = SIB_IMEM_LO,
     addr_hi      = SIB_IMEM_HI
   )
 
   val dmemSibCfg = SibConfig(
     addressWidth = DATA_RAM_ADDR_WIDTH,
-    dataWidth    = DATA_RAM_DATA_WIDTH,
+    dataWidth    = XLEN,
     addr_lo      = SIB_DMEM_LO,
     addr_hi      = SIB_DMEM_HI
   )
@@ -83,9 +85,10 @@ class SOC_PARAM {
     addr_hi      = SIB_CPU_HI
   )
 
-  // FIXME
   val clicSibCfg = SibConfig(
-    addressWidth = DATA_RAM_ADDR_WIDTH,
-    dataWidth    = DATA_RAM_DATA_WIDTH
+    addressWidth = SIB_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_CLIC_LO,
+    addr_hi      = SIB_CLIC_HI
   )
 }

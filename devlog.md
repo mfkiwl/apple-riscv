@@ -6,6 +6,7 @@
   - Designed a sib switch with 1 to N topology
   - Replaced the AHB bus with the SIB bus
   - Moved memory into soc folder
+  - Designed the CLIC module and updated SOC
 
 - 04/20/2021
   - Designed the sib (simple internal bus)

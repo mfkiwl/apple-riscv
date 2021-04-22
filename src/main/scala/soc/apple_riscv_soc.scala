@@ -21,6 +21,7 @@ import spinal.core._
 import spinal.lib._
 import sib._
 import core._
+import ip._
 
 
 
@@ -33,9 +34,10 @@ case class apple_riscv_soc(soc_param: SOC_PARAM, cpu_param: CPU_PARAM) extends C
     cpu_core.io.software_interrupt  := False
     cpu_core.io.debug_interrupt     := False
 
-    // imem & dmem
+    // soc component instance
     val imem_inst = imem(soc_param)
     val dmem_inst = dmem(soc_param)
+    val clic_isnt = clic(soc_param)
 
     // Imem debug bus
     val imem_dbg_sib = slave(Sib(soc_param.imemSibCfg))
@@ -50,10 +52,11 @@ case class apple_riscv_soc(soc_param: SOC_PARAM, cpu_param: CPU_PARAM) extends C
     imem_switch.clientSib(0) <> imem_inst.imem_cpu_sib
 
     // dmem bus switch
-    val dmemClientSibCfg = Array(soc_param.dmemSibCfg)
+    val dmemClientSibCfg = Array(soc_param.dmemSibCfg, soc_param.clicSibCfg)
     val dmem_switch = Sib_switch1tN(soc_param.cpuSibCfg, dmemClientSibCfg)
 
     // dmem bus connection
-    dmem_switch.hostSib <> cpu_core.dmem_sib
-    dmem_switch.clientSib(0) <> dmem_inst.dmem_sib
+    dmem_switch.hostSib <> cpu_core.dmem_sib            // To CPU
+    dmem_switch.clientSib(0) <> dmem_inst.dmem_sib      // To dmem
+    dmem_switch.clientSib(1) <> clic_isnt.clic_sib      // To CLIC
 }

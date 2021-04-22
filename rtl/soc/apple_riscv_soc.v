@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : e72ce92d5862997877ed80888a9221651776e660
+// Git hash  : 3dd7d724e8d6446e0c784c86f9caacfae9d6bc73
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -54,6 +54,11 @@ module apple_riscv_soc (
   wire       [31:0]   dmem_inst_dmem_sib_rdata;
   wire                dmem_inst_dmem_sib_ready;
   wire                dmem_inst_dmem_sib_resp;
+  wire                clic_isnt_io_software_interrupt;
+  wire                clic_isnt_io_timer_interrupt;
+  wire       [31:0]   clic_isnt_clic_sib_rdata;
+  wire                clic_isnt_clic_sib_ready;
+  wire                clic_isnt_clic_sib_resp;
   wire       [31:0]   imem_switch_hostSib_rdata;
   wire                imem_switch_hostSib_ready;
   wire                imem_switch_hostSib_resp;
@@ -72,6 +77,12 @@ module apple_riscv_soc (
   wire       [3:0]    dmem_switch_clientSib_0_mask;
   wire       [31:0]   dmem_switch_clientSib_0_wdata;
   wire       [15:0]   dmem_switch_clientSib_0_addr;
+  wire                dmem_switch_clientSib_1_sel;
+  wire                dmem_switch_clientSib_1_enable;
+  wire                dmem_switch_clientSib_1_write;
+  wire       [3:0]    dmem_switch_clientSib_1_mask;
+  wire       [31:0]   dmem_switch_clientSib_1_wdata;
+  wire       [11:0]   dmem_switch_clientSib_1_addr;
 
   apple_riscv cpu_core (
     .io_external_interrupt    (_zz_1                            ), //i
@@ -134,6 +145,21 @@ module apple_riscv_soc (
     .clk                (clk                                  ), //i
     .reset              (reset                                )  //i
   );
+  clic clic_isnt (
+    .io_software_interrupt    (clic_isnt_io_software_interrupt      ), //o
+    .io_timer_interrupt       (clic_isnt_io_timer_interrupt         ), //o
+    .clic_sib_sel             (dmem_switch_clientSib_1_sel          ), //i
+    .clic_sib_enable          (dmem_switch_clientSib_1_enable       ), //i
+    .clic_sib_write           (dmem_switch_clientSib_1_write        ), //i
+    .clic_sib_mask            (dmem_switch_clientSib_1_mask[3:0]    ), //i
+    .clic_sib_addr            (dmem_switch_clientSib_1_addr[11:0]   ), //i
+    .clic_sib_wdata           (dmem_switch_clientSib_1_wdata[31:0]  ), //i
+    .clic_sib_rdata           (clic_isnt_clic_sib_rdata[31:0]       ), //o
+    .clic_sib_ready           (clic_isnt_clic_sib_ready             ), //o
+    .clic_sib_resp            (clic_isnt_clic_sib_resp              ), //o
+    .clk                      (clk                                  ), //i
+    .reset                    (reset                                )  //i
+  );
   Sib_switch1tN imem_switch (
     .hostSib_sel           (cpu_core_imem_sib_sel                ), //i
     .hostSib_enable        (cpu_core_imem_sib_enable             ), //i
@@ -152,7 +178,9 @@ module apple_riscv_soc (
     .clientSib_0_wdata     (imem_switch_clientSib_0_wdata[31:0]  ), //o
     .clientSib_0_rdata     (imem_inst_imem_cpu_sib_rdata[31:0]   ), //i
     .clientSib_0_ready     (imem_inst_imem_cpu_sib_ready         ), //i
-    .clientSib_0_resp      (imem_inst_imem_cpu_sib_resp          )  //i
+    .clientSib_0_resp      (imem_inst_imem_cpu_sib_resp          ), //i
+    .clk                   (clk                                  ), //i
+    .reset                 (reset                                )  //i
   );
   Sib_switch1tN_1 dmem_switch (
     .hostSib_sel           (cpu_core_dmem_sib_sel                ), //i
@@ -172,7 +200,18 @@ module apple_riscv_soc (
     .clientSib_0_wdata     (dmem_switch_clientSib_0_wdata[31:0]  ), //o
     .clientSib_0_rdata     (dmem_inst_dmem_sib_rdata[31:0]       ), //i
     .clientSib_0_ready     (dmem_inst_dmem_sib_ready             ), //i
-    .clientSib_0_resp      (dmem_inst_dmem_sib_resp              )  //i
+    .clientSib_0_resp      (dmem_inst_dmem_sib_resp              ), //i
+    .clientSib_1_sel       (dmem_switch_clientSib_1_sel          ), //o
+    .clientSib_1_enable    (dmem_switch_clientSib_1_enable       ), //o
+    .clientSib_1_write     (dmem_switch_clientSib_1_write        ), //o
+    .clientSib_1_mask      (dmem_switch_clientSib_1_mask[3:0]    ), //o
+    .clientSib_1_addr      (dmem_switch_clientSib_1_addr[11:0]   ), //o
+    .clientSib_1_wdata     (dmem_switch_clientSib_1_wdata[31:0]  ), //o
+    .clientSib_1_rdata     (clic_isnt_clic_sib_rdata[31:0]       ), //i
+    .clientSib_1_ready     (clic_isnt_clic_sib_ready             ), //i
+    .clientSib_1_resp      (clic_isnt_clic_sib_resp              ), //i
+    .clk                   (clk                                  ), //i
+    .reset                 (reset                                )  //i
   );
   assign _zz_1 = 1'b0;
   assign _zz_2 = 1'b0;
@@ -202,22 +241,50 @@ module Sib_switch1tN_1 (
   output     [31:0]   clientSib_0_wdata,
   input      [31:0]   clientSib_0_rdata,
   input               clientSib_0_ready,
-  input               clientSib_0_resp
+  input               clientSib_0_resp,
+  output              clientSib_1_sel,
+  output              clientSib_1_enable,
+  output              clientSib_1_write,
+  output     [3:0]    clientSib_1_mask,
+  output     [11:0]   clientSib_1_addr,
+  output     [31:0]   clientSib_1_wdata,
+  input      [31:0]   clientSib_1_rdata,
+  input               clientSib_1_ready,
+  input               clientSib_1_resp,
+  input               clk,
+  input               reset
 );
-  wire       [0:0]    dec_sel;
+  reg        [1:0]    dec_sel;
+  reg        [1:0]    dec_sel_ff;
   wire                dec_good;
+  wire                _zz_1;
 
-  assign dec_good = (dec_sel != 1'b0);
-  assign dec_sel[0] = ((32'h01000000 <= hostSib_addr) && (hostSib_addr <= 32'h01ffffff));
-  assign hostSib_rdata = clientSib_0_rdata;
-  assign hostSib_resp = (clientSib_0_resp && dec_good);
-  assign hostSib_ready = clientSib_0_ready;
+  assign dec_good = (dec_sel != 2'b00);
+  always @ (*) begin
+    dec_sel[0] = ((32'h01000000 <= hostSib_addr) && (hostSib_addr <= 32'h01ffffff));
+    dec_sel[1] = ((32'h02000000 <= hostSib_addr) && (hostSib_addr <= 32'h02000fff));
+  end
+
+  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
+  assign _zz_1 = dec_sel[0];
+  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
+  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
   assign clientSib_0_write = hostSib_write;
   assign clientSib_0_addr = hostSib_addr[15 : 0];
   assign clientSib_0_wdata = hostSib_wdata;
   assign clientSib_0_enable = hostSib_enable;
   assign clientSib_0_mask = hostSib_mask;
   assign clientSib_0_sel = (hostSib_sel && dec_sel[0]);
+  assign clientSib_1_write = hostSib_write;
+  assign clientSib_1_addr = hostSib_addr[11 : 0];
+  assign clientSib_1_wdata = hostSib_wdata;
+  assign clientSib_1_enable = hostSib_enable;
+  assign clientSib_1_mask = hostSib_mask;
+  assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
+  always @ (posedge clk) begin
+    dec_sel_ff <= dec_sel;
+  end
+
 
 endmodule
 
@@ -239,9 +306,12 @@ module Sib_switch1tN (
   output     [31:0]   clientSib_0_wdata,
   input      [31:0]   clientSib_0_rdata,
   input               clientSib_0_ready,
-  input               clientSib_0_resp
+  input               clientSib_0_resp,
+  input               clk,
+  input               reset
 );
   wire       [0:0]    dec_sel;
+  reg        [0:0]    dec_sel_ff;
   wire                dec_good;
 
   assign dec_good = (dec_sel != 1'b0);
@@ -255,6 +325,133 @@ module Sib_switch1tN (
   assign clientSib_0_enable = hostSib_enable;
   assign clientSib_0_mask = hostSib_mask;
   assign clientSib_0_sel = (hostSib_sel && dec_sel[0]);
+  always @ (posedge clk) begin
+    dec_sel_ff <= dec_sel;
+  end
+
+
+endmodule
+
+module clic (
+  output              io_software_interrupt,
+  output              io_timer_interrupt,
+  input               clic_sib_sel,
+  input               clic_sib_enable,
+  input               clic_sib_write,
+  input      [3:0]    clic_sib_mask,
+  input      [11:0]   clic_sib_addr,
+  input      [31:0]   clic_sib_wdata,
+  output reg [31:0]   clic_sib_rdata,
+  output              clic_sib_ready,
+  output reg          clic_sib_resp,
+  input               clk,
+  input               reset
+);
+  wire                _zz_1;
+  wire       [0:0]    _zz_2;
+  reg                 msip;
+  reg        [31:0]   mtime_lo;
+  reg        [31:0]   mtime_hi;
+  reg        [31:0]   mtimecmp_lo;
+  reg        [31:0]   mtimecmp_hi;
+  wire       [63:0]   mtime;
+  wire       [63:0]   mtimecmp;
+
+  assign _zz_1 = (clic_sib_sel && clic_sib_enable);
+  assign _zz_2 = msip;
+  assign io_software_interrupt = msip;
+  assign mtime = {mtime_hi,mtime_lo};
+  assign mtimecmp = {mtimecmp_hi,mtimecmp_lo};
+  assign io_timer_interrupt = (mtimecmp <= mtime);
+  always @ (*) begin
+    clic_sib_resp = 1'b1;
+    if(_zz_1)begin
+      case(clic_sib_addr)
+        12'h0 : begin
+        end
+        12'h004 : begin
+        end
+        12'h008 : begin
+        end
+        12'h00c : begin
+        end
+        12'h010 : begin
+        end
+        default : begin
+          clic_sib_resp = 1'b0;
+        end
+      endcase
+    end
+  end
+
+  always @ (*) begin
+    clic_sib_rdata = mtime_lo;
+    if(_zz_1)begin
+      case(clic_sib_addr)
+        12'h0 : begin
+          clic_sib_rdata = {31'd0, _zz_2};
+        end
+        12'h004 : begin
+          clic_sib_rdata = mtime_lo;
+        end
+        12'h008 : begin
+          clic_sib_rdata = mtime_hi;
+        end
+        12'h00c : begin
+          clic_sib_rdata = mtimecmp_lo;
+        end
+        12'h010 : begin
+          clic_sib_rdata = mtimecmp_hi;
+        end
+        default : begin
+        end
+      endcase
+    end
+  end
+
+  assign clic_sib_ready = 1'b1;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      msip <= 1'b0;
+      mtime_lo <= 32'h0;
+      mtime_hi <= 32'h0;
+      mtimecmp_lo <= 32'h0;
+      mtimecmp_hi <= 32'h0;
+    end else begin
+      if(_zz_1)begin
+        case(clic_sib_addr)
+          12'h0 : begin
+            if(clic_sib_write)begin
+              msip <= clic_sib_wdata[0];
+            end
+          end
+          12'h004 : begin
+            if(clic_sib_write)begin
+              mtime_lo <= clic_sib_wdata;
+            end
+          end
+          12'h008 : begin
+            if(clic_sib_write)begin
+              mtime_hi <= clic_sib_wdata;
+            end
+          end
+          12'h00c : begin
+            if(clic_sib_write)begin
+              mtimecmp_lo <= clic_sib_wdata;
+            end
+          end
+          12'h010 : begin
+            if(clic_sib_write)begin
+              mtimecmp_hi <= clic_sib_wdata;
+            end
+          end
+          default : begin
+          end
+        endcase
+      end
+    end
+  end
+
 
 endmodule
 
