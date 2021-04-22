@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 3dd7d724e8d6446e0c784c86f9caacfae9d6bc73
+// Git hash  : 0b5de7627499b8df696dcbefadbb2ddbd71f7848
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -26,13 +26,14 @@ module apple_riscv_soc (
   output     [31:0]   imem_dbg_sib_rdata,
   output              imem_dbg_sib_ready,
   output              imem_dbg_sib_resp,
+   inout     [31:0]   gpio_port_gpio_group0,
   input               clk,
   input               reset
 );
-  wire                _zz_1;
-  wire                _zz_2;
-  wire                _zz_3;
-  wire                _zz_4;
+  wire                _zz_36;
+  wire                _zz_37;
+  wire                _zz_38;
+  wire                _zz_39;
   wire                cpu_core_imem_sib_sel;
   wire                cpu_core_imem_sib_enable;
   wire                cpu_core_imem_sib_write;
@@ -59,6 +60,15 @@ module apple_riscv_soc (
   wire       [31:0]   clic_isnt_clic_sib_rdata;
   wire                clic_isnt_clic_sib_ready;
   wire                clic_isnt_clic_sib_resp;
+  wire       [31:0]   gpio_inst_io_gpio_group0_write;
+  wire       [31:0]   gpio_inst_io_gpio_group0_writeEnable;
+  wire       [31:0]   gpio_inst_gpio_sib_rdata;
+  wire                gpio_inst_gpio_sib_ready;
+  wire                gpio_inst_gpio_sib_resp;
+  wire                timer_inst_io_timer_interrupt;
+  wire       [31:0]   timer_inst_timer_sib_rdata;
+  wire                timer_inst_timer_sib_ready;
+  wire                timer_inst_timer_sib_resp;
   wire       [31:0]   imem_switch_hostSib_rdata;
   wire                imem_switch_hostSib_ready;
   wire                imem_switch_hostSib_resp;
@@ -83,12 +93,68 @@ module apple_riscv_soc (
   wire       [3:0]    dmem_switch_clientSib_1_mask;
   wire       [31:0]   dmem_switch_clientSib_1_wdata;
   wire       [11:0]   dmem_switch_clientSib_1_addr;
+  wire                dmem_switch_clientSib_2_sel;
+  wire                dmem_switch_clientSib_2_enable;
+  wire                dmem_switch_clientSib_2_write;
+  wire       [3:0]    dmem_switch_clientSib_2_mask;
+  wire       [31:0]   dmem_switch_clientSib_2_wdata;
+  wire       [15:0]   dmem_switch_clientSib_2_addr;
+  wire       [31:0]   perip_switch_hostSib_rdata;
+  wire                perip_switch_hostSib_ready;
+  wire                perip_switch_hostSib_resp;
+  wire                perip_switch_clientSib_0_sel;
+  wire                perip_switch_clientSib_0_enable;
+  wire                perip_switch_clientSib_0_write;
+  wire       [3:0]    perip_switch_clientSib_0_mask;
+  wire       [31:0]   perip_switch_clientSib_0_wdata;
+  wire       [11:0]   perip_switch_clientSib_0_addr;
+  wire                perip_switch_clientSib_1_sel;
+  wire                perip_switch_clientSib_1_enable;
+  wire                perip_switch_clientSib_1_write;
+  wire       [3:0]    perip_switch_clientSib_1_mask;
+  wire       [31:0]   perip_switch_clientSib_1_wdata;
+  wire       [11:0]   perip_switch_clientSib_1_addr;
+  reg                 _zz_1;
+  reg                 _zz_2;
+  reg                 _zz_3;
+  reg                 _zz_4;
+  reg                 _zz_5;
+  reg                 _zz_6;
+  reg                 _zz_7;
+  reg                 _zz_8;
+  reg                 _zz_9;
+  reg                 _zz_10;
+  reg                 _zz_11;
+  reg                 _zz_12;
+  reg                 _zz_13;
+  reg                 _zz_14;
+  reg                 _zz_15;
+  reg                 _zz_16;
+  reg                 _zz_17;
+  reg                 _zz_18;
+  reg                 _zz_19;
+  reg                 _zz_20;
+  reg                 _zz_21;
+  reg                 _zz_22;
+  reg                 _zz_23;
+  reg                 _zz_24;
+  reg                 _zz_25;
+  reg                 _zz_26;
+  reg                 _zz_27;
+  reg                 _zz_28;
+  reg                 _zz_29;
+  reg                 _zz_30;
+  reg                 _zz_31;
+  reg                 _zz_32;
+  wire       [31:0]   _zz_33;
+  wire       [31:0]   _zz_34;
+  wire       [31:0]   _zz_35;
 
   apple_riscv cpu_core (
-    .io_external_interrupt    (_zz_1                            ), //i
-    .io_timer_interrupt       (_zz_2                            ), //i
-    .io_software_interrupt    (_zz_3                            ), //i
-    .io_debug_interrupt       (_zz_4                            ), //i
+    .io_external_interrupt    (_zz_36                           ), //i
+    .io_timer_interrupt       (_zz_37                           ), //i
+    .io_software_interrupt    (_zz_38                           ), //i
+    .io_debug_interrupt       (_zz_39                           ), //i
     .imem_sib_sel             (cpu_core_imem_sib_sel            ), //o
     .imem_sib_enable          (cpu_core_imem_sib_enable         ), //o
     .imem_sib_write           (cpu_core_imem_sib_write          ), //o
@@ -160,6 +226,36 @@ module apple_riscv_soc (
     .clk                      (clk                                  ), //i
     .reset                    (reset                                )  //i
   );
+  gpio gpio_inst (
+    .io_gpio_group0_read           (_zz_33[31:0]                                ), //i
+    .io_gpio_group0_write          (gpio_inst_io_gpio_group0_write[31:0]        ), //o
+    .io_gpio_group0_writeEnable    (gpio_inst_io_gpio_group0_writeEnable[31:0]  ), //o
+    .gpio_sib_sel                  (perip_switch_clientSib_1_sel                ), //i
+    .gpio_sib_enable               (perip_switch_clientSib_1_enable             ), //i
+    .gpio_sib_write                (perip_switch_clientSib_1_write              ), //i
+    .gpio_sib_mask                 (perip_switch_clientSib_1_mask[3:0]          ), //i
+    .gpio_sib_addr                 (perip_switch_clientSib_1_addr[11:0]         ), //i
+    .gpio_sib_wdata                (perip_switch_clientSib_1_wdata[31:0]        ), //i
+    .gpio_sib_rdata                (gpio_inst_gpio_sib_rdata[31:0]              ), //o
+    .gpio_sib_ready                (gpio_inst_gpio_sib_ready                    ), //o
+    .gpio_sib_resp                 (gpio_inst_gpio_sib_resp                     ), //o
+    .clk                           (clk                                         ), //i
+    .reset                         (reset                                       )  //i
+  );
+  timer timer_inst (
+    .io_timer_interrupt    (timer_inst_io_timer_interrupt         ), //o
+    .timer_sib_sel         (perip_switch_clientSib_0_sel          ), //i
+    .timer_sib_enable      (perip_switch_clientSib_0_enable       ), //i
+    .timer_sib_write       (perip_switch_clientSib_0_write        ), //i
+    .timer_sib_mask        (perip_switch_clientSib_0_mask[3:0]    ), //i
+    .timer_sib_addr        (perip_switch_clientSib_0_addr[11:0]   ), //i
+    .timer_sib_wdata       (perip_switch_clientSib_0_wdata[31:0]  ), //i
+    .timer_sib_rdata       (timer_inst_timer_sib_rdata[31:0]      ), //o
+    .timer_sib_ready       (timer_inst_timer_sib_ready            ), //o
+    .timer_sib_resp        (timer_inst_timer_sib_resp             ), //o
+    .clk                   (clk                                   ), //i
+    .reset                 (reset                                 )  //i
+  );
   Sib_switch1tN imem_switch (
     .hostSib_sel           (cpu_core_imem_sib_sel                ), //i
     .hostSib_enable        (cpu_core_imem_sib_enable             ), //i
@@ -210,16 +306,380 @@ module apple_riscv_soc (
     .clientSib_1_rdata     (clic_isnt_clic_sib_rdata[31:0]       ), //i
     .clientSib_1_ready     (clic_isnt_clic_sib_ready             ), //i
     .clientSib_1_resp      (clic_isnt_clic_sib_resp              ), //i
+    .clientSib_2_sel       (dmem_switch_clientSib_2_sel          ), //o
+    .clientSib_2_enable    (dmem_switch_clientSib_2_enable       ), //o
+    .clientSib_2_write     (dmem_switch_clientSib_2_write        ), //o
+    .clientSib_2_mask      (dmem_switch_clientSib_2_mask[3:0]    ), //o
+    .clientSib_2_addr      (dmem_switch_clientSib_2_addr[15:0]   ), //o
+    .clientSib_2_wdata     (dmem_switch_clientSib_2_wdata[31:0]  ), //o
+    .clientSib_2_rdata     (perip_switch_hostSib_rdata[31:0]     ), //i
+    .clientSib_2_ready     (perip_switch_hostSib_ready           ), //i
+    .clientSib_2_resp      (perip_switch_hostSib_resp            ), //i
     .clk                   (clk                                  ), //i
     .reset                 (reset                                )  //i
   );
-  assign _zz_1 = 1'b0;
-  assign _zz_2 = 1'b0;
-  assign _zz_3 = 1'b0;
-  assign _zz_4 = 1'b0;
+  Sib_switch1tN_2 perip_switch (
+    .hostSib_sel           (dmem_switch_clientSib_2_sel           ), //i
+    .hostSib_enable        (dmem_switch_clientSib_2_enable        ), //i
+    .hostSib_write         (dmem_switch_clientSib_2_write         ), //i
+    .hostSib_mask          (dmem_switch_clientSib_2_mask[3:0]     ), //i
+    .hostSib_addr          (dmem_switch_clientSib_2_addr[15:0]    ), //i
+    .hostSib_wdata         (dmem_switch_clientSib_2_wdata[31:0]   ), //i
+    .hostSib_rdata         (perip_switch_hostSib_rdata[31:0]      ), //o
+    .hostSib_ready         (perip_switch_hostSib_ready            ), //o
+    .hostSib_resp          (perip_switch_hostSib_resp             ), //o
+    .clientSib_0_sel       (perip_switch_clientSib_0_sel          ), //o
+    .clientSib_0_enable    (perip_switch_clientSib_0_enable       ), //o
+    .clientSib_0_write     (perip_switch_clientSib_0_write        ), //o
+    .clientSib_0_mask      (perip_switch_clientSib_0_mask[3:0]    ), //o
+    .clientSib_0_addr      (perip_switch_clientSib_0_addr[11:0]   ), //o
+    .clientSib_0_wdata     (perip_switch_clientSib_0_wdata[31:0]  ), //o
+    .clientSib_0_rdata     (timer_inst_timer_sib_rdata[31:0]      ), //i
+    .clientSib_0_ready     (timer_inst_timer_sib_ready            ), //i
+    .clientSib_0_resp      (timer_inst_timer_sib_resp             ), //i
+    .clientSib_1_sel       (perip_switch_clientSib_1_sel          ), //o
+    .clientSib_1_enable    (perip_switch_clientSib_1_enable       ), //o
+    .clientSib_1_write     (perip_switch_clientSib_1_write        ), //o
+    .clientSib_1_mask      (perip_switch_clientSib_1_mask[3:0]    ), //o
+    .clientSib_1_addr      (perip_switch_clientSib_1_addr[11:0]   ), //o
+    .clientSib_1_wdata     (perip_switch_clientSib_1_wdata[31:0]  ), //o
+    .clientSib_1_rdata     (gpio_inst_gpio_sib_rdata[31:0]        ), //i
+    .clientSib_1_ready     (gpio_inst_gpio_sib_ready              ), //i
+    .clientSib_1_resp      (gpio_inst_gpio_sib_resp               ), //i
+    .clk                   (clk                                   ), //i
+    .reset                 (reset                                 )  //i
+  );
+  assign gpio_port_gpio_group0[0] = _zz_32 ? _zz_34[0] : 1'bz;
+  assign gpio_port_gpio_group0[1] = _zz_31 ? _zz_34[1] : 1'bz;
+  assign gpio_port_gpio_group0[2] = _zz_30 ? _zz_34[2] : 1'bz;
+  assign gpio_port_gpio_group0[3] = _zz_29 ? _zz_34[3] : 1'bz;
+  assign gpio_port_gpio_group0[4] = _zz_28 ? _zz_34[4] : 1'bz;
+  assign gpio_port_gpio_group0[5] = _zz_27 ? _zz_34[5] : 1'bz;
+  assign gpio_port_gpio_group0[6] = _zz_26 ? _zz_34[6] : 1'bz;
+  assign gpio_port_gpio_group0[7] = _zz_25 ? _zz_34[7] : 1'bz;
+  assign gpio_port_gpio_group0[8] = _zz_24 ? _zz_34[8] : 1'bz;
+  assign gpio_port_gpio_group0[9] = _zz_23 ? _zz_34[9] : 1'bz;
+  assign gpio_port_gpio_group0[10] = _zz_22 ? _zz_34[10] : 1'bz;
+  assign gpio_port_gpio_group0[11] = _zz_21 ? _zz_34[11] : 1'bz;
+  assign gpio_port_gpio_group0[12] = _zz_20 ? _zz_34[12] : 1'bz;
+  assign gpio_port_gpio_group0[13] = _zz_19 ? _zz_34[13] : 1'bz;
+  assign gpio_port_gpio_group0[14] = _zz_18 ? _zz_34[14] : 1'bz;
+  assign gpio_port_gpio_group0[15] = _zz_17 ? _zz_34[15] : 1'bz;
+  assign gpio_port_gpio_group0[16] = _zz_16 ? _zz_34[16] : 1'bz;
+  assign gpio_port_gpio_group0[17] = _zz_15 ? _zz_34[17] : 1'bz;
+  assign gpio_port_gpio_group0[18] = _zz_14 ? _zz_34[18] : 1'bz;
+  assign gpio_port_gpio_group0[19] = _zz_13 ? _zz_34[19] : 1'bz;
+  assign gpio_port_gpio_group0[20] = _zz_12 ? _zz_34[20] : 1'bz;
+  assign gpio_port_gpio_group0[21] = _zz_11 ? _zz_34[21] : 1'bz;
+  assign gpio_port_gpio_group0[22] = _zz_10 ? _zz_34[22] : 1'bz;
+  assign gpio_port_gpio_group0[23] = _zz_9 ? _zz_34[23] : 1'bz;
+  assign gpio_port_gpio_group0[24] = _zz_8 ? _zz_34[24] : 1'bz;
+  assign gpio_port_gpio_group0[25] = _zz_7 ? _zz_34[25] : 1'bz;
+  assign gpio_port_gpio_group0[26] = _zz_6 ? _zz_34[26] : 1'bz;
+  assign gpio_port_gpio_group0[27] = _zz_5 ? _zz_34[27] : 1'bz;
+  assign gpio_port_gpio_group0[28] = _zz_4 ? _zz_34[28] : 1'bz;
+  assign gpio_port_gpio_group0[29] = _zz_3 ? _zz_34[29] : 1'bz;
+  assign gpio_port_gpio_group0[30] = _zz_2 ? _zz_34[30] : 1'bz;
+  assign gpio_port_gpio_group0[31] = _zz_1 ? _zz_34[31] : 1'bz;
+  always @ (*) begin
+    _zz_1 = 1'b0;
+    if(_zz_35[31])begin
+      _zz_1 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_2 = 1'b0;
+    if(_zz_35[30])begin
+      _zz_2 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_3 = 1'b0;
+    if(_zz_35[29])begin
+      _zz_3 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_4 = 1'b0;
+    if(_zz_35[28])begin
+      _zz_4 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_5 = 1'b0;
+    if(_zz_35[27])begin
+      _zz_5 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_6 = 1'b0;
+    if(_zz_35[26])begin
+      _zz_6 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_7 = 1'b0;
+    if(_zz_35[25])begin
+      _zz_7 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_8 = 1'b0;
+    if(_zz_35[24])begin
+      _zz_8 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_9 = 1'b0;
+    if(_zz_35[23])begin
+      _zz_9 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_10 = 1'b0;
+    if(_zz_35[22])begin
+      _zz_10 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_11 = 1'b0;
+    if(_zz_35[21])begin
+      _zz_11 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_12 = 1'b0;
+    if(_zz_35[20])begin
+      _zz_12 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_13 = 1'b0;
+    if(_zz_35[19])begin
+      _zz_13 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_14 = 1'b0;
+    if(_zz_35[18])begin
+      _zz_14 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_15 = 1'b0;
+    if(_zz_35[17])begin
+      _zz_15 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_16 = 1'b0;
+    if(_zz_35[16])begin
+      _zz_16 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_17 = 1'b0;
+    if(_zz_35[15])begin
+      _zz_17 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_18 = 1'b0;
+    if(_zz_35[14])begin
+      _zz_18 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_19 = 1'b0;
+    if(_zz_35[13])begin
+      _zz_19 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_20 = 1'b0;
+    if(_zz_35[12])begin
+      _zz_20 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_21 = 1'b0;
+    if(_zz_35[11])begin
+      _zz_21 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_22 = 1'b0;
+    if(_zz_35[10])begin
+      _zz_22 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_23 = 1'b0;
+    if(_zz_35[9])begin
+      _zz_23 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_24 = 1'b0;
+    if(_zz_35[8])begin
+      _zz_24 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_25 = 1'b0;
+    if(_zz_35[7])begin
+      _zz_25 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_26 = 1'b0;
+    if(_zz_35[6])begin
+      _zz_26 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_27 = 1'b0;
+    if(_zz_35[5])begin
+      _zz_27 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_28 = 1'b0;
+    if(_zz_35[4])begin
+      _zz_28 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_29 = 1'b0;
+    if(_zz_35[3])begin
+      _zz_29 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_30 = 1'b0;
+    if(_zz_35[2])begin
+      _zz_30 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_31 = 1'b0;
+    if(_zz_35[1])begin
+      _zz_31 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    _zz_32 = 1'b0;
+    if(_zz_35[0])begin
+      _zz_32 = 1'b1;
+    end
+  end
+
+  assign _zz_36 = 1'b0;
+  assign _zz_37 = 1'b0;
+  assign _zz_38 = 1'b0;
+  assign _zz_39 = 1'b0;
   assign imem_dbg_sib_rdata = imem_inst_imem_dbg_sib_rdata;
   assign imem_dbg_sib_ready = imem_inst_imem_dbg_sib_ready;
   assign imem_dbg_sib_resp = imem_inst_imem_dbg_sib_resp;
+  assign _zz_34 = gpio_inst_io_gpio_group0_write;
+  assign _zz_35 = gpio_inst_io_gpio_group0_writeEnable;
+  assign _zz_33 = gpio_port_gpio_group0;
+
+endmodule
+
+module Sib_switch1tN_2 (
+  input               hostSib_sel,
+  input               hostSib_enable,
+  input               hostSib_write,
+  input      [3:0]    hostSib_mask,
+  input      [15:0]   hostSib_addr,
+  input      [31:0]   hostSib_wdata,
+  output     [31:0]   hostSib_rdata,
+  output              hostSib_ready,
+  output              hostSib_resp,
+  output              clientSib_0_sel,
+  output              clientSib_0_enable,
+  output              clientSib_0_write,
+  output     [3:0]    clientSib_0_mask,
+  output     [11:0]   clientSib_0_addr,
+  output     [31:0]   clientSib_0_wdata,
+  input      [31:0]   clientSib_0_rdata,
+  input               clientSib_0_ready,
+  input               clientSib_0_resp,
+  output              clientSib_1_sel,
+  output              clientSib_1_enable,
+  output              clientSib_1_write,
+  output     [3:0]    clientSib_1_mask,
+  output     [11:0]   clientSib_1_addr,
+  output     [31:0]   clientSib_1_wdata,
+  input      [31:0]   clientSib_1_rdata,
+  input               clientSib_1_ready,
+  input               clientSib_1_resp,
+  input               clk,
+  input               reset
+);
+  reg        [1:0]    dec_sel;
+  reg        [1:0]    dec_sel_ff;
+  wire                dec_good;
+  wire                _zz_1;
+
+  assign dec_good = (dec_sel != 2'b00);
+  always @ (*) begin
+    dec_sel[0] = ((16'h2000 <= hostSib_addr) && (hostSib_addr <= 16'h2fff));
+    dec_sel[1] = ((16'h3000 <= hostSib_addr) && (hostSib_addr <= 16'h3fff));
+  end
+
+  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
+  assign _zz_1 = dec_sel[0];
+  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
+  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
+  assign clientSib_0_write = hostSib_write;
+  assign clientSib_0_addr = hostSib_addr[11 : 0];
+  assign clientSib_0_wdata = hostSib_wdata;
+  assign clientSib_0_enable = hostSib_enable;
+  assign clientSib_0_mask = hostSib_mask;
+  assign clientSib_0_sel = (hostSib_sel && dec_sel[0]);
+  assign clientSib_1_write = hostSib_write;
+  assign clientSib_1_addr = hostSib_addr[11 : 0];
+  assign clientSib_1_wdata = hostSib_wdata;
+  assign clientSib_1_enable = hostSib_enable;
+  assign clientSib_1_mask = hostSib_mask;
+  assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
+  always @ (posedge clk) begin
+    dec_sel_ff <= dec_sel;
+  end
+
 
 endmodule
 
@@ -251,24 +711,78 @@ module Sib_switch1tN_1 (
   input      [31:0]   clientSib_1_rdata,
   input               clientSib_1_ready,
   input               clientSib_1_resp,
+  output              clientSib_2_sel,
+  output              clientSib_2_enable,
+  output              clientSib_2_write,
+  output     [3:0]    clientSib_2_mask,
+  output     [15:0]   clientSib_2_addr,
+  output     [31:0]   clientSib_2_wdata,
+  input      [31:0]   clientSib_2_rdata,
+  input               clientSib_2_ready,
+  input               clientSib_2_resp,
   input               clk,
   input               reset
 );
-  reg        [1:0]    dec_sel;
-  reg        [1:0]    dec_sel_ff;
+  reg        [31:0]   _zz_6;
+  reg                 _zz_7;
+  reg                 _zz_8;
+  wire       [1:0]    _zz_9;
+  reg        [2:0]    dec_sel;
+  reg        [2:0]    dec_sel_ff;
   wire                dec_good;
   wire                _zz_1;
+  wire                _zz_2;
+  wire                _zz_3;
+  wire                _zz_4;
+  wire       [1:0]    _zz_5;
 
-  assign dec_good = (dec_sel != 2'b00);
+  assign _zz_9 = {_zz_2,_zz_1};
+  always @(*) begin
+    case(_zz_9)
+      2'b00 : begin
+        _zz_6 = clientSib_0_rdata;
+      end
+      2'b01 : begin
+        _zz_6 = clientSib_1_rdata;
+      end
+      default : begin
+        _zz_6 = clientSib_2_rdata;
+      end
+    endcase
+  end
+
+  always @(*) begin
+    case(_zz_5)
+      2'b00 : begin
+        _zz_7 = clientSib_0_resp;
+        _zz_8 = clientSib_0_ready;
+      end
+      2'b01 : begin
+        _zz_7 = clientSib_1_resp;
+        _zz_8 = clientSib_1_ready;
+      end
+      default : begin
+        _zz_7 = clientSib_2_resp;
+        _zz_8 = clientSib_2_ready;
+      end
+    endcase
+  end
+
+  assign dec_good = (dec_sel != 3'b000);
   always @ (*) begin
     dec_sel[0] = ((32'h01000000 <= hostSib_addr) && (hostSib_addr <= 32'h01ffffff));
     dec_sel[1] = ((32'h02000000 <= hostSib_addr) && (hostSib_addr <= 32'h02000fff));
+    dec_sel[2] = ((32'h02002000 <= hostSib_addr) && (hostSib_addr <= 32'h02004fff));
   end
 
-  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
-  assign _zz_1 = dec_sel[0];
-  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
-  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
+  assign _zz_1 = dec_sel_ff[1];
+  assign _zz_2 = dec_sel_ff[2];
+  assign hostSib_rdata = _zz_6;
+  assign _zz_3 = dec_sel[1];
+  assign _zz_4 = dec_sel[2];
+  assign _zz_5 = {_zz_4,_zz_3};
+  assign hostSib_resp = (_zz_7 && dec_good);
+  assign hostSib_ready = _zz_8;
   assign clientSib_0_write = hostSib_write;
   assign clientSib_0_addr = hostSib_addr[15 : 0];
   assign clientSib_0_wdata = hostSib_wdata;
@@ -281,6 +795,12 @@ module Sib_switch1tN_1 (
   assign clientSib_1_enable = hostSib_enable;
   assign clientSib_1_mask = hostSib_mask;
   assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
+  assign clientSib_2_write = hostSib_write;
+  assign clientSib_2_addr = hostSib_addr[15 : 0];
+  assign clientSib_2_wdata = hostSib_wdata;
+  assign clientSib_2_enable = hostSib_enable;
+  assign clientSib_2_mask = hostSib_mask;
+  assign clientSib_2_sel = (hostSib_sel && dec_sel[2]);
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -332,6 +852,193 @@ module Sib_switch1tN (
 
 endmodule
 
+module timer (
+  output              io_timer_interrupt,
+  input               timer_sib_sel,
+  input               timer_sib_enable,
+  input               timer_sib_write,
+  input      [3:0]    timer_sib_mask,
+  input      [11:0]   timer_sib_addr,
+  input      [31:0]   timer_sib_wdata,
+  output reg [31:0]   timer_sib_rdata,
+  output              timer_sib_ready,
+  output reg          timer_sib_resp,
+  input               clk,
+  input               reset
+);
+  wire                _zz_1;
+  reg        [1:0]    int_1;
+  reg        [63:0]   mtime;
+  reg        [63:0]   mtimecmp;
+  wire                int_en;
+
+  assign _zz_1 = (timer_sib_sel && timer_sib_enable);
+  assign int_en = (int_1[0] && (mtimecmp != 64'h0));
+  assign io_timer_interrupt = int_1[1];
+  always @ (*) begin
+    timer_sib_resp = 1'b1;
+    if(_zz_1)begin
+      case(timer_sib_addr)
+        12'h0 : begin
+        end
+        12'h004 : begin
+        end
+        12'h008 : begin
+        end
+        12'h00c : begin
+        end
+        12'h010 : begin
+        end
+        default : begin
+          timer_sib_resp = 1'b0;
+        end
+      endcase
+    end
+  end
+
+  always @ (*) begin
+    timer_sib_rdata = mtime[31 : 0];
+    if(_zz_1)begin
+      case(timer_sib_addr)
+        12'h0 : begin
+          timer_sib_rdata = {30'd0, int_1};
+        end
+        12'h004 : begin
+          timer_sib_rdata = mtime[31 : 0];
+        end
+        12'h008 : begin
+          timer_sib_rdata = mtime[63 : 32];
+        end
+        12'h00c : begin
+          timer_sib_rdata = mtimecmp[31 : 0];
+        end
+        12'h010 : begin
+          timer_sib_rdata = mtimecmp[63 : 32];
+        end
+        default : begin
+        end
+      endcase
+    end
+  end
+
+  assign timer_sib_ready = 1'b1;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      int_1 <= 2'b01;
+      mtime <= 64'h0;
+      mtimecmp <= 64'h0;
+    end else begin
+      mtime <= (mtime + 64'h0000000000000001);
+      int_1[1] <= ((mtimecmp <= mtime) && int_en);
+      if(_zz_1)begin
+        case(timer_sib_addr)
+          12'h0 : begin
+            if(timer_sib_write)begin
+              int_1[0] <= timer_sib_wdata[0];
+            end
+          end
+          12'h004 : begin
+            if(timer_sib_write)begin
+              mtime[31 : 0] <= timer_sib_wdata;
+            end
+          end
+          12'h008 : begin
+            if(timer_sib_write)begin
+              mtime[63 : 32] <= timer_sib_wdata;
+            end
+          end
+          12'h00c : begin
+            if(timer_sib_write)begin
+              mtimecmp[31 : 0] <= timer_sib_wdata;
+            end
+          end
+          12'h010 : begin
+            if(timer_sib_write)begin
+              mtimecmp[63 : 32] <= timer_sib_wdata;
+            end
+          end
+          default : begin
+          end
+        endcase
+      end
+    end
+  end
+
+
+endmodule
+
+module gpio (
+  input      [31:0]   io_gpio_group0_read,
+  output     [31:0]   io_gpio_group0_write,
+  output     [31:0]   io_gpio_group0_writeEnable,
+  input               gpio_sib_sel,
+  input               gpio_sib_enable,
+  input               gpio_sib_write,
+  input      [3:0]    gpio_sib_mask,
+  input      [11:0]   gpio_sib_addr,
+  input      [31:0]   gpio_sib_wdata,
+  output     [31:0]   gpio_sib_rdata,
+  output              gpio_sib_ready,
+  output reg          gpio_sib_resp,
+  input               clk,
+  input               reset
+);
+  wire                _zz_1;
+  reg        [1:0]    int_1;
+  reg        [31:0]   gpio_group0;
+  reg        [31:0]   gpio_group_ctrl;
+
+  assign _zz_1 = (gpio_sib_sel && gpio_sib_enable);
+  assign io_gpio_group0_write = gpio_group0;
+  assign io_gpio_group0_writeEnable = gpio_group_ctrl;
+  always @ (*) begin
+    gpio_sib_resp = 1'b1;
+    if(_zz_1)begin
+      case(gpio_sib_addr)
+        12'h0 : begin
+        end
+        12'h004 : begin
+        end
+        12'h008 : begin
+        end
+        default : begin
+          gpio_sib_resp = 1'b0;
+        end
+      endcase
+    end
+  end
+
+  assign gpio_sib_rdata = gpio_group0;
+  assign gpio_sib_ready = 1'b1;
+  always @ (posedge clk) begin
+    gpio_group0 <= (gpio_group_ctrl & io_gpio_group0_read);
+    int_1[1] <= 1'b0;
+    if(_zz_1)begin
+      case(gpio_sib_addr)
+        12'h0 : begin
+          if(gpio_sib_write)begin
+            int_1[0] <= gpio_sib_wdata[0];
+          end
+        end
+        12'h004 : begin
+          if(gpio_sib_write)begin
+            gpio_group0 <= gpio_sib_wdata;
+          end
+        end
+        12'h008 : begin
+          if(gpio_sib_write)begin
+            gpio_group_ctrl <= gpio_sib_wdata;
+          end
+        end
+        default : begin
+        end
+      endcase
+    end
+  end
+
+
+endmodule
+
 module clic (
   output              io_software_interrupt,
   output              io_timer_interrupt,
@@ -350,19 +1057,13 @@ module clic (
   wire                _zz_1;
   wire       [0:0]    _zz_2;
   reg                 msip;
-  reg        [31:0]   mtime_lo;
-  reg        [31:0]   mtime_hi;
-  reg        [31:0]   mtimecmp_lo;
-  reg        [31:0]   mtimecmp_hi;
-  wire       [63:0]   mtime;
-  wire       [63:0]   mtimecmp;
+  reg        [63:0]   mtime;
+  reg        [63:0]   mtimecmp;
 
   assign _zz_1 = (clic_sib_sel && clic_sib_enable);
   assign _zz_2 = msip;
   assign io_software_interrupt = msip;
-  assign mtime = {mtime_hi,mtime_lo};
-  assign mtimecmp = {mtimecmp_hi,mtimecmp_lo};
-  assign io_timer_interrupt = (mtimecmp <= mtime);
+  assign io_timer_interrupt = ((mtimecmp <= mtime) && (mtimecmp != 64'h0));
   always @ (*) begin
     clic_sib_resp = 1'b1;
     if(_zz_1)begin
@@ -385,23 +1086,23 @@ module clic (
   end
 
   always @ (*) begin
-    clic_sib_rdata = mtime_lo;
+    clic_sib_rdata = mtime[31 : 0];
     if(_zz_1)begin
       case(clic_sib_addr)
         12'h0 : begin
           clic_sib_rdata = {31'd0, _zz_2};
         end
         12'h004 : begin
-          clic_sib_rdata = mtime_lo;
+          clic_sib_rdata = mtime[31 : 0];
         end
         12'h008 : begin
-          clic_sib_rdata = mtime_hi;
+          clic_sib_rdata = mtime[63 : 32];
         end
         12'h00c : begin
-          clic_sib_rdata = mtimecmp_lo;
+          clic_sib_rdata = mtimecmp[31 : 0];
         end
         12'h010 : begin
-          clic_sib_rdata = mtimecmp_hi;
+          clic_sib_rdata = mtimecmp[63 : 32];
         end
         default : begin
         end
@@ -413,11 +1114,10 @@ module clic (
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
       msip <= 1'b0;
-      mtime_lo <= 32'h0;
-      mtime_hi <= 32'h0;
-      mtimecmp_lo <= 32'h0;
-      mtimecmp_hi <= 32'h0;
+      mtime <= 64'h0;
+      mtimecmp <= 64'h0;
     end else begin
+      mtime <= (mtime + 64'h0000000000000001);
       if(_zz_1)begin
         case(clic_sib_addr)
           12'h0 : begin
@@ -427,22 +1127,22 @@ module clic (
           end
           12'h004 : begin
             if(clic_sib_write)begin
-              mtime_lo <= clic_sib_wdata;
+              mtime[31 : 0] <= clic_sib_wdata;
             end
           end
           12'h008 : begin
             if(clic_sib_write)begin
-              mtime_hi <= clic_sib_wdata;
+              mtime[63 : 32] <= clic_sib_wdata;
             end
           end
           12'h00c : begin
             if(clic_sib_write)begin
-              mtimecmp_lo <= clic_sib_wdata;
+              mtimecmp[31 : 0] <= clic_sib_wdata;
             end
           end
           12'h010 : begin
             if(clic_sib_write)begin
-              mtimecmp_hi <= clic_sib_wdata;
+              mtimecmp[63 : 32] <= clic_sib_wdata;
             end
           end
           default : begin

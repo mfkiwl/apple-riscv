@@ -23,12 +23,17 @@ import sib._
 class SOC_PARAM {
   val NAME = "apple-riscv-soc"
 
-  ////////////////////////////////////////////////////////////////////////////
-  //                              Bus Address                               //
-  ////////////////////////////////////////////////////////////////////////////
   val XLEN = 32
   val ADDR_WIDTH = XLEN
   val DATA_WIDTH = XLEN
+
+  val CLIC_TIMER_WIDTH = 64
+  val TIMER_TIMER_WIDTH = 64
+
+  ////////////////////////////////////////////////////////////////////////////
+  //                              Bus Address                               //
+  ////////////////////////////////////////////////////////////////////////////
+
 
   val INSTR_RAM_DATA_WIDTH = DATA_WIDTH
   val INSTR_RAM_ADDR_WIDTH = 16                // 64KB Instruction RAM for now
@@ -44,21 +49,31 @@ class SOC_PARAM {
   val SIB_DMEM_LO = Integer.parseInt("01000000", 16)
   val SIB_DMEM_HI = Integer.parseInt("01FFFFFF", 16)
 
-
   val SIB_CLIC_LO = Integer.parseInt("02000000", 16)
   val SIB_CLIC_HI = Integer.parseInt("02000FFF", 16)
-  val SIB_ADDR_WIDTH = 12
+  val CLIC_ADDR_WIDTH = 12
+
+  val SIB_PERIP_HOST_LO = Integer.parseInt("02002000", 16)
+  val SIB_PERIP_HOST_HI = Integer.parseInt("02004FFF", 16)
+  val PERIP_HOST_ADDR_WIDTH = 16
+
+  val SIB_TIMER_LO  = Integer.parseInt("2000", 16)
+  val SIB_TIMER_HI  = Integer.parseInt("2FFF", 16)
+  val TIMER_ADDR_WIDTH = 12
+
+  val SIB_GPIO_LO = Integer.parseInt("3000", 16)
+  val SIB_GPIO_HI = Integer.parseInt("3FFF", 16)
+  val GPIO_ADDR_WIDTH = 12
+  val GPIO_WIDTH      = 32
+
+  val SIB_UART_LO = Integer.parseInt("4000", 16)
+  val SIB_UART_HI = Integer.parseInt("4FFF", 16)
+  val UART_ADDR_WIDTH = 12
+
+
   /*
   val APB_PLIC_LO = B"32'h02001000"
   val APB_PLIC_HI = B"32'h02001FFF"
-  val APB_TMR_LO  = B"32'h02002000"
-  val APB_TMR_HI  = B"32'h02002FFF"
-  val APB_GPIO_LO = B"32'h02003000"
-  val APB_GPIO_HI = B"32'h02003FFF"
-  val APB_UART_LO = B"32'h02004000"
-  val APB_UART_HI = B"32'h02004FFF"
-
-  val SIB2APB_BRDG1_LO = B"32'h02000000"
   */
 
   // ========================== //
@@ -86,9 +101,37 @@ class SOC_PARAM {
   )
 
   val clicSibCfg = SibConfig(
-    addressWidth = SIB_ADDR_WIDTH,
+    addressWidth = CLIC_ADDR_WIDTH,
     dataWidth    = XLEN,
     addr_lo      = SIB_CLIC_LO,
     addr_hi      = SIB_CLIC_HI
+  )
+
+  val peripHostSibCfg = SibConfig(
+    addressWidth = PERIP_HOST_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_PERIP_HOST_LO,
+    addr_hi      = SIB_PERIP_HOST_HI
+  )
+
+  val timerSibCfg = SibConfig(
+    addressWidth = TIMER_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_TIMER_LO,
+    addr_hi      = SIB_TIMER_HI
+  )
+
+  val gpioSibCfg = SibConfig(
+    addressWidth = GPIO_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_GPIO_LO,
+    addr_hi      = SIB_GPIO_HI
+  )
+
+  val uartSibCfg = SibConfig(
+    addressWidth = UART_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_UART_LO,
+    addr_hi      = SIB_UART_HI
   )
 }

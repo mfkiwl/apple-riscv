@@ -7,6 +7,7 @@
   - Replaced the AHB bus with the SIB bus
   - Moved memory into soc folder
   - Designed the CLIC module and updated SOC
+  - Designed timer and gpio module and updated soc
 
 - 04/20/2021
   - Designed the sib (simple internal bus)

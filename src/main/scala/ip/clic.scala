@@ -33,26 +33,28 @@ case class clic(soc_param: SOC_PARAM) extends Component {
   val clic_sib = slave(Sib(soc_param.clicSibCfg))
 
   val msip = Reg(Bool) init False
-  val mtime_lo = Reg(Bits(soc_param.DATA_WIDTH bits)) init 0
-  val mtime_hi = Reg(Bits(soc_param.DATA_WIDTH bits)) init 0
-  val mtimecmp_lo = Reg(Bits(soc_param.DATA_WIDTH bits)) init 0
-  val mtimecmp_hi = Reg(Bits(soc_param.DATA_WIDTH bits)) init 0
+  val mtime = Reg(UInt(soc_param.CLIC_TIMER_WIDTH bits)) init 0
+  val mtimecmp = Reg(UInt(soc_param.CLIC_TIMER_WIDTH bits)) init 0
+  def mtime_lo = mtime(31 downto 0)
+  def mtime_hi = mtime(63 downto 32)
+  def mtimecmp_lo = mtimecmp(31 downto 0)
+  def mtimecmp_hi = mtimecmp(63 downto 32)
 
   // only need to use bit 4-2 for the address decode becasue:
   // 1) the address is aligned to 4 bytes (ignore lower 2 bits)
   // 2) the address range is 00, 04, 08, 0C, 10 so only need to check bit 3 - 2
   //val decode_addr = clic_sib.addr(4 downto 2)
 
+  // == timer logic == //
+  mtime := mtime + 1
 
   // == interrupt generation logic == //
   io.software_interrupt := msip
-  val mtime = mtime_hi ## mtime_lo
-  val mtimecmp = mtimecmp_hi ## mtimecmp_lo
-  io.timer_interrupt := (mtime.asUInt >= mtimecmp.asUInt)
+  io.timer_interrupt := (mtime >= mtimecmp) & (mtimecmp =/= 0)
 
   // == SIB logic == //
   clic_sib.resp := True
-  clic_sib.rdata := mtime_lo
+  clic_sib.rdata := mtime_lo.asBits
   when(clic_sib.sel && clic_sib.enable) {
     switch(clic_sib.addr) {
       // msip
@@ -62,23 +64,23 @@ case class clic(soc_param: SOC_PARAM) extends Component {
       }
       // mtime_lo
       is(4) {
-        clic_sib.rdata := mtime_lo
-        when (clic_sib.write) {mtime_lo := clic_sib.wdata}
+        clic_sib.rdata := mtime_lo.asBits
+        when (clic_sib.write) {mtime_lo := clic_sib.wdata.asUInt}
       }
       // mtime_hi
       is(8) {
-        clic_sib.rdata := mtime_hi
-        when (clic_sib.write) {mtime_hi := clic_sib.wdata}
+        clic_sib.rdata := mtime_hi.asBits
+        when (clic_sib.write) {mtime_hi := clic_sib.wdata.asUInt}
       }
       // mtimecmp_lo
       is(12) {
-        clic_sib.rdata := mtimecmp_lo
-        when (clic_sib.write) {mtimecmp_lo := clic_sib.wdata}
+        clic_sib.rdata := mtimecmp_lo.asBits
+        when (clic_sib.write) {mtimecmp_lo := clic_sib.wdata.asUInt}
       }
       // mtimecmp_hi
       is(16) {
-        clic_sib.rdata := mtimecmp_hi
-        when (clic_sib.write) {mtimecmp_hi := clic_sib.wdata}
+        clic_sib.rdata := mtimecmp_hi.asBits
+        when (clic_sib.write) {mtimecmp_hi := clic_sib.wdata.asUInt}
       }
       default {
         clic_sib.resp := False

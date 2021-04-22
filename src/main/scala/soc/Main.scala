@@ -19,6 +19,7 @@ package soc
 
 import spinal.core._
 import core._
+import spinal.lib.io.InOutWrapper
 
 // Run this main to generate the RTL
 
@@ -28,6 +29,6 @@ object Main{
     val soc_param = new SOC_PARAM()
     SpinalConfig(
       targetDirectory = "rtl/soc"
-    ).generateVerilog(apple_riscv_soc(soc_param, cpu_param))
+    ).generateVerilog(InOutWrapper(apple_riscv_soc(soc_param, cpu_param)))
   }
 }
