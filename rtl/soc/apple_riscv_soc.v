@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 0b5de7627499b8df696dcbefadbb2ddbd71f7848
+// Git hash  : 59896a1260d5104f3c4b0be5672409e2d1a7befd
 
 
 `define br_imm_type_e_binary_sequential_type [1:0]
@@ -26,14 +26,12 @@ module apple_riscv_soc (
   output     [31:0]   imem_dbg_sib_rdata,
   output              imem_dbg_sib_ready,
   output              imem_dbg_sib_resp,
-   inout     [31:0]   gpio_port_gpio_group0,
+   inout     [31:0]   gpio_port_gpio,
   input               clk,
   input               reset
 );
   wire                _zz_36;
   wire                _zz_37;
-  wire                _zz_38;
-  wire                _zz_39;
   wire                cpu_core_imem_sib_sel;
   wire                cpu_core_imem_sib_enable;
   wire                cpu_core_imem_sib_write;
@@ -55,13 +53,14 @@ module apple_riscv_soc (
   wire       [31:0]   dmem_inst_dmem_sib_rdata;
   wire                dmem_inst_dmem_sib_ready;
   wire                dmem_inst_dmem_sib_resp;
-  wire                clic_isnt_io_software_interrupt;
-  wire                clic_isnt_io_timer_interrupt;
-  wire       [31:0]   clic_isnt_clic_sib_rdata;
-  wire                clic_isnt_clic_sib_ready;
-  wire                clic_isnt_clic_sib_resp;
-  wire       [31:0]   gpio_inst_io_gpio_group0_write;
-  wire       [31:0]   gpio_inst_io_gpio_group0_writeEnable;
+  wire                clic_inst_io_software_interrupt;
+  wire                clic_inst_io_timer_interrupt;
+  wire       [31:0]   clic_inst_clic_sib_rdata;
+  wire                clic_inst_clic_sib_ready;
+  wire                clic_inst_clic_sib_resp;
+  wire       [31:0]   gpio_inst_io_gpio_write;
+  wire       [31:0]   gpio_inst_io_gpio_writeEnable;
+  wire                gpio_inst_io_gpio_int_pe;
   wire       [31:0]   gpio_inst_gpio_sib_rdata;
   wire                gpio_inst_gpio_sib_ready;
   wire                gpio_inst_gpio_sib_resp;
@@ -152,9 +151,9 @@ module apple_riscv_soc (
 
   apple_riscv cpu_core (
     .io_external_interrupt    (_zz_36                           ), //i
-    .io_timer_interrupt       (_zz_37                           ), //i
-    .io_software_interrupt    (_zz_38                           ), //i
-    .io_debug_interrupt       (_zz_39                           ), //i
+    .io_timer_interrupt       (clic_inst_io_timer_interrupt     ), //i
+    .io_software_interrupt    (clic_inst_io_software_interrupt  ), //i
+    .io_debug_interrupt       (_zz_37                           ), //i
     .imem_sib_sel             (cpu_core_imem_sib_sel            ), //o
     .imem_sib_enable          (cpu_core_imem_sib_enable         ), //o
     .imem_sib_write           (cpu_core_imem_sib_write          ), //o
@@ -211,36 +210,37 @@ module apple_riscv_soc (
     .clk                (clk                                  ), //i
     .reset              (reset                                )  //i
   );
-  clic clic_isnt (
-    .io_software_interrupt    (clic_isnt_io_software_interrupt      ), //o
-    .io_timer_interrupt       (clic_isnt_io_timer_interrupt         ), //o
+  clic clic_inst (
+    .io_software_interrupt    (clic_inst_io_software_interrupt      ), //o
+    .io_timer_interrupt       (clic_inst_io_timer_interrupt         ), //o
     .clic_sib_sel             (dmem_switch_clientSib_1_sel          ), //i
     .clic_sib_enable          (dmem_switch_clientSib_1_enable       ), //i
     .clic_sib_write           (dmem_switch_clientSib_1_write        ), //i
     .clic_sib_mask            (dmem_switch_clientSib_1_mask[3:0]    ), //i
     .clic_sib_addr            (dmem_switch_clientSib_1_addr[11:0]   ), //i
     .clic_sib_wdata           (dmem_switch_clientSib_1_wdata[31:0]  ), //i
-    .clic_sib_rdata           (clic_isnt_clic_sib_rdata[31:0]       ), //o
-    .clic_sib_ready           (clic_isnt_clic_sib_ready             ), //o
-    .clic_sib_resp            (clic_isnt_clic_sib_resp              ), //o
+    .clic_sib_rdata           (clic_inst_clic_sib_rdata[31:0]       ), //o
+    .clic_sib_ready           (clic_inst_clic_sib_ready             ), //o
+    .clic_sib_resp            (clic_inst_clic_sib_resp              ), //o
     .clk                      (clk                                  ), //i
     .reset                    (reset                                )  //i
   );
   gpio gpio_inst (
-    .io_gpio_group0_read           (_zz_33[31:0]                                ), //i
-    .io_gpio_group0_write          (gpio_inst_io_gpio_group0_write[31:0]        ), //o
-    .io_gpio_group0_writeEnable    (gpio_inst_io_gpio_group0_writeEnable[31:0]  ), //o
-    .gpio_sib_sel                  (perip_switch_clientSib_1_sel                ), //i
-    .gpio_sib_enable               (perip_switch_clientSib_1_enable             ), //i
-    .gpio_sib_write                (perip_switch_clientSib_1_write              ), //i
-    .gpio_sib_mask                 (perip_switch_clientSib_1_mask[3:0]          ), //i
-    .gpio_sib_addr                 (perip_switch_clientSib_1_addr[11:0]         ), //i
-    .gpio_sib_wdata                (perip_switch_clientSib_1_wdata[31:0]        ), //i
-    .gpio_sib_rdata                (gpio_inst_gpio_sib_rdata[31:0]              ), //o
-    .gpio_sib_ready                (gpio_inst_gpio_sib_ready                    ), //o
-    .gpio_sib_resp                 (gpio_inst_gpio_sib_resp                     ), //o
-    .clk                           (clk                                         ), //i
-    .reset                         (reset                                       )  //i
+    .io_gpio_read           (_zz_33[31:0]                          ), //i
+    .io_gpio_write          (gpio_inst_io_gpio_write[31:0]         ), //o
+    .io_gpio_writeEnable    (gpio_inst_io_gpio_writeEnable[31:0]   ), //o
+    .io_gpio_int_pe         (gpio_inst_io_gpio_int_pe              ), //o
+    .gpio_sib_sel           (perip_switch_clientSib_1_sel          ), //i
+    .gpio_sib_enable        (perip_switch_clientSib_1_enable       ), //i
+    .gpio_sib_write         (perip_switch_clientSib_1_write        ), //i
+    .gpio_sib_mask          (perip_switch_clientSib_1_mask[3:0]    ), //i
+    .gpio_sib_addr          (perip_switch_clientSib_1_addr[11:0]   ), //i
+    .gpio_sib_wdata         (perip_switch_clientSib_1_wdata[31:0]  ), //i
+    .gpio_sib_rdata         (gpio_inst_gpio_sib_rdata[31:0]        ), //o
+    .gpio_sib_ready         (gpio_inst_gpio_sib_ready              ), //o
+    .gpio_sib_resp          (gpio_inst_gpio_sib_resp               ), //o
+    .clk                    (clk                                   ), //i
+    .reset                  (reset                                 )  //i
   );
   timer timer_inst (
     .io_timer_interrupt    (timer_inst_io_timer_interrupt         ), //o
@@ -256,7 +256,7 @@ module apple_riscv_soc (
     .clk                   (clk                                   ), //i
     .reset                 (reset                                 )  //i
   );
-  Sib_switch1tN imem_switch (
+  Sib_decoder imem_switch (
     .hostSib_sel           (cpu_core_imem_sib_sel                ), //i
     .hostSib_enable        (cpu_core_imem_sib_enable             ), //i
     .hostSib_write         (cpu_core_imem_sib_write              ), //i
@@ -278,7 +278,7 @@ module apple_riscv_soc (
     .clk                   (clk                                  ), //i
     .reset                 (reset                                )  //i
   );
-  Sib_switch1tN_1 dmem_switch (
+  Sib_decoder_1 dmem_switch (
     .hostSib_sel           (cpu_core_dmem_sib_sel                ), //i
     .hostSib_enable        (cpu_core_dmem_sib_enable             ), //i
     .hostSib_write         (cpu_core_dmem_sib_write              ), //i
@@ -303,9 +303,9 @@ module apple_riscv_soc (
     .clientSib_1_mask      (dmem_switch_clientSib_1_mask[3:0]    ), //o
     .clientSib_1_addr      (dmem_switch_clientSib_1_addr[11:0]   ), //o
     .clientSib_1_wdata     (dmem_switch_clientSib_1_wdata[31:0]  ), //o
-    .clientSib_1_rdata     (clic_isnt_clic_sib_rdata[31:0]       ), //i
-    .clientSib_1_ready     (clic_isnt_clic_sib_ready             ), //i
-    .clientSib_1_resp      (clic_isnt_clic_sib_resp              ), //i
+    .clientSib_1_rdata     (clic_inst_clic_sib_rdata[31:0]       ), //i
+    .clientSib_1_ready     (clic_inst_clic_sib_ready             ), //i
+    .clientSib_1_resp      (clic_inst_clic_sib_resp              ), //i
     .clientSib_2_sel       (dmem_switch_clientSib_2_sel          ), //o
     .clientSib_2_enable    (dmem_switch_clientSib_2_enable       ), //o
     .clientSib_2_write     (dmem_switch_clientSib_2_write        ), //o
@@ -318,7 +318,7 @@ module apple_riscv_soc (
     .clk                   (clk                                  ), //i
     .reset                 (reset                                )  //i
   );
-  Sib_switch1tN_2 perip_switch (
+  Sib_decoder_2 perip_switch (
     .hostSib_sel           (dmem_switch_clientSib_2_sel           ), //i
     .hostSib_enable        (dmem_switch_clientSib_2_enable        ), //i
     .hostSib_write         (dmem_switch_clientSib_2_write         ), //i
@@ -349,38 +349,38 @@ module apple_riscv_soc (
     .clk                   (clk                                   ), //i
     .reset                 (reset                                 )  //i
   );
-  assign gpio_port_gpio_group0[0] = _zz_32 ? _zz_34[0] : 1'bz;
-  assign gpio_port_gpio_group0[1] = _zz_31 ? _zz_34[1] : 1'bz;
-  assign gpio_port_gpio_group0[2] = _zz_30 ? _zz_34[2] : 1'bz;
-  assign gpio_port_gpio_group0[3] = _zz_29 ? _zz_34[3] : 1'bz;
-  assign gpio_port_gpio_group0[4] = _zz_28 ? _zz_34[4] : 1'bz;
-  assign gpio_port_gpio_group0[5] = _zz_27 ? _zz_34[5] : 1'bz;
-  assign gpio_port_gpio_group0[6] = _zz_26 ? _zz_34[6] : 1'bz;
-  assign gpio_port_gpio_group0[7] = _zz_25 ? _zz_34[7] : 1'bz;
-  assign gpio_port_gpio_group0[8] = _zz_24 ? _zz_34[8] : 1'bz;
-  assign gpio_port_gpio_group0[9] = _zz_23 ? _zz_34[9] : 1'bz;
-  assign gpio_port_gpio_group0[10] = _zz_22 ? _zz_34[10] : 1'bz;
-  assign gpio_port_gpio_group0[11] = _zz_21 ? _zz_34[11] : 1'bz;
-  assign gpio_port_gpio_group0[12] = _zz_20 ? _zz_34[12] : 1'bz;
-  assign gpio_port_gpio_group0[13] = _zz_19 ? _zz_34[13] : 1'bz;
-  assign gpio_port_gpio_group0[14] = _zz_18 ? _zz_34[14] : 1'bz;
-  assign gpio_port_gpio_group0[15] = _zz_17 ? _zz_34[15] : 1'bz;
-  assign gpio_port_gpio_group0[16] = _zz_16 ? _zz_34[16] : 1'bz;
-  assign gpio_port_gpio_group0[17] = _zz_15 ? _zz_34[17] : 1'bz;
-  assign gpio_port_gpio_group0[18] = _zz_14 ? _zz_34[18] : 1'bz;
-  assign gpio_port_gpio_group0[19] = _zz_13 ? _zz_34[19] : 1'bz;
-  assign gpio_port_gpio_group0[20] = _zz_12 ? _zz_34[20] : 1'bz;
-  assign gpio_port_gpio_group0[21] = _zz_11 ? _zz_34[21] : 1'bz;
-  assign gpio_port_gpio_group0[22] = _zz_10 ? _zz_34[22] : 1'bz;
-  assign gpio_port_gpio_group0[23] = _zz_9 ? _zz_34[23] : 1'bz;
-  assign gpio_port_gpio_group0[24] = _zz_8 ? _zz_34[24] : 1'bz;
-  assign gpio_port_gpio_group0[25] = _zz_7 ? _zz_34[25] : 1'bz;
-  assign gpio_port_gpio_group0[26] = _zz_6 ? _zz_34[26] : 1'bz;
-  assign gpio_port_gpio_group0[27] = _zz_5 ? _zz_34[27] : 1'bz;
-  assign gpio_port_gpio_group0[28] = _zz_4 ? _zz_34[28] : 1'bz;
-  assign gpio_port_gpio_group0[29] = _zz_3 ? _zz_34[29] : 1'bz;
-  assign gpio_port_gpio_group0[30] = _zz_2 ? _zz_34[30] : 1'bz;
-  assign gpio_port_gpio_group0[31] = _zz_1 ? _zz_34[31] : 1'bz;
+  assign gpio_port_gpio[0] = _zz_32 ? _zz_34[0] : 1'bz;
+  assign gpio_port_gpio[1] = _zz_31 ? _zz_34[1] : 1'bz;
+  assign gpio_port_gpio[2] = _zz_30 ? _zz_34[2] : 1'bz;
+  assign gpio_port_gpio[3] = _zz_29 ? _zz_34[3] : 1'bz;
+  assign gpio_port_gpio[4] = _zz_28 ? _zz_34[4] : 1'bz;
+  assign gpio_port_gpio[5] = _zz_27 ? _zz_34[5] : 1'bz;
+  assign gpio_port_gpio[6] = _zz_26 ? _zz_34[6] : 1'bz;
+  assign gpio_port_gpio[7] = _zz_25 ? _zz_34[7] : 1'bz;
+  assign gpio_port_gpio[8] = _zz_24 ? _zz_34[8] : 1'bz;
+  assign gpio_port_gpio[9] = _zz_23 ? _zz_34[9] : 1'bz;
+  assign gpio_port_gpio[10] = _zz_22 ? _zz_34[10] : 1'bz;
+  assign gpio_port_gpio[11] = _zz_21 ? _zz_34[11] : 1'bz;
+  assign gpio_port_gpio[12] = _zz_20 ? _zz_34[12] : 1'bz;
+  assign gpio_port_gpio[13] = _zz_19 ? _zz_34[13] : 1'bz;
+  assign gpio_port_gpio[14] = _zz_18 ? _zz_34[14] : 1'bz;
+  assign gpio_port_gpio[15] = _zz_17 ? _zz_34[15] : 1'bz;
+  assign gpio_port_gpio[16] = _zz_16 ? _zz_34[16] : 1'bz;
+  assign gpio_port_gpio[17] = _zz_15 ? _zz_34[17] : 1'bz;
+  assign gpio_port_gpio[18] = _zz_14 ? _zz_34[18] : 1'bz;
+  assign gpio_port_gpio[19] = _zz_13 ? _zz_34[19] : 1'bz;
+  assign gpio_port_gpio[20] = _zz_12 ? _zz_34[20] : 1'bz;
+  assign gpio_port_gpio[21] = _zz_11 ? _zz_34[21] : 1'bz;
+  assign gpio_port_gpio[22] = _zz_10 ? _zz_34[22] : 1'bz;
+  assign gpio_port_gpio[23] = _zz_9 ? _zz_34[23] : 1'bz;
+  assign gpio_port_gpio[24] = _zz_8 ? _zz_34[24] : 1'bz;
+  assign gpio_port_gpio[25] = _zz_7 ? _zz_34[25] : 1'bz;
+  assign gpio_port_gpio[26] = _zz_6 ? _zz_34[26] : 1'bz;
+  assign gpio_port_gpio[27] = _zz_5 ? _zz_34[27] : 1'bz;
+  assign gpio_port_gpio[28] = _zz_4 ? _zz_34[28] : 1'bz;
+  assign gpio_port_gpio[29] = _zz_3 ? _zz_34[29] : 1'bz;
+  assign gpio_port_gpio[30] = _zz_2 ? _zz_34[30] : 1'bz;
+  assign gpio_port_gpio[31] = _zz_1 ? _zz_34[31] : 1'bz;
   always @ (*) begin
     _zz_1 = 1'b0;
     if(_zz_35[31])begin
@@ -605,20 +605,18 @@ module apple_riscv_soc (
     end
   end
 
-  assign _zz_36 = 1'b0;
-  assign _zz_37 = 1'b0;
-  assign _zz_38 = 1'b0;
-  assign _zz_39 = 1'b0;
   assign imem_dbg_sib_rdata = imem_inst_imem_dbg_sib_rdata;
   assign imem_dbg_sib_ready = imem_inst_imem_dbg_sib_ready;
   assign imem_dbg_sib_resp = imem_inst_imem_dbg_sib_resp;
-  assign _zz_34 = gpio_inst_io_gpio_group0_write;
-  assign _zz_35 = gpio_inst_io_gpio_group0_writeEnable;
-  assign _zz_33 = gpio_port_gpio_group0;
+  assign _zz_34 = gpio_inst_io_gpio_write;
+  assign _zz_35 = gpio_inst_io_gpio_writeEnable;
+  assign _zz_36 = 1'b0;
+  assign _zz_37 = 1'b0;
+  assign _zz_33 = gpio_port_gpio;
 
 endmodule
 
-module Sib_switch1tN_2 (
+module Sib_decoder_2 (
   input               hostSib_sel,
   input               hostSib_enable,
   input               hostSib_write,
@@ -660,10 +658,6 @@ module Sib_switch1tN_2 (
     dec_sel[1] = ((16'h3000 <= hostSib_addr) && (hostSib_addr <= 16'h3fff));
   end
 
-  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
-  assign _zz_1 = dec_sel[0];
-  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
-  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
   assign clientSib_0_write = hostSib_write;
   assign clientSib_0_addr = hostSib_addr[11 : 0];
   assign clientSib_0_wdata = hostSib_wdata;
@@ -676,6 +670,10 @@ module Sib_switch1tN_2 (
   assign clientSib_1_enable = hostSib_enable;
   assign clientSib_1_mask = hostSib_mask;
   assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
+  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
+  assign _zz_1 = dec_sel[0];
+  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
+  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -683,7 +681,7 @@ module Sib_switch1tN_2 (
 
 endmodule
 
-module Sib_switch1tN_1 (
+module Sib_decoder_1 (
   input               hostSib_sel,
   input               hostSib_enable,
   input               hostSib_write,
@@ -775,14 +773,6 @@ module Sib_switch1tN_1 (
     dec_sel[2] = ((32'h02002000 <= hostSib_addr) && (hostSib_addr <= 32'h02004fff));
   end
 
-  assign _zz_1 = dec_sel_ff[1];
-  assign _zz_2 = dec_sel_ff[2];
-  assign hostSib_rdata = _zz_6;
-  assign _zz_3 = dec_sel[1];
-  assign _zz_4 = dec_sel[2];
-  assign _zz_5 = {_zz_4,_zz_3};
-  assign hostSib_resp = (_zz_7 && dec_good);
-  assign hostSib_ready = _zz_8;
   assign clientSib_0_write = hostSib_write;
   assign clientSib_0_addr = hostSib_addr[15 : 0];
   assign clientSib_0_wdata = hostSib_wdata;
@@ -801,6 +791,14 @@ module Sib_switch1tN_1 (
   assign clientSib_2_enable = hostSib_enable;
   assign clientSib_2_mask = hostSib_mask;
   assign clientSib_2_sel = (hostSib_sel && dec_sel[2]);
+  assign _zz_1 = dec_sel_ff[1];
+  assign _zz_2 = dec_sel_ff[2];
+  assign hostSib_rdata = _zz_6;
+  assign _zz_3 = dec_sel[1];
+  assign _zz_4 = dec_sel[2];
+  assign _zz_5 = {_zz_4,_zz_3};
+  assign hostSib_resp = (_zz_7 && dec_good);
+  assign hostSib_ready = _zz_8;
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -808,7 +806,7 @@ module Sib_switch1tN_1 (
 
 endmodule
 
-module Sib_switch1tN (
+module Sib_decoder (
   input               hostSib_sel,
   input               hostSib_enable,
   input               hostSib_write,
@@ -836,15 +834,15 @@ module Sib_switch1tN (
 
   assign dec_good = (dec_sel != 1'b0);
   assign dec_sel[0] = ((32'h0 <= hostSib_addr) && (hostSib_addr <= 32'h00ffffff));
-  assign hostSib_rdata = clientSib_0_rdata;
-  assign hostSib_resp = (clientSib_0_resp && dec_good);
-  assign hostSib_ready = clientSib_0_ready;
   assign clientSib_0_write = hostSib_write;
   assign clientSib_0_addr = hostSib_addr[15 : 0];
   assign clientSib_0_wdata = hostSib_wdata;
   assign clientSib_0_enable = hostSib_enable;
   assign clientSib_0_mask = hostSib_mask;
   assign clientSib_0_sel = (hostSib_sel && dec_sel[0]);
+  assign hostSib_rdata = clientSib_0_rdata;
+  assign hostSib_resp = (clientSib_0_resp && dec_good);
+  assign hostSib_ready = clientSib_0_ready;
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -860,107 +858,147 @@ module timer (
   input      [3:0]    timer_sib_mask,
   input      [11:0]   timer_sib_addr,
   input      [31:0]   timer_sib_wdata,
-  output reg [31:0]   timer_sib_rdata,
+  output     [31:0]   timer_sib_rdata,
   output              timer_sib_ready,
   output reg          timer_sib_resp,
   input               clk,
   input               reset
 );
-  wire                _zz_1;
-  reg        [1:0]    int_1;
-  reg        [63:0]   mtime;
-  reg        [63:0]   mtimecmp;
-  wire                int_en;
+  wire       [0:0]    _zz_3;
+  wire       [0:0]    _zz_4;
+  wire       [31:0]   _zz_5;
+  wire       [31:0]   _zz_6;
+  wire       [31:0]   _zz_7;
+  wire       [31:0]   _zz_8;
+  wire       [31:0]   _zz_9;
+  wire       [31:0]   _zz_10;
+  wire       [31:0]   _zz_11;
+  wire       [31:0]   _zz_12;
+  wire                busCtrl_doWrite;
+  wire                busCtrl_doRead;
+  reg        [31:0]   busCtrl_rdata;
+  reg        [31:0]   busCtrl_rdata_regNext;
+  reg                 en;
+  reg                 int_en;
+  reg                 int_pe;
+  reg        [63:0]   timerval;
+  wire       [63:0]   _zz_1;
+  reg        [63:0]   timercmp;
+  wire       [63:0]   _zz_2;
 
-  assign _zz_1 = (timer_sib_sel && timer_sib_enable);
-  assign int_en = (int_1[0] && (mtimecmp != 64'h0));
-  assign io_timer_interrupt = int_1[1];
+  assign _zz_3 = timer_sib_wdata[0 : 0];
+  assign _zz_4 = timer_sib_wdata[1 : 1];
+  assign _zz_5 = timer_sib_wdata[31 : 0];
+  assign _zz_6 = _zz_5;
+  assign _zz_7 = timer_sib_wdata[31 : 0];
+  assign _zz_8 = _zz_7;
+  assign _zz_9 = timer_sib_wdata[31 : 0];
+  assign _zz_10 = _zz_9;
+  assign _zz_11 = timer_sib_wdata[31 : 0];
+  assign _zz_12 = _zz_11;
+  assign busCtrl_doWrite = (((timer_sib_sel && timer_sib_enable) && timer_sib_ready) && timer_sib_write);
+  assign busCtrl_doRead = (((timer_sib_sel && timer_sib_enable) && timer_sib_ready) && (! timer_sib_write));
   always @ (*) begin
-    timer_sib_resp = 1'b1;
-    if(_zz_1)begin
-      case(timer_sib_addr)
-        12'h0 : begin
-        end
-        12'h004 : begin
-        end
-        12'h008 : begin
-        end
-        12'h00c : begin
-        end
-        12'h010 : begin
-        end
-        default : begin
-          timer_sib_resp = 1'b0;
-        end
-      endcase
-    end
+    busCtrl_rdata = 32'h0;
+    case(timer_sib_addr)
+      12'h0 : begin
+        busCtrl_rdata[0 : 0] = en;
+        busCtrl_rdata[1 : 1] = int_en;
+        busCtrl_rdata[4 : 4] = int_pe;
+      end
+      12'h004 : begin
+        busCtrl_rdata[31 : 0] = _zz_1[31 : 0];
+      end
+      12'h008 : begin
+        busCtrl_rdata[31 : 0] = _zz_1[63 : 32];
+      end
+      12'h00c : begin
+        busCtrl_rdata[31 : 0] = _zz_2[31 : 0];
+      end
+      12'h010 : begin
+        busCtrl_rdata[31 : 0] = _zz_2[63 : 32];
+      end
+      default : begin
+      end
+    endcase
   end
 
   always @ (*) begin
-    timer_sib_rdata = mtime[31 : 0];
-    if(_zz_1)begin
-      case(timer_sib_addr)
-        12'h0 : begin
-          timer_sib_rdata = {30'd0, int_1};
-        end
-        12'h004 : begin
-          timer_sib_rdata = mtime[31 : 0];
-        end
-        12'h008 : begin
-          timer_sib_rdata = mtime[63 : 32];
-        end
-        12'h00c : begin
-          timer_sib_rdata = mtimecmp[31 : 0];
-        end
-        12'h010 : begin
-          timer_sib_rdata = mtimecmp[63 : 32];
-        end
-        default : begin
-        end
-      endcase
-    end
+    timer_sib_resp = 1'b0;
+    case(timer_sib_addr)
+      12'h0 : begin
+        timer_sib_resp = 1'b1;
+      end
+      12'h004 : begin
+        timer_sib_resp = 1'b1;
+      end
+      12'h008 : begin
+        timer_sib_resp = 1'b1;
+      end
+      12'h00c : begin
+        timer_sib_resp = 1'b1;
+      end
+      12'h010 : begin
+        timer_sib_resp = 1'b1;
+      end
+      default : begin
+      end
+    endcase
   end
 
   assign timer_sib_ready = 1'b1;
+  assign timer_sib_rdata = busCtrl_rdata_regNext;
+  assign _zz_1 = timerval;
+  assign _zz_2 = timercmp;
+  assign io_timer_interrupt = int_pe;
+  always @ (posedge clk) begin
+    busCtrl_rdata_regNext <= busCtrl_rdata;
+    int_pe <= (((timercmp <= timerval) && (timercmp != 64'h0)) && int_en);
+    case(timer_sib_addr)
+      12'h00c : begin
+        if(busCtrl_doWrite)begin
+          timercmp[31 : 0] <= _zz_10;
+        end
+      end
+      12'h010 : begin
+        if(busCtrl_doWrite)begin
+          timercmp[63 : 32] <= _zz_12;
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
-      int_1 <= 2'b01;
-      mtime <= 64'h0;
-      mtimecmp <= 64'h0;
+      en <= 1'b0;
+      int_en <= 1'b0;
+      timerval <= 64'h0;
     end else begin
-      mtime <= (mtime + 64'h0000000000000001);
-      int_1[1] <= ((mtimecmp <= mtime) && int_en);
-      if(_zz_1)begin
-        case(timer_sib_addr)
-          12'h0 : begin
-            if(timer_sib_write)begin
-              int_1[0] <= timer_sib_wdata[0];
-            end
-          end
-          12'h004 : begin
-            if(timer_sib_write)begin
-              mtime[31 : 0] <= timer_sib_wdata;
-            end
-          end
-          12'h008 : begin
-            if(timer_sib_write)begin
-              mtime[63 : 32] <= timer_sib_wdata;
-            end
-          end
-          12'h00c : begin
-            if(timer_sib_write)begin
-              mtimecmp[31 : 0] <= timer_sib_wdata;
-            end
-          end
-          12'h010 : begin
-            if(timer_sib_write)begin
-              mtimecmp[63 : 32] <= timer_sib_wdata;
-            end
-          end
-          default : begin
-          end
-        endcase
+      if(en)begin
+        timerval <= (timerval + 64'h0000000000000001);
       end
+      case(timer_sib_addr)
+        12'h0 : begin
+          if(busCtrl_doWrite)begin
+            en <= _zz_3[0];
+            int_en <= _zz_4[0];
+          end
+        end
+        12'h004 : begin
+          if(busCtrl_doWrite)begin
+            timerval[31 : 0] <= _zz_6;
+          end
+        end
+        12'h008 : begin
+          if(busCtrl_doWrite)begin
+            timerval[63 : 32] <= _zz_8;
+          end
+        end
+        default : begin
+        end
+      endcase
     end
   end
 
@@ -968,9 +1006,10 @@ module timer (
 endmodule
 
 module gpio (
-  input      [31:0]   io_gpio_group0_read,
-  output     [31:0]   io_gpio_group0_write,
-  output     [31:0]   io_gpio_group0_writeEnable,
+  input      [31:0]   io_gpio_read,
+  output     [31:0]   io_gpio_write,
+  output     [31:0]   io_gpio_writeEnable,
+  output              io_gpio_int_pe,
   input               gpio_sib_sel,
   input               gpio_sib_enable,
   input               gpio_sib_write,
@@ -983,57 +1022,136 @@ module gpio (
   input               clk,
   input               reset
 );
-  wire                _zz_1;
-  reg        [1:0]    int_1;
-  reg        [31:0]   gpio_group0;
-  reg        [31:0]   gpio_group_ctrl;
+  wire                busCtrl_doWrite;
+  wire                busCtrl_doRead;
+  reg        [31:0]   busCtrl_rdata;
+  reg        [31:0]   busCtrl_rdata_regNext;
+  wire                gpio_value_0;
+  wire                gpio_value_1;
+  wire                gpio_value_2;
+  wire                gpio_value_3;
+  wire                gpio_value_4;
+  wire                gpio_value_5;
+  wire                gpio_value_6;
+  wire                gpio_value_7;
+  wire                gpio_value_8;
+  wire                gpio_value_9;
+  wire                gpio_value_10;
+  wire                gpio_value_11;
+  wire                gpio_value_12;
+  wire                gpio_value_13;
+  wire                gpio_value_14;
+  wire                gpio_value_15;
+  wire                gpio_value_16;
+  wire                gpio_value_17;
+  wire                gpio_value_18;
+  wire                gpio_value_19;
+  wire                gpio_value_20;
+  wire                gpio_value_21;
+  wire                gpio_value_22;
+  wire                gpio_value_23;
+  wire                gpio_value_24;
+  wire                gpio_value_25;
+  wire                gpio_value_26;
+  wire                gpio_value_27;
+  wire                gpio_value_28;
+  wire                gpio_value_29;
+  wire                gpio_value_30;
+  wire                gpio_value_31;
+  reg        [31:0]   _zz_1;
+  reg        [31:0]   io_gpio_writeEnable_driver;
+  wire                hi_int_int_aggr;
+  wire                lo_int_int_aggr;
+  wire                ri_int_int_aggr;
+  wire                fa_int_int_aggr;
 
-  assign _zz_1 = (gpio_sib_sel && gpio_sib_enable);
-  assign io_gpio_group0_write = gpio_group0;
-  assign io_gpio_group0_writeEnable = gpio_group_ctrl;
+  assign busCtrl_doWrite = (((gpio_sib_sel && gpio_sib_enable) && gpio_sib_ready) && gpio_sib_write);
+  assign busCtrl_doRead = (((gpio_sib_sel && gpio_sib_enable) && gpio_sib_ready) && (! gpio_sib_write));
   always @ (*) begin
-    gpio_sib_resp = 1'b1;
-    if(_zz_1)begin
-      case(gpio_sib_addr)
-        12'h0 : begin
-        end
-        12'h004 : begin
-        end
-        12'h008 : begin
-        end
-        default : begin
-          gpio_sib_resp = 1'b0;
-        end
-      endcase
-    end
+    busCtrl_rdata = 32'h0;
+    case(gpio_sib_addr)
+      12'h0 : begin
+        busCtrl_rdata[31 : 0] = io_gpio_read;
+      end
+      12'h004 : begin
+        busCtrl_rdata[31 : 0] = io_gpio_writeEnable_driver;
+      end
+      default : begin
+      end
+    endcase
   end
 
-  assign gpio_sib_rdata = gpio_group0;
+  always @ (*) begin
+    gpio_sib_resp = 1'b0;
+    case(gpio_sib_addr)
+      12'h0 : begin
+        gpio_sib_resp = 1'b1;
+      end
+      12'h004 : begin
+        gpio_sib_resp = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
   assign gpio_sib_ready = 1'b1;
+  assign gpio_sib_rdata = busCtrl_rdata_regNext;
+  assign gpio_value_0 = io_gpio_read[0];
+  assign gpio_value_1 = io_gpio_read[1];
+  assign gpio_value_2 = io_gpio_read[2];
+  assign gpio_value_3 = io_gpio_read[3];
+  assign gpio_value_4 = io_gpio_read[4];
+  assign gpio_value_5 = io_gpio_read[5];
+  assign gpio_value_6 = io_gpio_read[6];
+  assign gpio_value_7 = io_gpio_read[7];
+  assign gpio_value_8 = io_gpio_read[8];
+  assign gpio_value_9 = io_gpio_read[9];
+  assign gpio_value_10 = io_gpio_read[10];
+  assign gpio_value_11 = io_gpio_read[11];
+  assign gpio_value_12 = io_gpio_read[12];
+  assign gpio_value_13 = io_gpio_read[13];
+  assign gpio_value_14 = io_gpio_read[14];
+  assign gpio_value_15 = io_gpio_read[15];
+  assign gpio_value_16 = io_gpio_read[16];
+  assign gpio_value_17 = io_gpio_read[17];
+  assign gpio_value_18 = io_gpio_read[18];
+  assign gpio_value_19 = io_gpio_read[19];
+  assign gpio_value_20 = io_gpio_read[20];
+  assign gpio_value_21 = io_gpio_read[21];
+  assign gpio_value_22 = io_gpio_read[22];
+  assign gpio_value_23 = io_gpio_read[23];
+  assign gpio_value_24 = io_gpio_read[24];
+  assign gpio_value_25 = io_gpio_read[25];
+  assign gpio_value_26 = io_gpio_read[26];
+  assign gpio_value_27 = io_gpio_read[27];
+  assign gpio_value_28 = io_gpio_read[28];
+  assign gpio_value_29 = io_gpio_read[29];
+  assign gpio_value_30 = io_gpio_read[30];
+  assign gpio_value_31 = io_gpio_read[31];
+  assign io_gpio_write = _zz_1;
+  assign io_gpio_writeEnable = io_gpio_writeEnable_driver;
+  assign hi_int_int_aggr = 1'b0;
+  assign lo_int_int_aggr = 1'b0;
+  assign ri_int_int_aggr = 1'b0;
+  assign fa_int_int_aggr = 1'b0;
+  assign io_gpio_int_pe = (((hi_int_int_aggr || lo_int_int_aggr) || ri_int_int_aggr) || fa_int_int_aggr);
   always @ (posedge clk) begin
-    gpio_group0 <= (gpio_group_ctrl & io_gpio_group0_read);
-    int_1[1] <= 1'b0;
-    if(_zz_1)begin
-      case(gpio_sib_addr)
-        12'h0 : begin
-          if(gpio_sib_write)begin
-            int_1[0] <= gpio_sib_wdata[0];
-          end
+    busCtrl_rdata_regNext <= busCtrl_rdata;
+    case(gpio_sib_addr)
+      12'h0 : begin
+        if(busCtrl_doWrite)begin
+          _zz_1 <= gpio_sib_wdata[31 : 0];
         end
-        12'h004 : begin
-          if(gpio_sib_write)begin
-            gpio_group0 <= gpio_sib_wdata;
-          end
+      end
+      12'h004 : begin
+        if(busCtrl_doWrite)begin
+          io_gpio_writeEnable_driver <= gpio_sib_wdata[31 : 0];
         end
-        12'h008 : begin
-          if(gpio_sib_write)begin
-            gpio_group_ctrl <= gpio_sib_wdata;
-          end
-        end
-        default : begin
-        end
-      endcase
-    end
+      end
+      default : begin
+      end
+    endcase
   end
 
 
@@ -1048,69 +1166,98 @@ module clic (
   input      [3:0]    clic_sib_mask,
   input      [11:0]   clic_sib_addr,
   input      [31:0]   clic_sib_wdata,
-  output reg [31:0]   clic_sib_rdata,
+  output     [31:0]   clic_sib_rdata,
   output              clic_sib_ready,
   output reg          clic_sib_resp,
   input               clk,
   input               reset
 );
-  wire                _zz_1;
-  wire       [0:0]    _zz_2;
+  wire       [0:0]    _zz_3;
+  wire       [31:0]   _zz_4;
+  wire       [31:0]   _zz_5;
+  wire       [31:0]   _zz_6;
+  wire       [31:0]   _zz_7;
+  wire       [31:0]   _zz_8;
+  wire       [31:0]   _zz_9;
+  wire       [31:0]   _zz_10;
+  wire       [31:0]   _zz_11;
+  wire                busCtrl_doWrite;
+  wire                busCtrl_doRead;
+  reg        [31:0]   busCtrl_rdata;
+  reg        [31:0]   busCtrl_rdata_regNext;
   reg                 msip;
   reg        [63:0]   mtime;
+  wire       [63:0]   _zz_1;
   reg        [63:0]   mtimecmp;
+  wire       [63:0]   _zz_2;
 
-  assign _zz_1 = (clic_sib_sel && clic_sib_enable);
-  assign _zz_2 = msip;
-  assign io_software_interrupt = msip;
-  assign io_timer_interrupt = ((mtimecmp <= mtime) && (mtimecmp != 64'h0));
+  assign _zz_3 = clic_sib_wdata[0 : 0];
+  assign _zz_4 = clic_sib_wdata[31 : 0];
+  assign _zz_5 = _zz_4;
+  assign _zz_6 = clic_sib_wdata[31 : 0];
+  assign _zz_7 = _zz_6;
+  assign _zz_8 = clic_sib_wdata[31 : 0];
+  assign _zz_9 = _zz_8;
+  assign _zz_10 = clic_sib_wdata[31 : 0];
+  assign _zz_11 = _zz_10;
+  assign busCtrl_doWrite = (((clic_sib_sel && clic_sib_enable) && clic_sib_ready) && clic_sib_write);
+  assign busCtrl_doRead = (((clic_sib_sel && clic_sib_enable) && clic_sib_ready) && (! clic_sib_write));
   always @ (*) begin
-    clic_sib_resp = 1'b1;
-    if(_zz_1)begin
-      case(clic_sib_addr)
-        12'h0 : begin
-        end
-        12'h004 : begin
-        end
-        12'h008 : begin
-        end
-        12'h00c : begin
-        end
-        12'h010 : begin
-        end
-        default : begin
-          clic_sib_resp = 1'b0;
-        end
-      endcase
-    end
+    busCtrl_rdata = 32'h0;
+    case(clic_sib_addr)
+      12'h0 : begin
+        busCtrl_rdata[0 : 0] = msip;
+      end
+      12'h004 : begin
+        busCtrl_rdata[31 : 0] = _zz_1[31 : 0];
+      end
+      12'h008 : begin
+        busCtrl_rdata[31 : 0] = _zz_1[63 : 32];
+      end
+      12'h00c : begin
+        busCtrl_rdata[31 : 0] = _zz_2[31 : 0];
+      end
+      12'h010 : begin
+        busCtrl_rdata[31 : 0] = _zz_2[63 : 32];
+      end
+      default : begin
+      end
+    endcase
   end
 
   always @ (*) begin
-    clic_sib_rdata = mtime[31 : 0];
-    if(_zz_1)begin
-      case(clic_sib_addr)
-        12'h0 : begin
-          clic_sib_rdata = {31'd0, _zz_2};
-        end
-        12'h004 : begin
-          clic_sib_rdata = mtime[31 : 0];
-        end
-        12'h008 : begin
-          clic_sib_rdata = mtime[63 : 32];
-        end
-        12'h00c : begin
-          clic_sib_rdata = mtimecmp[31 : 0];
-        end
-        12'h010 : begin
-          clic_sib_rdata = mtimecmp[63 : 32];
-        end
-        default : begin
-        end
-      endcase
-    end
+    clic_sib_resp = 1'b0;
+    case(clic_sib_addr)
+      12'h0 : begin
+        clic_sib_resp = 1'b1;
+      end
+      12'h004 : begin
+        clic_sib_resp = 1'b1;
+      end
+      12'h008 : begin
+        clic_sib_resp = 1'b1;
+      end
+      12'h00c : begin
+        clic_sib_resp = 1'b1;
+      end
+      12'h010 : begin
+        clic_sib_resp = 1'b1;
+      end
+      default : begin
+      end
+    endcase
   end
 
   assign clic_sib_ready = 1'b1;
+  assign clic_sib_rdata = busCtrl_rdata_regNext;
+  assign _zz_1 = mtime;
+  assign _zz_2 = mtimecmp;
+  assign io_software_interrupt = msip;
+  assign io_timer_interrupt = ((mtimecmp <= mtime) && (mtimecmp != 64'h0));
+  always @ (posedge clk) begin
+    busCtrl_rdata_regNext <= busCtrl_rdata;
+  end
+
   always @ (posedge clk or posedge reset) begin
     if (reset) begin
       msip <= 1'b0;
@@ -1118,37 +1265,35 @@ module clic (
       mtimecmp <= 64'h0;
     end else begin
       mtime <= (mtime + 64'h0000000000000001);
-      if(_zz_1)begin
-        case(clic_sib_addr)
-          12'h0 : begin
-            if(clic_sib_write)begin
-              msip <= clic_sib_wdata[0];
-            end
+      case(clic_sib_addr)
+        12'h0 : begin
+          if(busCtrl_doWrite)begin
+            msip <= _zz_3[0];
           end
-          12'h004 : begin
-            if(clic_sib_write)begin
-              mtime[31 : 0] <= clic_sib_wdata;
-            end
+        end
+        12'h004 : begin
+          if(busCtrl_doWrite)begin
+            mtime[31 : 0] <= _zz_5;
           end
-          12'h008 : begin
-            if(clic_sib_write)begin
-              mtime[63 : 32] <= clic_sib_wdata;
-            end
+        end
+        12'h008 : begin
+          if(busCtrl_doWrite)begin
+            mtime[63 : 32] <= _zz_7;
           end
-          12'h00c : begin
-            if(clic_sib_write)begin
-              mtimecmp[31 : 0] <= clic_sib_wdata;
-            end
+        end
+        12'h00c : begin
+          if(busCtrl_doWrite)begin
+            mtimecmp[31 : 0] <= _zz_9;
           end
-          12'h010 : begin
-            if(clic_sib_write)begin
-              mtimecmp[63 : 32] <= clic_sib_wdata;
-            end
+        end
+        12'h010 : begin
+          if(busCtrl_doWrite)begin
+            mtimecmp[63 : 32] <= _zz_11;
           end
-          default : begin
-          end
-        endcase
-      end
+        end
+        default : begin
+        end
+      endcase
     end
   end
 

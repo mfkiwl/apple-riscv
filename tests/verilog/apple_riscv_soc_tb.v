@@ -60,7 +60,7 @@ end
   wire              imem_dbg_sib_ready;
   wire              imem_dbg_sib_resp;
 
-  wire     [31:0]   gpio_port_gpio_group0;
+  wire     [31:0]   gpio_port_gpio;
 
 endmodule
 

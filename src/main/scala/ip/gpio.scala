@@ -11,58 +11,61 @@
 //
 // ================== Description ==================
 //
-// General Purpose IO
+// General Purpose IO, currently only supporting output signal
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 package ip
 
-import soc._
 import sib._
 import spinal.core._
 import spinal.lib._
 import spinal.lib.io.TriStateArray
 
-case class gpio_io(soc_param: SOC_PARAM) extends Bundle {
-  val gpio_group0 = master(TriStateArray(soc_param.GPIO_WIDTH bits))
+// GPIO config
+class GpioCfg(
+  val HI_INT: Boolean = true,
+  val LO_INT: Boolean = true,
+  val RISE_INT: Boolean = true,
+  val FALL_INT: Boolean = true,
+  val GPIO_WIDTH : Int  = 32
+)
+
+case class gpio_io(cfg: GpioCfg, useInt: Boolean = true) extends Bundle {
+  val gpio         = master(TriStateArray(cfg.GPIO_WIDTH bits))
+  val gpio_int_pe  = if (useInt) out Bool else null
 }
 
-case class gpio(soc_param: SOC_PARAM) extends Component {
-
-  val io = gpio_io(soc_param)
-  val gpio_sib = slave(Sib(soc_param.gpioSibCfg))
-
-  val int = Reg(Bits(2 bits)) // 0
-  val gpio_group0 = Reg(Bits(soc_param.GPIO_WIDTH bits))  // 4
-  val gpio_group_ctrl = Reg(Bits(soc_param.GPIO_WIDTH bits))  // 8
-
-  // == GPIO read write logic == //
-  io.gpio_group0.write := gpio_group0
-  io.gpio_group0.writeEnable := gpio_group_ctrl
-  gpio_group0 := gpio_group_ctrl & io.gpio_group0.read
-
-  // == GPIO edge detection and interrupt == //
-  // FIXME
-  int(1) := False
-
-  // == SIB logic == //
-  gpio_sib.resp := True
-  gpio_sib.rdata := gpio_group0
-  when(gpio_sib.sel && gpio_sib.enable) {
-    switch(gpio_sib.addr) {
-      is(0) {
-        when (gpio_sib.write) {int(0) := gpio_sib.wdata(0)}
-      }
-      is(4) {
-        when (gpio_sib.write) {gpio_group0 := gpio_sib.wdata}
-      }
-      is(8) {
-        when (gpio_sib.write) {gpio_group_ctrl := gpio_sib.wdata}
-      }
-      default {
-        gpio_sib.resp := False
-      }
-    }
+case class gpio_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, enable: Boolean, addr: Int,
+                          intName: String, gpio_value: Vec[Bool], int_op: Bool => Bool) extends Area {
+  val int_aggr = False
+  if (enable) {
+    // Interrupt Ctrl and Status Register
+    val int_en = busCtrl.createReadAndWrite(Bits(width bits), addr    , 0, "GPIO" + intName + "Interrupt Enable")
+    val int_pe = busCtrl.createReadAndWrite(Bits(width bits), addr + 4, 0, "GPIO" + intName + "Interrupt Pending")
+    // Interrupt Logic
+    int_pe := gpio_value.map(int_op).asBits
+    int_aggr := int_pe.orR
   }
-  gpio_sib.ready := True // always ready, haha
+}
+
+case class gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
+
+  val io        = gpio_io(cfg)
+  val gpio_sib  = slave(Sib(sibCfg))
+  val busCtrl   = SibSlaveFactory(gpio_sib)
+
+  val gpio_value = io.gpio.read.asBools
+
+  // == Register == //
+  busCtrl.read        (io.gpio.read       , 0x0, 0, "GPIO Read Value")
+  busCtrl.drive       (io.gpio.write      , 0x0, 0, "GPIO Write Value")
+  busCtrl.driveAndRead(io.gpio.writeEnable, 0x4, 0, "GPIO Write Enable")
+
+  val hi_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.HI_INT, 0x8,  "Level HI",    gpio_value, x => x)
+  val lo_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x10, "Level LO",    gpio_value, x => ~x)
+  val ri_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x18, "Rising Edge", gpio_value, x => x.rise(False))
+  val fa_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x20, "Rising Edge", gpio_value, x => x.fall(False))
+
+  io.gpio_int_pe := hi_int.int_aggr | lo_int.int_aggr | ri_int.int_aggr | fa_int.int_aggr
 }
