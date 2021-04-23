@@ -21,20 +21,21 @@ import spinal.core._
 import core._
 import ip._
 import spinal.lib.io.InOutWrapper
-
-import spinal.lib.bus.regif.AccessType._
-import spinal.lib.bus.regif._
+import spinal.lib.com.uart.UartCtrlGenerics
 
 
 // Run this main to generate the RTL
 
 object Main{
   def main(args: Array[String]) {
-    val cpu_param = new CPU_PARAM()
-    val soc_param = new SOC_PARAM()
-    val gpioCfg   = new GpioCfg(false, false, false, false)
+    val cfg = soc_cfg (
+      cpu_param = new CPU_PARAM(),
+      soc_param = new SOC_PARAM(),
+      gpioCfg   = new GpioCfg(false, false, false, false),
+      uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
+    )
     val spinalCfg = SpinalConfig(
       targetDirectory = "rtl/soc"
-    ).generateVerilog(InOutWrapper(apple_riscv_soc(soc_param, cpu_param, gpioCfg)))
+    ).generateVerilog(InOutWrapper(apple_riscv_soc(cfg)))
   }
 }

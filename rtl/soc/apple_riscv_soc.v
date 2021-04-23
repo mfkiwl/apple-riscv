@@ -1,22 +1,47 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 59896a1260d5104f3c4b0be5672409e2d1a7befd
+// Git hash  : 6945fafcc10a71b857a734875a2a589a6a35e39e
 
 
-`define br_imm_type_e_binary_sequential_type [1:0]
-`define br_imm_type_e_binary_sequential_JTYPE 2'b00
-`define br_imm_type_e_binary_sequential_BTYPE 2'b01
-`define br_imm_type_e_binary_sequential_ITYPE 2'b10
+`define br_imm_type_e_defaultEncoding_type [1:0]
+`define br_imm_type_e_defaultEncoding_JTYPE 2'b00
+`define br_imm_type_e_defaultEncoding_BTYPE 2'b01
+`define br_imm_type_e_defaultEncoding_ITYPE 2'b10
 
-`define alu_imm_type_e_binary_sequential_type [2:0]
-`define alu_imm_type_e_binary_sequential_ITYPE 3'b000
-`define alu_imm_type_e_binary_sequential_STYPE 3'b001
-`define alu_imm_type_e_binary_sequential_UTYPE 3'b010
-`define alu_imm_type_e_binary_sequential_FOUR 3'b011
-`define alu_imm_type_e_binary_sequential_ZERO 3'b100
+`define alu_imm_type_e_defaultEncoding_type [2:0]
+`define alu_imm_type_e_defaultEncoding_ITYPE 3'b000
+`define alu_imm_type_e_defaultEncoding_STYPE 3'b001
+`define alu_imm_type_e_defaultEncoding_UTYPE 3'b010
+`define alu_imm_type_e_defaultEncoding_FOUR 3'b011
+`define alu_imm_type_e_defaultEncoding_ZERO 3'b100
+
+`define UartStopType_defaultEncoding_type [0:0]
+`define UartStopType_defaultEncoding_ONE 1'b0
+`define UartStopType_defaultEncoding_TWO 1'b1
+
+`define UartParityType_defaultEncoding_type [1:0]
+`define UartParityType_defaultEncoding_NONE 2'b00
+`define UartParityType_defaultEncoding_EVEN 2'b01
+`define UartParityType_defaultEncoding_ODD 2'b10
+
+`define UartCtrlTxState_defaultEncoding_type [2:0]
+`define UartCtrlTxState_defaultEncoding_IDLE 3'b000
+`define UartCtrlTxState_defaultEncoding_START 3'b001
+`define UartCtrlTxState_defaultEncoding_DATA 3'b010
+`define UartCtrlTxState_defaultEncoding_PARITY 3'b011
+`define UartCtrlTxState_defaultEncoding_STOP 3'b100
+
+`define UartCtrlRxState_defaultEncoding_type [2:0]
+`define UartCtrlRxState_defaultEncoding_IDLE 3'b000
+`define UartCtrlRxState_defaultEncoding_START 3'b001
+`define UartCtrlRxState_defaultEncoding_DATA 3'b010
+`define UartCtrlRxState_defaultEncoding_PARITY 3'b011
+`define UartCtrlRxState_defaultEncoding_STOP 3'b100
 
 
 module apple_riscv_soc (
+  output              uart_port_txd,
+  input               uart_port_rxd,
   input               imem_dbg_sib_sel,
   input               imem_dbg_sib_enable,
   input               imem_dbg_sib_write,
@@ -68,6 +93,10 @@ module apple_riscv_soc (
   wire       [31:0]   timer_inst_timer_sib_rdata;
   wire                timer_inst_timer_sib_ready;
   wire                timer_inst_timer_sib_resp;
+  wire                uart_inst_uart_txd;
+  wire       [31:0]   uart_inst_uart_sib_rdata;
+  wire                uart_inst_uart_sib_ready;
+  wire                uart_inst_uart_sib_resp;
   wire       [31:0]   imem_switch_hostSib_rdata;
   wire                imem_switch_hostSib_ready;
   wire                imem_switch_hostSib_resp;
@@ -113,6 +142,12 @@ module apple_riscv_soc (
   wire       [3:0]    perip_switch_clientSib_1_mask;
   wire       [31:0]   perip_switch_clientSib_1_wdata;
   wire       [11:0]   perip_switch_clientSib_1_addr;
+  wire                perip_switch_clientSib_2_sel;
+  wire                perip_switch_clientSib_2_enable;
+  wire                perip_switch_clientSib_2_write;
+  wire       [3:0]    perip_switch_clientSib_2_mask;
+  wire       [31:0]   perip_switch_clientSib_2_wdata;
+  wire       [11:0]   perip_switch_clientSib_2_addr;
   reg                 _zz_1;
   reg                 _zz_2;
   reg                 _zz_3;
@@ -256,6 +291,21 @@ module apple_riscv_soc (
     .clk                   (clk                                   ), //i
     .reset                 (reset                                 )  //i
   );
+  SibUart uart_inst (
+    .uart_txd           (uart_inst_uart_txd                    ), //o
+    .uart_rxd           (uart_port_rxd                         ), //i
+    .uart_sib_sel       (perip_switch_clientSib_2_sel          ), //i
+    .uart_sib_enable    (perip_switch_clientSib_2_enable       ), //i
+    .uart_sib_write     (perip_switch_clientSib_2_write        ), //i
+    .uart_sib_mask      (perip_switch_clientSib_2_mask[3:0]    ), //i
+    .uart_sib_addr      (perip_switch_clientSib_2_addr[11:0]   ), //i
+    .uart_sib_wdata     (perip_switch_clientSib_2_wdata[31:0]  ), //i
+    .uart_sib_rdata     (uart_inst_uart_sib_rdata[31:0]        ), //o
+    .uart_sib_ready     (uart_inst_uart_sib_ready              ), //o
+    .uart_sib_resp      (uart_inst_uart_sib_resp               ), //o
+    .clk                (clk                                   ), //i
+    .reset              (reset                                 )  //i
+  );
   Sib_decoder imem_switch (
     .hostSib_sel           (cpu_core_imem_sib_sel                ), //i
     .hostSib_enable        (cpu_core_imem_sib_enable             ), //i
@@ -346,6 +396,15 @@ module apple_riscv_soc (
     .clientSib_1_rdata     (gpio_inst_gpio_sib_rdata[31:0]        ), //i
     .clientSib_1_ready     (gpio_inst_gpio_sib_ready              ), //i
     .clientSib_1_resp      (gpio_inst_gpio_sib_resp               ), //i
+    .clientSib_2_sel       (perip_switch_clientSib_2_sel          ), //o
+    .clientSib_2_enable    (perip_switch_clientSib_2_enable       ), //o
+    .clientSib_2_write     (perip_switch_clientSib_2_write        ), //o
+    .clientSib_2_mask      (perip_switch_clientSib_2_mask[3:0]    ), //o
+    .clientSib_2_addr      (perip_switch_clientSib_2_addr[11:0]   ), //o
+    .clientSib_2_wdata     (perip_switch_clientSib_2_wdata[31:0]  ), //o
+    .clientSib_2_rdata     (uart_inst_uart_sib_rdata[31:0]        ), //i
+    .clientSib_2_ready     (uart_inst_uart_sib_ready              ), //i
+    .clientSib_2_resp      (uart_inst_uart_sib_resp               ), //i
     .clk                   (clk                                   ), //i
     .reset                 (reset                                 )  //i
   );
@@ -610,6 +669,7 @@ module apple_riscv_soc (
   assign imem_dbg_sib_resp = imem_inst_imem_dbg_sib_resp;
   assign _zz_34 = gpio_inst_io_gpio_write;
   assign _zz_35 = gpio_inst_io_gpio_writeEnable;
+  assign uart_port_txd = uart_inst_uart_txd;
   assign _zz_36 = 1'b0;
   assign _zz_37 = 1'b0;
   assign _zz_33 = gpio_port_gpio;
@@ -644,18 +704,68 @@ module Sib_decoder_2 (
   input      [31:0]   clientSib_1_rdata,
   input               clientSib_1_ready,
   input               clientSib_1_resp,
+  output              clientSib_2_sel,
+  output              clientSib_2_enable,
+  output              clientSib_2_write,
+  output     [3:0]    clientSib_2_mask,
+  output     [11:0]   clientSib_2_addr,
+  output     [31:0]   clientSib_2_wdata,
+  input      [31:0]   clientSib_2_rdata,
+  input               clientSib_2_ready,
+  input               clientSib_2_resp,
   input               clk,
   input               reset
 );
-  reg        [1:0]    dec_sel;
-  reg        [1:0]    dec_sel_ff;
+  reg        [31:0]   _zz_6;
+  reg                 _zz_7;
+  reg                 _zz_8;
+  wire       [1:0]    _zz_9;
+  reg        [2:0]    dec_sel;
+  reg        [2:0]    dec_sel_ff;
   wire                dec_good;
   wire                _zz_1;
+  wire                _zz_2;
+  wire                _zz_3;
+  wire                _zz_4;
+  wire       [1:0]    _zz_5;
 
-  assign dec_good = (dec_sel != 2'b00);
+  assign _zz_9 = {_zz_2,_zz_1};
+  always @(*) begin
+    case(_zz_9)
+      2'b00 : begin
+        _zz_6 = clientSib_0_rdata;
+      end
+      2'b01 : begin
+        _zz_6 = clientSib_1_rdata;
+      end
+      default : begin
+        _zz_6 = clientSib_2_rdata;
+      end
+    endcase
+  end
+
+  always @(*) begin
+    case(_zz_5)
+      2'b00 : begin
+        _zz_7 = clientSib_0_resp;
+        _zz_8 = clientSib_0_ready;
+      end
+      2'b01 : begin
+        _zz_7 = clientSib_1_resp;
+        _zz_8 = clientSib_1_ready;
+      end
+      default : begin
+        _zz_7 = clientSib_2_resp;
+        _zz_8 = clientSib_2_ready;
+      end
+    endcase
+  end
+
+  assign dec_good = (dec_sel != 3'b000);
   always @ (*) begin
     dec_sel[0] = ((16'h2000 <= hostSib_addr) && (hostSib_addr <= 16'h2fff));
     dec_sel[1] = ((16'h3000 <= hostSib_addr) && (hostSib_addr <= 16'h3fff));
+    dec_sel[2] = ((16'h4000 <= hostSib_addr) && (hostSib_addr <= 16'h4fff));
   end
 
   assign clientSib_0_write = hostSib_write;
@@ -670,10 +780,20 @@ module Sib_decoder_2 (
   assign clientSib_1_enable = hostSib_enable;
   assign clientSib_1_mask = hostSib_mask;
   assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
-  assign hostSib_rdata = (dec_sel_ff[0] ? clientSib_0_rdata : clientSib_1_rdata);
-  assign _zz_1 = dec_sel[0];
-  assign hostSib_resp = ((_zz_1 ? clientSib_0_resp : clientSib_1_resp) && dec_good);
-  assign hostSib_ready = (_zz_1 ? clientSib_0_ready : clientSib_1_ready);
+  assign clientSib_2_write = hostSib_write;
+  assign clientSib_2_addr = hostSib_addr[11 : 0];
+  assign clientSib_2_wdata = hostSib_wdata;
+  assign clientSib_2_enable = hostSib_enable;
+  assign clientSib_2_mask = hostSib_mask;
+  assign clientSib_2_sel = (hostSib_sel && dec_sel[2]);
+  assign _zz_1 = dec_sel_ff[1];
+  assign _zz_2 = dec_sel_ff[2];
+  assign hostSib_rdata = _zz_6;
+  assign _zz_3 = dec_sel[1];
+  assign _zz_4 = dec_sel[2];
+  assign _zz_5 = {_zz_4,_zz_3};
+  assign hostSib_resp = (_zz_7 && dec_good);
+  assign hostSib_ready = _zz_8;
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -845,6 +965,295 @@ module Sib_decoder (
   assign hostSib_ready = clientSib_0_ready;
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
+  end
+
+
+endmodule
+
+module SibUart (
+  output              uart_txd,
+  input               uart_rxd,
+  input               uart_sib_sel,
+  input               uart_sib_enable,
+  input               uart_sib_write,
+  input      [3:0]    uart_sib_mask,
+  input      [11:0]   uart_sib_addr,
+  input      [31:0]   uart_sib_wdata,
+  output     [31:0]   uart_sib_rdata,
+  output              uart_sib_ready,
+  output reg          uart_sib_resp,
+  input               clk,
+  input               reset
+);
+  wire                _zz_5;
+  wire       [7:0]    _zz_6;
+  wire                _zz_7;
+  reg                 _zz_8;
+  wire                _zz_9;
+  wire                uartCtrl_1_io_write_ready;
+  wire                uartCtrl_1_io_read_valid;
+  wire       [7:0]    uartCtrl_1_io_read_payload;
+  wire                uartCtrl_1_io_uart_txd;
+  wire                uartCtrl_1_io_readError;
+  wire                uartCtrl_1_io_readBreak;
+  wire                streamFifo_2_io_push_ready;
+  wire                streamFifo_2_io_pop_valid;
+  wire       [7:0]    streamFifo_2_io_pop_payload;
+  wire       [3:0]    streamFifo_2_io_occupancy;
+  wire       [3:0]    streamFifo_2_io_availability;
+  wire                uartCtrl_1_io_read_queueWithOccupancy_io_push_ready;
+  wire                uartCtrl_1_io_read_queueWithOccupancy_io_pop_valid;
+  wire       [7:0]    uartCtrl_1_io_read_queueWithOccupancy_io_pop_payload;
+  wire       [3:0]    uartCtrl_1_io_read_queueWithOccupancy_io_occupancy;
+  wire       [3:0]    uartCtrl_1_io_read_queueWithOccupancy_io_availability;
+  wire       [0:0]    _zz_10;
+  wire       [0:0]    _zz_11;
+  wire       [0:0]    _zz_12;
+  wire       [0:0]    _zz_13;
+  wire                busCtrl_doWrite;
+  wire                busCtrl_doRead;
+  reg        [31:0]   busCtrl_rdata;
+  reg        [31:0]   busCtrl_rdata_regNext;
+  reg                 rx_avail_int_en;
+  reg                 rx_full_int_en;
+  reg                 rx_en;
+  reg                 tx_en;
+  reg        [2:0]    uartCtrl_1_io_config_frame_driver_dataLength;
+  reg        `UartStopType_defaultEncoding_type uartCtrl_1_io_config_frame_driver_stop;
+  reg        `UartParityType_defaultEncoding_type uartCtrl_1_io_config_frame_driver_parity;
+  reg        [19:0]   uartCtrl_1_io_config_clockDivider_driver;
+  reg                 _zz_1;
+  wire                txFull;
+  wire                rxFull;
+  wire                rxEmpty;
+  wire       [5:0]    _zz_2;
+  wire       `UartStopType_defaultEncoding_type _zz_3;
+  wire       `UartParityType_defaultEncoding_type _zz_4;
+  `ifndef SYNTHESIS
+  reg [23:0] uartCtrl_1_io_config_frame_driver_stop_string;
+  reg [31:0] uartCtrl_1_io_config_frame_driver_parity_string;
+  reg [23:0] _zz_3_string;
+  reg [31:0] _zz_4_string;
+  `endif
+
+
+  assign _zz_10 = uart_sib_wdata[0 : 0];
+  assign _zz_11 = uart_sib_wdata[1 : 1];
+  assign _zz_12 = uart_sib_wdata[4 : 4];
+  assign _zz_13 = uart_sib_wdata[5 : 5];
+  UartCtrl uartCtrl_1 (
+    .io_config_frame_dataLength    (uartCtrl_1_io_config_frame_driver_dataLength[2:0]    ), //i
+    .io_config_frame_stop          (uartCtrl_1_io_config_frame_driver_stop               ), //i
+    .io_config_frame_parity        (uartCtrl_1_io_config_frame_driver_parity[1:0]        ), //i
+    .io_config_clockDivider        (uartCtrl_1_io_config_clockDivider_driver[19:0]       ), //i
+    .io_write_valid                (streamFifo_2_io_pop_valid                            ), //i
+    .io_write_ready                (uartCtrl_1_io_write_ready                            ), //o
+    .io_write_payload              (streamFifo_2_io_pop_payload[7:0]                     ), //i
+    .io_read_valid                 (uartCtrl_1_io_read_valid                             ), //o
+    .io_read_ready                 (uartCtrl_1_io_read_queueWithOccupancy_io_push_ready  ), //i
+    .io_read_payload               (uartCtrl_1_io_read_payload[7:0]                      ), //o
+    .io_uart_txd                   (uartCtrl_1_io_uart_txd                               ), //o
+    .io_uart_rxd                   (uart_rxd                                             ), //i
+    .io_readError                  (uartCtrl_1_io_readError                              ), //o
+    .io_writeBreak                 (_zz_5                                                ), //i
+    .io_readBreak                  (uartCtrl_1_io_readBreak                              ), //o
+    .clk                           (clk                                                  ), //i
+    .reset                         (reset                                                )  //i
+  );
+  StreamFifo streamFifo_2 (
+    .io_push_valid      (_zz_1                              ), //i
+    .io_push_ready      (streamFifo_2_io_push_ready         ), //o
+    .io_push_payload    (_zz_6[7:0]                         ), //i
+    .io_pop_valid       (streamFifo_2_io_pop_valid          ), //o
+    .io_pop_ready       (uartCtrl_1_io_write_ready          ), //i
+    .io_pop_payload     (streamFifo_2_io_pop_payload[7:0]   ), //o
+    .io_flush           (_zz_7                              ), //i
+    .io_occupancy       (streamFifo_2_io_occupancy[3:0]     ), //o
+    .io_availability    (streamFifo_2_io_availability[3:0]  ), //o
+    .clk                (clk                                ), //i
+    .reset              (reset                              )  //i
+  );
+  StreamFifo uartCtrl_1_io_read_queueWithOccupancy (
+    .io_push_valid      (uartCtrl_1_io_read_valid                                    ), //i
+    .io_push_ready      (uartCtrl_1_io_read_queueWithOccupancy_io_push_ready         ), //o
+    .io_push_payload    (uartCtrl_1_io_read_payload[7:0]                             ), //i
+    .io_pop_valid       (uartCtrl_1_io_read_queueWithOccupancy_io_pop_valid          ), //o
+    .io_pop_ready       (_zz_8                                                       ), //i
+    .io_pop_payload     (uartCtrl_1_io_read_queueWithOccupancy_io_pop_payload[7:0]   ), //o
+    .io_flush           (_zz_9                                                       ), //i
+    .io_occupancy       (uartCtrl_1_io_read_queueWithOccupancy_io_occupancy[3:0]     ), //o
+    .io_availability    (uartCtrl_1_io_read_queueWithOccupancy_io_availability[3:0]  ), //o
+    .clk                (clk                                                         ), //i
+    .reset              (reset                                                       )  //i
+  );
+  `ifndef SYNTHESIS
+  always @(*) begin
+    case(uartCtrl_1_io_config_frame_driver_stop)
+      `UartStopType_defaultEncoding_ONE : uartCtrl_1_io_config_frame_driver_stop_string = "ONE";
+      `UartStopType_defaultEncoding_TWO : uartCtrl_1_io_config_frame_driver_stop_string = "TWO";
+      default : uartCtrl_1_io_config_frame_driver_stop_string = "???";
+    endcase
+  end
+  always @(*) begin
+    case(uartCtrl_1_io_config_frame_driver_parity)
+      `UartParityType_defaultEncoding_NONE : uartCtrl_1_io_config_frame_driver_parity_string = "NONE";
+      `UartParityType_defaultEncoding_EVEN : uartCtrl_1_io_config_frame_driver_parity_string = "EVEN";
+      `UartParityType_defaultEncoding_ODD : uartCtrl_1_io_config_frame_driver_parity_string = "ODD ";
+      default : uartCtrl_1_io_config_frame_driver_parity_string = "????";
+    endcase
+  end
+  always @(*) begin
+    case(_zz_3)
+      `UartStopType_defaultEncoding_ONE : _zz_3_string = "ONE";
+      `UartStopType_defaultEncoding_TWO : _zz_3_string = "TWO";
+      default : _zz_3_string = "???";
+    endcase
+  end
+  always @(*) begin
+    case(_zz_4)
+      `UartParityType_defaultEncoding_NONE : _zz_4_string = "NONE";
+      `UartParityType_defaultEncoding_EVEN : _zz_4_string = "EVEN";
+      `UartParityType_defaultEncoding_ODD : _zz_4_string = "ODD ";
+      default : _zz_4_string = "????";
+    endcase
+  end
+  `endif
+
+  assign busCtrl_doWrite = (((uart_sib_sel && uart_sib_enable) && uart_sib_ready) && uart_sib_write);
+  assign busCtrl_doRead = (((uart_sib_sel && uart_sib_enable) && uart_sib_ready) && (! uart_sib_write));
+  always @ (*) begin
+    busCtrl_rdata = 32'h0;
+    case(uart_sib_addr)
+      12'h0 : begin
+        busCtrl_rdata[0 : 0] = rx_avail_int_en;
+        busCtrl_rdata[1 : 1] = rx_full_int_en;
+        busCtrl_rdata[4 : 4] = rx_en;
+        busCtrl_rdata[5 : 5] = tx_en;
+      end
+      12'h004 : begin
+        busCtrl_rdata[5 : 0] = {uartCtrl_1_io_config_frame_driver_parity,{uartCtrl_1_io_config_frame_driver_stop,uartCtrl_1_io_config_frame_driver_dataLength}};
+      end
+      12'h008 : begin
+        busCtrl_rdata[19 : 0] = uartCtrl_1_io_config_clockDivider_driver;
+      end
+      12'h00c : begin
+        busCtrl_rdata[31 : 31] = (uartCtrl_1_io_read_queueWithOccupancy_io_pop_valid ^ 1'b0);
+        busCtrl_rdata[7 : 0] = uartCtrl_1_io_read_queueWithOccupancy_io_pop_payload;
+        busCtrl_rdata[11 : 8] = uartCtrl_1_io_read_queueWithOccupancy_io_occupancy;
+      end
+      12'h010 : begin
+        busCtrl_rdata[0 : 0] = (! rxEmpty);
+        busCtrl_rdata[1 : 1] = rxFull;
+        busCtrl_rdata[4 : 4] = txFull;
+        busCtrl_rdata[5 : 5] = rxEmpty;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    uart_sib_resp = 1'b0;
+    case(uart_sib_addr)
+      12'h0 : begin
+        uart_sib_resp = 1'b1;
+      end
+      12'h004 : begin
+        uart_sib_resp = 1'b1;
+      end
+      12'h008 : begin
+        uart_sib_resp = 1'b1;
+      end
+      12'h00c : begin
+        uart_sib_resp = 1'b1;
+      end
+      12'h010 : begin
+        uart_sib_resp = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign uart_sib_ready = 1'b1;
+  assign uart_sib_rdata = busCtrl_rdata_regNext;
+  assign uart_txd = uartCtrl_1_io_uart_txd;
+  assign _zz_5 = 1'b0;
+  always @ (*) begin
+    _zz_1 = 1'b0;
+    case(uart_sib_addr)
+      12'h008 : begin
+        if(busCtrl_doWrite)begin
+          _zz_1 = 1'b1;
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign _zz_6 = uart_sib_wdata[7 : 0];
+  always @ (*) begin
+    _zz_8 = 1'b0;
+    case(uart_sib_addr)
+      12'h00c : begin
+        if(busCtrl_doRead)begin
+          _zz_8 = 1'b1;
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign txFull = (streamFifo_2_io_availability == 4'b0000);
+  assign rxFull = (uartCtrl_1_io_read_queueWithOccupancy_io_occupancy == 4'b1000);
+  assign rxEmpty = (uartCtrl_1_io_read_queueWithOccupancy_io_occupancy == 4'b0000);
+  assign _zz_2 = uart_sib_wdata[5 : 0];
+  assign _zz_3 = _zz_2[3 : 3];
+  assign _zz_4 = _zz_2[5 : 4];
+  assign _zz_7 = 1'b0;
+  assign _zz_9 = 1'b0;
+  always @ (posedge clk) begin
+    busCtrl_rdata_regNext <= busCtrl_rdata;
+    case(uart_sib_addr)
+      12'h004 : begin
+        if(busCtrl_doWrite)begin
+          uartCtrl_1_io_config_frame_driver_dataLength <= _zz_2[2 : 0];
+          uartCtrl_1_io_config_frame_driver_stop <= _zz_3;
+          uartCtrl_1_io_config_frame_driver_parity <= _zz_4;
+        end
+      end
+      12'h008 : begin
+        if(busCtrl_doWrite)begin
+          uartCtrl_1_io_config_clockDivider_driver <= uart_sib_wdata[19 : 0];
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      rx_avail_int_en <= 1'b1;
+      rx_full_int_en <= 1'b1;
+      rx_en <= 1'b1;
+      tx_en <= 1'b1;
+    end else begin
+      case(uart_sib_addr)
+        12'h0 : begin
+          if(busCtrl_doWrite)begin
+            rx_avail_int_en <= _zz_10[0];
+            rx_full_int_en <= _zz_11[0];
+            rx_en <= _zz_12[0];
+            tx_en <= _zz_13[0];
+          end
+        end
+        default : begin
+        end
+      endcase
+    end
   end
 
 
@@ -2326,6 +2735,277 @@ module apple_riscv (
 
 endmodule
 
+//StreamFifo replaced by StreamFifo
+
+module StreamFifo (
+  input               io_push_valid,
+  output              io_push_ready,
+  input      [7:0]    io_push_payload,
+  output              io_pop_valid,
+  input               io_pop_ready,
+  output     [7:0]    io_pop_payload,
+  input               io_flush,
+  output     [3:0]    io_occupancy,
+  output     [3:0]    io_availability,
+  input               clk,
+  input               reset
+);
+  reg        [7:0]    _zz_3;
+  wire       [0:0]    _zz_4;
+  wire       [2:0]    _zz_5;
+  wire       [0:0]    _zz_6;
+  wire       [2:0]    _zz_7;
+  wire       [2:0]    _zz_8;
+  wire                _zz_9;
+  reg                 _zz_1;
+  reg                 logic_pushPtr_willIncrement;
+  reg                 logic_pushPtr_willClear;
+  reg        [2:0]    logic_pushPtr_valueNext;
+  reg        [2:0]    logic_pushPtr_value;
+  wire                logic_pushPtr_willOverflowIfInc;
+  wire                logic_pushPtr_willOverflow;
+  reg                 logic_popPtr_willIncrement;
+  reg                 logic_popPtr_willClear;
+  reg        [2:0]    logic_popPtr_valueNext;
+  reg        [2:0]    logic_popPtr_value;
+  wire                logic_popPtr_willOverflowIfInc;
+  wire                logic_popPtr_willOverflow;
+  wire                logic_ptrMatch;
+  reg                 logic_risingOccupancy;
+  wire                logic_pushing;
+  wire                logic_popping;
+  wire                logic_empty;
+  wire                logic_full;
+  reg                 _zz_2;
+  wire       [2:0]    logic_ptrDif;
+  reg [7:0] logic_ram [0:7];
+
+  assign _zz_4 = logic_pushPtr_willIncrement;
+  assign _zz_5 = {2'd0, _zz_4};
+  assign _zz_6 = logic_popPtr_willIncrement;
+  assign _zz_7 = {2'd0, _zz_6};
+  assign _zz_8 = (logic_popPtr_value - logic_pushPtr_value);
+  assign _zz_9 = 1'b1;
+  always @ (posedge clk) begin
+    if(_zz_9) begin
+      _zz_3 <= logic_ram[logic_popPtr_valueNext];
+    end
+  end
+
+  always @ (posedge clk) begin
+    if(_zz_1) begin
+      logic_ram[logic_pushPtr_value] <= io_push_payload;
+    end
+  end
+
+  always @ (*) begin
+    _zz_1 = 1'b0;
+    if(logic_pushing)begin
+      _zz_1 = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    logic_pushPtr_willIncrement = 1'b0;
+    if(logic_pushing)begin
+      logic_pushPtr_willIncrement = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    logic_pushPtr_willClear = 1'b0;
+    if(io_flush)begin
+      logic_pushPtr_willClear = 1'b1;
+    end
+  end
+
+  assign logic_pushPtr_willOverflowIfInc = (logic_pushPtr_value == 3'b111);
+  assign logic_pushPtr_willOverflow = (logic_pushPtr_willOverflowIfInc && logic_pushPtr_willIncrement);
+  always @ (*) begin
+    logic_pushPtr_valueNext = (logic_pushPtr_value + _zz_5);
+    if(logic_pushPtr_willClear)begin
+      logic_pushPtr_valueNext = 3'b000;
+    end
+  end
+
+  always @ (*) begin
+    logic_popPtr_willIncrement = 1'b0;
+    if(logic_popping)begin
+      logic_popPtr_willIncrement = 1'b1;
+    end
+  end
+
+  always @ (*) begin
+    logic_popPtr_willClear = 1'b0;
+    if(io_flush)begin
+      logic_popPtr_willClear = 1'b1;
+    end
+  end
+
+  assign logic_popPtr_willOverflowIfInc = (logic_popPtr_value == 3'b111);
+  assign logic_popPtr_willOverflow = (logic_popPtr_willOverflowIfInc && logic_popPtr_willIncrement);
+  always @ (*) begin
+    logic_popPtr_valueNext = (logic_popPtr_value + _zz_7);
+    if(logic_popPtr_willClear)begin
+      logic_popPtr_valueNext = 3'b000;
+    end
+  end
+
+  assign logic_ptrMatch = (logic_pushPtr_value == logic_popPtr_value);
+  assign logic_pushing = (io_push_valid && io_push_ready);
+  assign logic_popping = (io_pop_valid && io_pop_ready);
+  assign logic_empty = (logic_ptrMatch && (! logic_risingOccupancy));
+  assign logic_full = (logic_ptrMatch && logic_risingOccupancy);
+  assign io_push_ready = (! logic_full);
+  assign io_pop_valid = ((! logic_empty) && (! (_zz_2 && (! logic_full))));
+  assign io_pop_payload = _zz_3;
+  assign logic_ptrDif = (logic_pushPtr_value - logic_popPtr_value);
+  assign io_occupancy = {(logic_risingOccupancy && logic_ptrMatch),logic_ptrDif};
+  assign io_availability = {((! logic_risingOccupancy) && logic_ptrMatch),_zz_8};
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      logic_pushPtr_value <= 3'b000;
+      logic_popPtr_value <= 3'b000;
+      logic_risingOccupancy <= 1'b0;
+      _zz_2 <= 1'b0;
+    end else begin
+      logic_pushPtr_value <= logic_pushPtr_valueNext;
+      logic_popPtr_value <= logic_popPtr_valueNext;
+      _zz_2 <= (logic_popPtr_valueNext == logic_pushPtr_value);
+      if((logic_pushing != logic_popping))begin
+        logic_risingOccupancy <= logic_pushing;
+      end
+      if(io_flush)begin
+        logic_risingOccupancy <= 1'b0;
+      end
+    end
+  end
+
+
+endmodule
+
+module UartCtrl (
+  input      [2:0]    io_config_frame_dataLength,
+  input      `UartStopType_defaultEncoding_type io_config_frame_stop,
+  input      `UartParityType_defaultEncoding_type io_config_frame_parity,
+  input      [19:0]   io_config_clockDivider,
+  input               io_write_valid,
+  output reg          io_write_ready,
+  input      [7:0]    io_write_payload,
+  output              io_read_valid,
+  input               io_read_ready,
+  output     [7:0]    io_read_payload,
+  output              io_uart_txd,
+  input               io_uart_rxd,
+  output              io_readError,
+  input               io_writeBreak,
+  output              io_readBreak,
+  input               clk,
+  input               reset
+);
+  wire                _zz_1;
+  wire                tx_io_write_ready;
+  wire                tx_io_txd;
+  wire                rx_io_read_valid;
+  wire       [7:0]    rx_io_read_payload;
+  wire                rx_io_rts;
+  wire                rx_io_error;
+  wire                rx_io_break;
+  reg        [19:0]   clockDivider_counter;
+  wire                clockDivider_tick;
+  reg                 io_write_thrown_valid;
+  wire                io_write_thrown_ready;
+  wire       [7:0]    io_write_thrown_payload;
+  `ifndef SYNTHESIS
+  reg [23:0] io_config_frame_stop_string;
+  reg [31:0] io_config_frame_parity_string;
+  `endif
+
+
+  UartCtrlTx tx (
+    .io_configFrame_dataLength    (io_config_frame_dataLength[2:0]  ), //i
+    .io_configFrame_stop          (io_config_frame_stop             ), //i
+    .io_configFrame_parity        (io_config_frame_parity[1:0]      ), //i
+    .io_samplingTick              (clockDivider_tick                ), //i
+    .io_write_valid               (io_write_thrown_valid            ), //i
+    .io_write_ready               (tx_io_write_ready                ), //o
+    .io_write_payload             (io_write_thrown_payload[7:0]     ), //i
+    .io_cts                       (_zz_1                            ), //i
+    .io_txd                       (tx_io_txd                        ), //o
+    .io_break                     (io_writeBreak                    ), //i
+    .clk                          (clk                              ), //i
+    .reset                        (reset                            )  //i
+  );
+  UartCtrlRx rx (
+    .io_configFrame_dataLength    (io_config_frame_dataLength[2:0]  ), //i
+    .io_configFrame_stop          (io_config_frame_stop             ), //i
+    .io_configFrame_parity        (io_config_frame_parity[1:0]      ), //i
+    .io_samplingTick              (clockDivider_tick                ), //i
+    .io_read_valid                (rx_io_read_valid                 ), //o
+    .io_read_ready                (io_read_ready                    ), //i
+    .io_read_payload              (rx_io_read_payload[7:0]          ), //o
+    .io_rxd                       (io_uart_rxd                      ), //i
+    .io_rts                       (rx_io_rts                        ), //o
+    .io_error                     (rx_io_error                      ), //o
+    .io_break                     (rx_io_break                      ), //o
+    .clk                          (clk                              ), //i
+    .reset                        (reset                            )  //i
+  );
+  `ifndef SYNTHESIS
+  always @(*) begin
+    case(io_config_frame_stop)
+      `UartStopType_defaultEncoding_ONE : io_config_frame_stop_string = "ONE";
+      `UartStopType_defaultEncoding_TWO : io_config_frame_stop_string = "TWO";
+      default : io_config_frame_stop_string = "???";
+    endcase
+  end
+  always @(*) begin
+    case(io_config_frame_parity)
+      `UartParityType_defaultEncoding_NONE : io_config_frame_parity_string = "NONE";
+      `UartParityType_defaultEncoding_EVEN : io_config_frame_parity_string = "EVEN";
+      `UartParityType_defaultEncoding_ODD : io_config_frame_parity_string = "ODD ";
+      default : io_config_frame_parity_string = "????";
+    endcase
+  end
+  `endif
+
+  assign clockDivider_tick = (clockDivider_counter == 20'h0);
+  always @ (*) begin
+    io_write_thrown_valid = io_write_valid;
+    if(rx_io_break)begin
+      io_write_thrown_valid = 1'b0;
+    end
+  end
+
+  always @ (*) begin
+    io_write_ready = io_write_thrown_ready;
+    if(rx_io_break)begin
+      io_write_ready = 1'b1;
+    end
+  end
+
+  assign io_write_thrown_payload = io_write_payload;
+  assign io_write_thrown_ready = tx_io_write_ready;
+  assign io_read_valid = rx_io_read_valid;
+  assign io_read_payload = rx_io_read_payload;
+  assign io_uart_txd = tx_io_txd;
+  assign io_readError = rx_io_error;
+  assign _zz_1 = 1'b0;
+  assign io_readBreak = rx_io_break;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      clockDivider_counter <= 20'h0;
+    end else begin
+      clockDivider_counter <= (clockDivider_counter - 20'h00001);
+      if(clockDivider_tick)begin
+        clockDivider_counter <= io_config_clockDivider;
+      end
+    end
+  end
+
+
+endmodule
+
 module hdu (
   output              io_if_valid,
   output              io_id_valid,
@@ -3117,8 +3797,8 @@ module instr_dec (
   wire       [2:0]    func3;
   wire       [6:0]    func7;
   wire       [11:0]   func12;
-  reg        `br_imm_type_e_binary_sequential_type br_imm_type;
-  reg        `alu_imm_type_e_binary_sequential_type alu_imm_type;
+  reg        `br_imm_type_e_defaultEncoding_type br_imm_type;
+  reg        `alu_imm_type_e_defaultEncoding_type alu_imm_type;
   wire                func7_not_all_zero;
   wire                rd_isnot_x0;
   wire                rs1_isnot_x0;
@@ -3142,19 +3822,19 @@ module instr_dec (
   `ifndef SYNTHESIS
   always @(*) begin
     case(br_imm_type)
-      `br_imm_type_e_binary_sequential_JTYPE : br_imm_type_string = "JTYPE";
-      `br_imm_type_e_binary_sequential_BTYPE : br_imm_type_string = "BTYPE";
-      `br_imm_type_e_binary_sequential_ITYPE : br_imm_type_string = "ITYPE";
+      `br_imm_type_e_defaultEncoding_JTYPE : br_imm_type_string = "JTYPE";
+      `br_imm_type_e_defaultEncoding_BTYPE : br_imm_type_string = "BTYPE";
+      `br_imm_type_e_defaultEncoding_ITYPE : br_imm_type_string = "ITYPE";
       default : br_imm_type_string = "?????";
     endcase
   end
   always @(*) begin
     case(alu_imm_type)
-      `alu_imm_type_e_binary_sequential_ITYPE : alu_imm_type_string = "ITYPE";
-      `alu_imm_type_e_binary_sequential_STYPE : alu_imm_type_string = "STYPE";
-      `alu_imm_type_e_binary_sequential_UTYPE : alu_imm_type_string = "UTYPE";
-      `alu_imm_type_e_binary_sequential_FOUR : alu_imm_type_string = "FOUR ";
-      `alu_imm_type_e_binary_sequential_ZERO : alu_imm_type_string = "ZERO ";
+      `alu_imm_type_e_defaultEncoding_ITYPE : alu_imm_type_string = "ITYPE";
+      `alu_imm_type_e_defaultEncoding_STYPE : alu_imm_type_string = "STYPE";
+      `alu_imm_type_e_defaultEncoding_UTYPE : alu_imm_type_string = "UTYPE";
+      `alu_imm_type_e_defaultEncoding_FOUR : alu_imm_type_string = "FOUR ";
+      `alu_imm_type_e_defaultEncoding_ZERO : alu_imm_type_string = "ZERO ";
       default : alu_imm_type_string = "?????";
     endcase
   end
@@ -3169,20 +3849,20 @@ module instr_dec (
   assign io_rs2_idx = io_instr[24 : 20];
   assign io_csr_idx = io_instr[31 : 20];
   always @ (*) begin
-    br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
+    br_imm_type = `br_imm_type_e_defaultEncoding_JTYPE;
     case(opcode)
       7'h37 : begin
       end
       7'h17 : begin
       end
       7'h6f : begin
-        br_imm_type = `br_imm_type_e_binary_sequential_JTYPE;
+        br_imm_type = `br_imm_type_e_defaultEncoding_JTYPE;
       end
       7'h67 : begin
-        br_imm_type = `br_imm_type_e_binary_sequential_ITYPE;
+        br_imm_type = `br_imm_type_e_defaultEncoding_ITYPE;
       end
       7'h63 : begin
-        br_imm_type = `br_imm_type_e_binary_sequential_BTYPE;
+        br_imm_type = `br_imm_type_e_defaultEncoding_BTYPE;
       end
       7'h03 : begin
       end
@@ -3200,13 +3880,13 @@ module instr_dec (
   end
 
   always @ (*) begin
-    alu_imm_type = `alu_imm_type_e_binary_sequential_FOUR;
+    alu_imm_type = `alu_imm_type_e_defaultEncoding_FOUR;
     case(opcode)
       7'h37 : begin
-        alu_imm_type = `alu_imm_type_e_binary_sequential_UTYPE;
+        alu_imm_type = `alu_imm_type_e_defaultEncoding_UTYPE;
       end
       7'h17 : begin
-        alu_imm_type = `alu_imm_type_e_binary_sequential_UTYPE;
+        alu_imm_type = `alu_imm_type_e_defaultEncoding_UTYPE;
       end
       7'h6f : begin
       end
@@ -3215,13 +3895,13 @@ module instr_dec (
       7'h63 : begin
       end
       7'h03 : begin
-        alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
+        alu_imm_type = `alu_imm_type_e_defaultEncoding_ITYPE;
       end
       7'h23 : begin
-        alu_imm_type = `alu_imm_type_e_binary_sequential_STYPE;
+        alu_imm_type = `alu_imm_type_e_defaultEncoding_STYPE;
       end
       7'h13 : begin
-        alu_imm_type = `alu_imm_type_e_binary_sequential_ITYPE;
+        alu_imm_type = `alu_imm_type_e_defaultEncoding_ITYPE;
       end
       7'h33 : begin
       end
@@ -5173,13 +5853,13 @@ module instr_dec (
   assign j_type_imm = {{{{io_instr[31],io_instr[19 : 12]},io_instr[20]},io_instr[30 : 21]},1'b0};
   always @ (*) begin
     case(alu_imm_type)
-      `alu_imm_type_e_binary_sequential_ITYPE : begin
+      `alu_imm_type_e_defaultEncoding_ITYPE : begin
         io_imm_value = i_type_imm;
       end
-      `alu_imm_type_e_binary_sequential_STYPE : begin
+      `alu_imm_type_e_defaultEncoding_STYPE : begin
         io_imm_value = s_type_imm;
       end
-      `alu_imm_type_e_binary_sequential_UTYPE : begin
+      `alu_imm_type_e_defaultEncoding_UTYPE : begin
         io_imm_value = u_type_imm;
       end
       default : begin
@@ -5190,10 +5870,10 @@ module instr_dec (
 
   always @ (*) begin
     case(br_imm_type)
-      `br_imm_type_e_binary_sequential_BTYPE : begin
+      `br_imm_type_e_defaultEncoding_BTYPE : begin
         io_jump_imm_value = b_type_imm;
       end
-      `br_imm_type_e_binary_sequential_ITYPE : begin
+      `br_imm_type_e_defaultEncoding_ITYPE : begin
         io_jump_imm_value = i_type_imm[20 : 0];
       end
       default : begin
@@ -5257,6 +5937,512 @@ module program_counter (
           end
         end
       end
+    end
+  end
+
+
+endmodule
+
+module UartCtrlRx (
+  input      [2:0]    io_configFrame_dataLength,
+  input      `UartStopType_defaultEncoding_type io_configFrame_stop,
+  input      `UartParityType_defaultEncoding_type io_configFrame_parity,
+  input               io_samplingTick,
+  output              io_read_valid,
+  input               io_read_ready,
+  output     [7:0]    io_read_payload,
+  input               io_rxd,
+  output              io_rts,
+  output reg          io_error,
+  output              io_break,
+  input               clk,
+  input               reset
+);
+  wire                io_rxd_buffercc_io_dataOut;
+  wire                _zz_2;
+  wire                _zz_3;
+  wire                _zz_4;
+  wire                _zz_5;
+  wire       [0:0]    _zz_6;
+  wire       [2:0]    _zz_7;
+  wire                _zz_8;
+  wire                _zz_9;
+  wire                _zz_10;
+  wire                _zz_11;
+  wire                _zz_12;
+  wire                _zz_13;
+  wire                _zz_14;
+  reg                 _zz_1;
+  wire                sampler_synchroniser;
+  wire                sampler_samples_0;
+  reg                 sampler_samples_1;
+  reg                 sampler_samples_2;
+  reg                 sampler_samples_3;
+  reg                 sampler_samples_4;
+  reg                 sampler_value;
+  reg                 sampler_tick;
+  reg        [2:0]    bitTimer_counter;
+  reg                 bitTimer_tick;
+  reg        [2:0]    bitCounter_value;
+  reg        [6:0]    break_counter;
+  wire                break_valid;
+  reg        `UartCtrlRxState_defaultEncoding_type stateMachine_state;
+  reg                 stateMachine_parity;
+  reg        [7:0]    stateMachine_shifter;
+  reg                 stateMachine_validReg;
+  `ifndef SYNTHESIS
+  reg [23:0] io_configFrame_stop_string;
+  reg [31:0] io_configFrame_parity_string;
+  reg [47:0] stateMachine_state_string;
+  `endif
+
+
+  assign _zz_2 = (stateMachine_parity == sampler_value);
+  assign _zz_3 = (! sampler_value);
+  assign _zz_4 = ((sampler_tick && (! sampler_value)) && (! break_valid));
+  assign _zz_5 = (bitCounter_value == io_configFrame_dataLength);
+  assign _zz_6 = ((io_configFrame_stop == `UartStopType_defaultEncoding_ONE) ? 1'b0 : 1'b1);
+  assign _zz_7 = {2'd0, _zz_6};
+  assign _zz_8 = ((((1'b0 || ((_zz_13 && sampler_samples_1) && sampler_samples_2)) || (((_zz_14 && sampler_samples_0) && sampler_samples_1) && sampler_samples_3)) || (((1'b1 && sampler_samples_0) && sampler_samples_2) && sampler_samples_3)) || (((1'b1 && sampler_samples_1) && sampler_samples_2) && sampler_samples_3));
+  assign _zz_9 = (((1'b1 && sampler_samples_0) && sampler_samples_1) && sampler_samples_4);
+  assign _zz_10 = ((1'b1 && sampler_samples_0) && sampler_samples_2);
+  assign _zz_11 = (1'b1 && sampler_samples_1);
+  assign _zz_12 = 1'b1;
+  assign _zz_13 = (1'b1 && sampler_samples_0);
+  assign _zz_14 = 1'b1;
+  BufferCC io_rxd_buffercc (
+    .io_dataIn     (io_rxd                      ), //i
+    .io_dataOut    (io_rxd_buffercc_io_dataOut  ), //o
+    .clk           (clk                         ), //i
+    .reset         (reset                       )  //i
+  );
+  `ifndef SYNTHESIS
+  always @(*) begin
+    case(io_configFrame_stop)
+      `UartStopType_defaultEncoding_ONE : io_configFrame_stop_string = "ONE";
+      `UartStopType_defaultEncoding_TWO : io_configFrame_stop_string = "TWO";
+      default : io_configFrame_stop_string = "???";
+    endcase
+  end
+  always @(*) begin
+    case(io_configFrame_parity)
+      `UartParityType_defaultEncoding_NONE : io_configFrame_parity_string = "NONE";
+      `UartParityType_defaultEncoding_EVEN : io_configFrame_parity_string = "EVEN";
+      `UartParityType_defaultEncoding_ODD : io_configFrame_parity_string = "ODD ";
+      default : io_configFrame_parity_string = "????";
+    endcase
+  end
+  always @(*) begin
+    case(stateMachine_state)
+      `UartCtrlRxState_defaultEncoding_IDLE : stateMachine_state_string = "IDLE  ";
+      `UartCtrlRxState_defaultEncoding_START : stateMachine_state_string = "START ";
+      `UartCtrlRxState_defaultEncoding_DATA : stateMachine_state_string = "DATA  ";
+      `UartCtrlRxState_defaultEncoding_PARITY : stateMachine_state_string = "PARITY";
+      `UartCtrlRxState_defaultEncoding_STOP : stateMachine_state_string = "STOP  ";
+      default : stateMachine_state_string = "??????";
+    endcase
+  end
+  `endif
+
+  always @ (*) begin
+    io_error = 1'b0;
+    case(stateMachine_state)
+      `UartCtrlRxState_defaultEncoding_IDLE : begin
+      end
+      `UartCtrlRxState_defaultEncoding_START : begin
+      end
+      `UartCtrlRxState_defaultEncoding_DATA : begin
+      end
+      `UartCtrlRxState_defaultEncoding_PARITY : begin
+        if(bitTimer_tick)begin
+          if(! _zz_2) begin
+            io_error = 1'b1;
+          end
+        end
+      end
+      default : begin
+        if(bitTimer_tick)begin
+          if(_zz_3)begin
+            io_error = 1'b1;
+          end
+        end
+      end
+    endcase
+  end
+
+  assign io_rts = _zz_1;
+  assign sampler_synchroniser = io_rxd_buffercc_io_dataOut;
+  assign sampler_samples_0 = sampler_synchroniser;
+  always @ (*) begin
+    bitTimer_tick = 1'b0;
+    if(sampler_tick)begin
+      if((bitTimer_counter == 3'b000))begin
+        bitTimer_tick = 1'b1;
+      end
+    end
+  end
+
+  assign break_valid = (break_counter == 7'h68);
+  assign io_break = break_valid;
+  assign io_read_valid = stateMachine_validReg;
+  assign io_read_payload = stateMachine_shifter;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      _zz_1 <= 1'b0;
+      sampler_samples_1 <= 1'b1;
+      sampler_samples_2 <= 1'b1;
+      sampler_samples_3 <= 1'b1;
+      sampler_samples_4 <= 1'b1;
+      sampler_value <= 1'b1;
+      sampler_tick <= 1'b0;
+      break_counter <= 7'h0;
+      stateMachine_state <= `UartCtrlRxState_defaultEncoding_IDLE;
+      stateMachine_validReg <= 1'b0;
+    end else begin
+      _zz_1 <= (! io_read_ready);
+      if(io_samplingTick)begin
+        sampler_samples_1 <= sampler_samples_0;
+      end
+      if(io_samplingTick)begin
+        sampler_samples_2 <= sampler_samples_1;
+      end
+      if(io_samplingTick)begin
+        sampler_samples_3 <= sampler_samples_2;
+      end
+      if(io_samplingTick)begin
+        sampler_samples_4 <= sampler_samples_3;
+      end
+      sampler_value <= ((((((_zz_8 || _zz_9) || (_zz_10 && sampler_samples_4)) || ((_zz_11 && sampler_samples_2) && sampler_samples_4)) || (((_zz_12 && sampler_samples_0) && sampler_samples_3) && sampler_samples_4)) || (((1'b1 && sampler_samples_1) && sampler_samples_3) && sampler_samples_4)) || (((1'b1 && sampler_samples_2) && sampler_samples_3) && sampler_samples_4));
+      sampler_tick <= io_samplingTick;
+      if(sampler_value)begin
+        break_counter <= 7'h0;
+      end else begin
+        if((io_samplingTick && (! break_valid)))begin
+          break_counter <= (break_counter + 7'h01);
+        end
+      end
+      stateMachine_validReg <= 1'b0;
+      case(stateMachine_state)
+        `UartCtrlRxState_defaultEncoding_IDLE : begin
+          if(_zz_4)begin
+            stateMachine_state <= `UartCtrlRxState_defaultEncoding_START;
+          end
+        end
+        `UartCtrlRxState_defaultEncoding_START : begin
+          if(bitTimer_tick)begin
+            stateMachine_state <= `UartCtrlRxState_defaultEncoding_DATA;
+            if((sampler_value == 1'b1))begin
+              stateMachine_state <= `UartCtrlRxState_defaultEncoding_IDLE;
+            end
+          end
+        end
+        `UartCtrlRxState_defaultEncoding_DATA : begin
+          if(bitTimer_tick)begin
+            if(_zz_5)begin
+              if((io_configFrame_parity == `UartParityType_defaultEncoding_NONE))begin
+                stateMachine_state <= `UartCtrlRxState_defaultEncoding_STOP;
+                stateMachine_validReg <= 1'b1;
+              end else begin
+                stateMachine_state <= `UartCtrlRxState_defaultEncoding_PARITY;
+              end
+            end
+          end
+        end
+        `UartCtrlRxState_defaultEncoding_PARITY : begin
+          if(bitTimer_tick)begin
+            if(_zz_2)begin
+              stateMachine_state <= `UartCtrlRxState_defaultEncoding_STOP;
+              stateMachine_validReg <= 1'b1;
+            end else begin
+              stateMachine_state <= `UartCtrlRxState_defaultEncoding_IDLE;
+            end
+          end
+        end
+        default : begin
+          if(bitTimer_tick)begin
+            if(_zz_3)begin
+              stateMachine_state <= `UartCtrlRxState_defaultEncoding_IDLE;
+            end else begin
+              if((bitCounter_value == _zz_7))begin
+                stateMachine_state <= `UartCtrlRxState_defaultEncoding_IDLE;
+              end
+            end
+          end
+        end
+      endcase
+    end
+  end
+
+  always @ (posedge clk) begin
+    if(sampler_tick)begin
+      bitTimer_counter <= (bitTimer_counter - 3'b001);
+    end
+    if(bitTimer_tick)begin
+      bitCounter_value <= (bitCounter_value + 3'b001);
+    end
+    if(bitTimer_tick)begin
+      stateMachine_parity <= (stateMachine_parity ^ sampler_value);
+    end
+    case(stateMachine_state)
+      `UartCtrlRxState_defaultEncoding_IDLE : begin
+        if(_zz_4)begin
+          bitTimer_counter <= 3'b010;
+        end
+      end
+      `UartCtrlRxState_defaultEncoding_START : begin
+        if(bitTimer_tick)begin
+          bitCounter_value <= 3'b000;
+          stateMachine_parity <= (io_configFrame_parity == `UartParityType_defaultEncoding_ODD);
+        end
+      end
+      `UartCtrlRxState_defaultEncoding_DATA : begin
+        if(bitTimer_tick)begin
+          stateMachine_shifter[bitCounter_value] <= sampler_value;
+          if(_zz_5)begin
+            bitCounter_value <= 3'b000;
+          end
+        end
+      end
+      `UartCtrlRxState_defaultEncoding_PARITY : begin
+        if(bitTimer_tick)begin
+          bitCounter_value <= 3'b000;
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+
+endmodule
+
+module UartCtrlTx (
+  input      [2:0]    io_configFrame_dataLength,
+  input      `UartStopType_defaultEncoding_type io_configFrame_stop,
+  input      `UartParityType_defaultEncoding_type io_configFrame_parity,
+  input               io_samplingTick,
+  input               io_write_valid,
+  output reg          io_write_ready,
+  input      [7:0]    io_write_payload,
+  input               io_cts,
+  output              io_txd,
+  input               io_break,
+  input               clk,
+  input               reset
+);
+  wire                _zz_2;
+  wire       [0:0]    _zz_3;
+  wire       [2:0]    _zz_4;
+  wire       [0:0]    _zz_5;
+  wire       [2:0]    _zz_6;
+  reg                 clockDivider_counter_willIncrement;
+  wire                clockDivider_counter_willClear;
+  reg        [2:0]    clockDivider_counter_valueNext;
+  reg        [2:0]    clockDivider_counter_value;
+  wire                clockDivider_counter_willOverflowIfInc;
+  wire                clockDivider_counter_willOverflow;
+  reg        [2:0]    tickCounter_value;
+  reg        `UartCtrlTxState_defaultEncoding_type stateMachine_state;
+  reg                 stateMachine_parity;
+  reg                 stateMachine_txd;
+  reg                 _zz_1;
+  `ifndef SYNTHESIS
+  reg [23:0] io_configFrame_stop_string;
+  reg [31:0] io_configFrame_parity_string;
+  reg [47:0] stateMachine_state_string;
+  `endif
+
+
+  assign _zz_2 = (tickCounter_value == io_configFrame_dataLength);
+  assign _zz_3 = clockDivider_counter_willIncrement;
+  assign _zz_4 = {2'd0, _zz_3};
+  assign _zz_5 = ((io_configFrame_stop == `UartStopType_defaultEncoding_ONE) ? 1'b0 : 1'b1);
+  assign _zz_6 = {2'd0, _zz_5};
+  `ifndef SYNTHESIS
+  always @(*) begin
+    case(io_configFrame_stop)
+      `UartStopType_defaultEncoding_ONE : io_configFrame_stop_string = "ONE";
+      `UartStopType_defaultEncoding_TWO : io_configFrame_stop_string = "TWO";
+      default : io_configFrame_stop_string = "???";
+    endcase
+  end
+  always @(*) begin
+    case(io_configFrame_parity)
+      `UartParityType_defaultEncoding_NONE : io_configFrame_parity_string = "NONE";
+      `UartParityType_defaultEncoding_EVEN : io_configFrame_parity_string = "EVEN";
+      `UartParityType_defaultEncoding_ODD : io_configFrame_parity_string = "ODD ";
+      default : io_configFrame_parity_string = "????";
+    endcase
+  end
+  always @(*) begin
+    case(stateMachine_state)
+      `UartCtrlTxState_defaultEncoding_IDLE : stateMachine_state_string = "IDLE  ";
+      `UartCtrlTxState_defaultEncoding_START : stateMachine_state_string = "START ";
+      `UartCtrlTxState_defaultEncoding_DATA : stateMachine_state_string = "DATA  ";
+      `UartCtrlTxState_defaultEncoding_PARITY : stateMachine_state_string = "PARITY";
+      `UartCtrlTxState_defaultEncoding_STOP : stateMachine_state_string = "STOP  ";
+      default : stateMachine_state_string = "??????";
+    endcase
+  end
+  `endif
+
+  always @ (*) begin
+    clockDivider_counter_willIncrement = 1'b0;
+    if(io_samplingTick)begin
+      clockDivider_counter_willIncrement = 1'b1;
+    end
+  end
+
+  assign clockDivider_counter_willClear = 1'b0;
+  assign clockDivider_counter_willOverflowIfInc = (clockDivider_counter_value == 3'b111);
+  assign clockDivider_counter_willOverflow = (clockDivider_counter_willOverflowIfInc && clockDivider_counter_willIncrement);
+  always @ (*) begin
+    clockDivider_counter_valueNext = (clockDivider_counter_value + _zz_4);
+    if(clockDivider_counter_willClear)begin
+      clockDivider_counter_valueNext = 3'b000;
+    end
+  end
+
+  always @ (*) begin
+    stateMachine_txd = 1'b1;
+    case(stateMachine_state)
+      `UartCtrlTxState_defaultEncoding_IDLE : begin
+      end
+      `UartCtrlTxState_defaultEncoding_START : begin
+        stateMachine_txd = 1'b0;
+      end
+      `UartCtrlTxState_defaultEncoding_DATA : begin
+        stateMachine_txd = io_write_payload[tickCounter_value];
+      end
+      `UartCtrlTxState_defaultEncoding_PARITY : begin
+        stateMachine_txd = stateMachine_parity;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    io_write_ready = io_break;
+    case(stateMachine_state)
+      `UartCtrlTxState_defaultEncoding_IDLE : begin
+      end
+      `UartCtrlTxState_defaultEncoding_START : begin
+      end
+      `UartCtrlTxState_defaultEncoding_DATA : begin
+        if(clockDivider_counter_willOverflow)begin
+          if(_zz_2)begin
+            io_write_ready = 1'b1;
+          end
+        end
+      end
+      `UartCtrlTxState_defaultEncoding_PARITY : begin
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign io_txd = _zz_1;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      clockDivider_counter_value <= 3'b000;
+      stateMachine_state <= `UartCtrlTxState_defaultEncoding_IDLE;
+      _zz_1 <= 1'b1;
+    end else begin
+      clockDivider_counter_value <= clockDivider_counter_valueNext;
+      case(stateMachine_state)
+        `UartCtrlTxState_defaultEncoding_IDLE : begin
+          if(((io_write_valid && (! io_cts)) && clockDivider_counter_willOverflow))begin
+            stateMachine_state <= `UartCtrlTxState_defaultEncoding_START;
+          end
+        end
+        `UartCtrlTxState_defaultEncoding_START : begin
+          if(clockDivider_counter_willOverflow)begin
+            stateMachine_state <= `UartCtrlTxState_defaultEncoding_DATA;
+          end
+        end
+        `UartCtrlTxState_defaultEncoding_DATA : begin
+          if(clockDivider_counter_willOverflow)begin
+            if(_zz_2)begin
+              if((io_configFrame_parity == `UartParityType_defaultEncoding_NONE))begin
+                stateMachine_state <= `UartCtrlTxState_defaultEncoding_STOP;
+              end else begin
+                stateMachine_state <= `UartCtrlTxState_defaultEncoding_PARITY;
+              end
+            end
+          end
+        end
+        `UartCtrlTxState_defaultEncoding_PARITY : begin
+          if(clockDivider_counter_willOverflow)begin
+            stateMachine_state <= `UartCtrlTxState_defaultEncoding_STOP;
+          end
+        end
+        default : begin
+          if(clockDivider_counter_willOverflow)begin
+            if((tickCounter_value == _zz_6))begin
+              stateMachine_state <= (io_write_valid ? `UartCtrlTxState_defaultEncoding_START : `UartCtrlTxState_defaultEncoding_IDLE);
+            end
+          end
+        end
+      endcase
+      _zz_1 <= (stateMachine_txd && (! io_break));
+    end
+  end
+
+  always @ (posedge clk) begin
+    if(clockDivider_counter_willOverflow)begin
+      tickCounter_value <= (tickCounter_value + 3'b001);
+    end
+    if(clockDivider_counter_willOverflow)begin
+      stateMachine_parity <= (stateMachine_parity ^ stateMachine_txd);
+    end
+    case(stateMachine_state)
+      `UartCtrlTxState_defaultEncoding_IDLE : begin
+      end
+      `UartCtrlTxState_defaultEncoding_START : begin
+        if(clockDivider_counter_willOverflow)begin
+          stateMachine_parity <= (io_configFrame_parity == `UartParityType_defaultEncoding_ODD);
+          tickCounter_value <= 3'b000;
+        end
+      end
+      `UartCtrlTxState_defaultEncoding_DATA : begin
+        if(clockDivider_counter_willOverflow)begin
+          if(_zz_2)begin
+            tickCounter_value <= 3'b000;
+          end
+        end
+      end
+      `UartCtrlTxState_defaultEncoding_PARITY : begin
+        if(clockDivider_counter_willOverflow)begin
+          tickCounter_value <= 3'b000;
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+
+endmodule
+
+module BufferCC (
+  input               io_dataIn,
+  output              io_dataOut,
+  input               clk,
+  input               reset
+);
+  (* async_reg = "true" *) reg                 buffers_0;
+  (* async_reg = "true" *) reg                 buffers_1;
+
+  assign io_dataOut = buffers_1;
+  always @ (posedge clk or posedge reset) begin
+    if (reset) begin
+      buffers_0 <= 1'b0;
+      buffers_1 <= 1'b0;
+    end else begin
+      buffers_0 <= io_dataIn;
+      buffers_1 <= buffers_0;
     end
   end
 

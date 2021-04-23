@@ -6,6 +6,7 @@
   - Redesigned the SIB module.
     - Designed the slaveFactory, so we can use SpinalHDL slaveFactory to create memory mapped register accessing logic
   - Redesigned the clic/gpio/timer module using sibSlaveFactory.
+  - Designed the SIB Uart module
 
 - 04/21/2021
   - Designed a sib switch with 1 to N topology
