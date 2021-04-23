@@ -7,6 +7,10 @@
     - Designed the slaveFactory, so we can use SpinalHDL slaveFactory to create memory mapped register accessing logic
   - Redesigned the clic/gpio/timer module using sibSlaveFactory.
   - Designed the SIB Uart module
+  - Wrote a test to test software interrupt
+    - **[RTL Bug Fix]** Fixed bug in trap control logic:
+      - Corrected the wrong pc output value when interrupt triggers trap
+      - Added flushing logic for the interrupt. Need to flush the pipeline when we switch pc to mtval
 
 - 04/21/2021
   - Designed a sib switch with 1 to N topology

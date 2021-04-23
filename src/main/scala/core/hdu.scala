@@ -61,6 +61,7 @@ case class hdu_io(param: CPU_PARAM) extends Bundle {
   val ex_ebreak     = in Bool
   val mem_ebreak    = in Bool
   val wb_ebreak     = in Bool
+  val int_flush     = in Bool
 }
 
 case class hdu(param: CPU_PARAM) extends Component {
@@ -105,10 +106,10 @@ case class hdu(param: CPU_PARAM) extends Component {
   val sys_flush_id  = (io.ex_mret  | io.ex_ebreak  | io.ex_ecall)  | sys_flush_ex
   val sys_flush_if  = sys_flush_id
 
-  val trap_flush_if  = sys_flush_if  | exception_flush_if
-  val trap_flush_id  = sys_flush_id  | exception_flush_id
-  val trap_flush_ex  = sys_flush_ex  | exception_flush_ex
-  val trap_flush_mem = sys_flush_mem | exception_flush_mem
+  val trap_flush_if  = sys_flush_if  | exception_flush_if | io.int_flush
+  val trap_flush_id  = sys_flush_id  | exception_flush_id | io.int_flush
+  val trap_flush_ex  = sys_flush_ex  | exception_flush_ex | io.int_flush
+  val trap_flush_mem = sys_flush_mem | exception_flush_mem | io.int_flush
   val trap_flush_wb  = exception_flush_wb
 
 

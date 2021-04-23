@@ -445,6 +445,8 @@ case class apple_riscv (param: CPU_PARAM) extends Component {
     hdu_inst.io.ex_ebreak    := id2ex_mret
     hdu_inst.io.mem_ebreak   := ex2mem_mret
     hdu_inst.io.wb_ebreak    := mem2wb_mret
+    hdu_inst.io.int_flush    := trap_ctrl_inst.io.int_flush
+
     // ===============================
     // Flushing/stalling logic
     // ===============================

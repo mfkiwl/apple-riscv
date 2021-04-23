@@ -53,7 +53,6 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   val mepc        = in Bits(param.PC_WIDTH bits)
   val mtvec       = in  Bits(param.PC_WIDTH bits)
 
-
   // mcsr output
   val mtrap_enter  = out Bool
   val mtrap_exit   = out Bool
@@ -64,6 +63,9 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
   // pc control
   val pc_trap     = out Bool
   val pc_value    = out UInt(param.PC_WIDTH bits)
+
+  // output to hdu for flushing
+  val int_flush   = out Bool
 }
 
 case class trap_ctrl(param: CPU_PARAM) extends Component {
@@ -81,7 +83,7 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   val debug_interrupt_masked    = io.debug_interrupt & io.mstatus_mie
   val interrupt = external_interrupt_masked | timer_interrupt_masked |
                   software_interrupt_masked | debug_interrupt_masked
-  val pc_plus_4 = io.pc_value + 4
+  val pc_plus_4 = io.wb_pc + 4
 
   // == mcause exception code == //
 
@@ -124,7 +126,8 @@ case class trap_ctrl(param: CPU_PARAM) extends Component {
   io.mtrap_mcause := interrupt ## exception_code
   io.mtrap_mtval  := Mux(io.illegal_instr_exception, io.wb_instr, dmem_addr_extended.asBits)
 
-  io.pc_trap      := exception | io.mret | io.ecall
+  io.pc_trap      := io.mtrap_enter | io.mtrap_exit
   val mtvec_base  =  io.mtvec(param.MXLEN-1 downto 2)
   io.pc_value     := Mux(io.mret, io.mepc.asUInt, mtvec_base.asUInt.resized)
+  io.int_flush    := interrupt
 }

@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 6945fafcc10a71b857a734875a2a589a6a35e39e
+// Git hash  : 0e89cd2ec4361c870a7cd4384f8401808f77fa20
 
 
 `define br_imm_type_e_defaultEncoding_type [1:0]
@@ -1951,6 +1951,7 @@ module apple_riscv (
   wire       [31:0]   trap_ctrl_inst_io_mtrap_mtval;
   wire                trap_ctrl_inst_io_pc_trap;
   wire       [31:0]   trap_ctrl_inst_io_pc_value;
+  wire                trap_ctrl_inst_io_int_flush;
   wire                fu_inst_io_forward_rs1_from_mem;
   wire                fu_inst_io_forward_rs1_from_wb;
   wire                fu_inst_io_forward_rs2_from_mem;
@@ -2285,7 +2286,8 @@ module apple_riscv (
     .io_mtrap_mcause                     (trap_ctrl_inst_io_mtrap_mcause[31:0]  ), //o
     .io_mtrap_mtval                      (trap_ctrl_inst_io_mtrap_mtval[31:0]   ), //o
     .io_pc_trap                          (trap_ctrl_inst_io_pc_trap             ), //o
-    .io_pc_value                         (trap_ctrl_inst_io_pc_value[31:0]      )  //o
+    .io_pc_value                         (trap_ctrl_inst_io_pc_value[31:0]      ), //o
+    .io_int_flush                        (trap_ctrl_inst_io_int_flush           )  //o
   );
   fu fu_inst (
     .io_ex_rs1_idx              (id2ex_rs1_idx[4:0]               ), //i
@@ -2334,7 +2336,8 @@ module apple_riscv (
     .io_wb_ecall          (mem2wb_mret                     ), //i
     .io_ex_ebreak         (id2ex_mret                      ), //i
     .io_mem_ebreak        (ex2mem_mret                     ), //i
-    .io_wb_ebreak         (mem2wb_mret                     )  //i
+    .io_wb_ebreak         (mem2wb_mret                     ), //i
+    .io_int_flush         (trap_ctrl_inst_io_int_flush     )  //i
   );
   assign if_pipe_run = (! if_pipe_stall);
   assign id_pipe_run = (! id_pipe_stall);
@@ -3039,7 +3042,8 @@ module hdu (
   input               io_wb_ecall,
   input               io_ex_ebreak,
   input               io_mem_ebreak,
-  input               io_wb_ebreak
+  input               io_wb_ebreak,
+  input               io_int_flush
 );
   wire                id_rs1_depends_on_ex_rd;
   wire                id_rs2_depends_on_ex_rd;
@@ -3074,10 +3078,10 @@ module hdu (
   assign sys_flush_mem = ((io_wb_mret || io_wb_ebreak) || io_wb_ecall);
   assign sys_flush_ex = (((io_mem_mret || io_mem_ebreak) || io_mem_ecall) || sys_flush_mem);
   assign sys_flush_id = (((io_ex_mret || io_ex_ebreak) || io_ex_ecall) || sys_flush_ex);
-  assign trap_flush_if = (sys_flush_id || exception_flush_if);
-  assign trap_flush_id = (sys_flush_id || exception_flush_id);
-  assign trap_flush_ex = (sys_flush_ex || exception_flush_ex);
-  assign trap_flush_mem = (sys_flush_mem || io_wb_exception);
+  assign trap_flush_if = ((sys_flush_id || exception_flush_if) || io_int_flush);
+  assign trap_flush_id = ((sys_flush_id || exception_flush_id) || io_int_flush);
+  assign trap_flush_ex = ((sys_flush_ex || exception_flush_ex) || io_int_flush);
+  assign trap_flush_mem = ((sys_flush_mem || io_wb_exception) || io_int_flush);
   assign io_if_pipe_stall = (stall_on_load_dependence || stall_on_csr_dependence);
   assign io_id_pipe_stall = (stall_on_load_dependence || stall_on_csr_dependence);
   assign io_ex_pipe_stall = 1'b0;
@@ -3151,7 +3155,8 @@ module trap_ctrl (
   output     [31:0]   io_mtrap_mcause,
   output     [31:0]   io_mtrap_mtval,
   output              io_pc_trap,
-  output     [31:0]   io_pc_value
+  output     [31:0]   io_pc_value,
+  output              io_int_flush
 );
   wire       [29:0]   _zz_1;
   wire       [31:0]   _zz_2;
@@ -3187,7 +3192,7 @@ module trap_ctrl (
   assign software_interrupt_masked = ((io_software_interrupt && io_mstatus_mie) && io_mie_msie);
   assign debug_interrupt_masked = (io_debug_interrupt && io_mstatus_mie);
   assign interrupt = (((external_interrupt_masked || timer_interrupt_masked) || software_interrupt_masked) || debug_interrupt_masked);
-  assign pc_plus_4 = (io_pc_value + 32'h00000004);
+  assign pc_plus_4 = (io_wb_pc + 32'h00000004);
   assign external_interrupt_mask = (external_interrupt_masked ? 31'h7fffffff : 31'h0);
   assign timer_interrupt_mask = (timer_interrupt_masked ? 31'h7fffffff : 31'h0);
   assign software_interrupt_mask = (software_interrupt_masked ? 31'h7fffffff : 31'h0);
@@ -3204,9 +3209,10 @@ module trap_ctrl (
   assign io_mtrap_mepc = ((exception || io_ecall) ? io_wb_pc : pc_plus_4);
   assign io_mtrap_mcause = {interrupt,exception_code};
   assign io_mtrap_mtval = (io_illegal_instr_exception ? io_wb_instr : dmem_addr_extended);
-  assign io_pc_trap = ((exception || io_mret) || io_ecall);
+  assign io_pc_trap = (io_mtrap_enter || io_mtrap_exit);
   assign mtvec_base = io_mtvec[31 : 2];
   assign io_pc_value = (io_mret ? io_mepc : _zz_2);
+  assign io_int_flush = interrupt;
 
 endmodule
 
