@@ -2,6 +2,10 @@
 
 ## Milestone 0.2
 
+- 04/22/2021
+  - Redesigned the SIB module.
+    - Designed the slaveFactory, so we can use SpinalHDL slaveFactory to create memory mapped register accessing logic
+
 - 04/21/2021
   - Designed a sib switch with 1 to N topology
   - Replaced the AHB bus with the SIB bus
@@ -20,6 +24,13 @@
     - updated all the tests related to this change
 
 ## Milestone 0.1
+
+Summary:
+
+- Completed Most of the instructions for RV32I ISA including CSR extension and Interrupt
+- Setup RISC-test ISA compatible test environment
+
+Details:
 
 - 04/19/2021
   - **[RTL Bug Fix]** Fixed bugs found in tests for csr instruction and exception
@@ -84,7 +95,11 @@
 
 ## Milestone 0.0
 
-Completed the basic RV32I instruction iplementation exception for FANCE, ECALL, EBREAK
+Summary:
+
+- CPU Core Initial Design: Completed the basic RV32I instruction implementation exception for FANCE, ECALL, EBREAK
+
+Details:
 
 - 04/05/2021
   - Major updates on the existing code.
