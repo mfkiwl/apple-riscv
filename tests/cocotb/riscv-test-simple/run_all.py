@@ -76,11 +76,17 @@ rv32si_isa = [
     ['scall', 6000],
 ]
 
+soc_isa = [
+    ['software_interrupt', 6000],
+    ['timer_interrupt', 6000],
+]
+
 # architecture
 ARCH = {
     'rv32ui': rv32ui_isa,
     'rv32mi': rv32mi_isa,
     'rv32si': rv32si_isa,
+    'soc': soc_isa
 }
 
 #####################################

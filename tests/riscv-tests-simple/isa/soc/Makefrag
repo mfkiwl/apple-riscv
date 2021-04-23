@@ -4,5 +4,6 @@
 
 tests_name = \
 	software_interrupt \
+	timer_interrupt \
 
 soc_tests = $(addprefix soc-, $(tests_name))

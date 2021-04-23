@@ -44,9 +44,9 @@ tests += $$($(1)_tests)
 
 endef
 
-#$(eval $(call compile_template,rv32ui,-march=rv32i -mabi=ilp32))
-#$(eval $(call compile_template,rv32mi,-march=rv32i -mabi=ilp32))
-#$(eval $(call compile_template,rv32si,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32ui,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32mi,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32si,-march=rv32i -mabi=ilp32))
 $(eval $(call compile_template,soc,-march=rv32i -mabi=ilp32))
 
 tests_dump = $(addsuffix .dump, $(tests))

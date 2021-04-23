@@ -10,8 +10,9 @@
   - Wrote a test to test software interrupt
     - **[RTL Bug Fix]** Fixed bug in trap control logic:
       - Corrected the wrong pc output value when interrupt triggers trap
-      - Added flushing logic for the interrupt. Need to flush the pipeline when we switch pc to mtval
-
+      - Added flushing logic for the interrupt. Need to flush the pipeline when we switch pc to mtval 
+  - Wrote a test to test timer interrupt
+        
 - 04/21/2021
   - Designed a sib switch with 1 to N topology
   - Replaced the AHB bus with the SIB bus
