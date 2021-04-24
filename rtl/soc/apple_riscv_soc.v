@@ -1,6 +1,6 @@
 // Generator : SpinalHDL v1.4.3    git head : adf552d8f500e7419fff395b7049228e4bc5de26
 // Component : apple_riscv_soc
-// Git hash  : 0e89cd2ec4361c870a7cd4384f8401808f77fa20
+// Git hash  : a4dc357175a2f21cc4b0df1e9b423d02e4588bc9
 
 
 `define br_imm_type_e_defaultEncoding_type [1:0]
@@ -56,7 +56,6 @@ module apple_riscv_soc (
   input               reset
 );
   wire                _zz_36;
-  wire                _zz_37;
   wire                cpu_core_imem_sib_sel;
   wire                cpu_core_imem_sib_enable;
   wire                cpu_core_imem_sib_write;
@@ -83,6 +82,10 @@ module apple_riscv_soc (
   wire       [31:0]   clic_inst_clic_sib_rdata;
   wire                clic_inst_clic_sib_ready;
   wire                clic_inst_clic_sib_resp;
+  wire                plic_inst_io_external_interrupt;
+  wire       [31:0]   plic_inst_plic_sib_rdata;
+  wire                plic_inst_plic_sib_ready;
+  wire                plic_inst_plic_sib_resp;
   wire       [31:0]   gpio_inst_io_gpio_write;
   wire       [31:0]   gpio_inst_io_gpio_writeEnable;
   wire                gpio_inst_io_gpio_int_pe;
@@ -93,6 +96,7 @@ module apple_riscv_soc (
   wire       [31:0]   timer_inst_timer_sib_rdata;
   wire                timer_inst_timer_sib_ready;
   wire                timer_inst_timer_sib_resp;
+  wire                uart_inst_io_uart_interrupt;
   wire                uart_inst_uart_txd;
   wire       [31:0]   uart_inst_uart_sib_rdata;
   wire                uart_inst_uart_sib_ready;
@@ -126,7 +130,13 @@ module apple_riscv_soc (
   wire                dmem_switch_clientSib_2_write;
   wire       [3:0]    dmem_switch_clientSib_2_mask;
   wire       [31:0]   dmem_switch_clientSib_2_wdata;
-  wire       [15:0]   dmem_switch_clientSib_2_addr;
+  wire       [11:0]   dmem_switch_clientSib_2_addr;
+  wire                dmem_switch_clientSib_3_sel;
+  wire                dmem_switch_clientSib_3_enable;
+  wire                dmem_switch_clientSib_3_write;
+  wire       [3:0]    dmem_switch_clientSib_3_mask;
+  wire       [31:0]   dmem_switch_clientSib_3_wdata;
+  wire       [15:0]   dmem_switch_clientSib_3_addr;
   wire       [31:0]   perip_switch_hostSib_rdata;
   wire                perip_switch_hostSib_ready;
   wire                perip_switch_hostSib_resp;
@@ -185,10 +195,10 @@ module apple_riscv_soc (
   wire       [31:0]   _zz_35;
 
   apple_riscv cpu_core (
-    .io_external_interrupt    (_zz_36                           ), //i
+    .io_external_interrupt    (plic_inst_io_external_interrupt  ), //i
     .io_timer_interrupt       (clic_inst_io_timer_interrupt     ), //i
     .io_software_interrupt    (clic_inst_io_software_interrupt  ), //i
-    .io_debug_interrupt       (_zz_37                           ), //i
+    .io_debug_interrupt       (_zz_36                           ), //i
     .imem_sib_sel             (cpu_core_imem_sib_sel            ), //o
     .imem_sib_enable          (cpu_core_imem_sib_enable         ), //o
     .imem_sib_write           (cpu_core_imem_sib_write          ), //o
@@ -260,6 +270,23 @@ module apple_riscv_soc (
     .clk                      (clk                                  ), //i
     .reset                    (reset                                )  //i
   );
+  plic plic_inst (
+    .io_external_interrupt    (plic_inst_io_external_interrupt      ), //o
+    .io_gpio_int              (gpio_inst_io_gpio_int_pe             ), //i
+    .io_timer_int             (timer_inst_io_timer_interrupt        ), //i
+    .io_uart_int              (uart_inst_io_uart_interrupt          ), //i
+    .plic_sib_sel             (dmem_switch_clientSib_2_sel          ), //i
+    .plic_sib_enable          (dmem_switch_clientSib_2_enable       ), //i
+    .plic_sib_write           (dmem_switch_clientSib_2_write        ), //i
+    .plic_sib_mask            (dmem_switch_clientSib_2_mask[3:0]    ), //i
+    .plic_sib_addr            (dmem_switch_clientSib_2_addr[11:0]   ), //i
+    .plic_sib_wdata           (dmem_switch_clientSib_2_wdata[31:0]  ), //i
+    .plic_sib_rdata           (plic_inst_plic_sib_rdata[31:0]       ), //o
+    .plic_sib_ready           (plic_inst_plic_sib_ready             ), //o
+    .plic_sib_resp            (plic_inst_plic_sib_resp              ), //o
+    .clk                      (clk                                  ), //i
+    .reset                    (reset                                )  //i
+  );
   gpio gpio_inst (
     .io_gpio_read           (_zz_33[31:0]                          ), //i
     .io_gpio_write          (gpio_inst_io_gpio_write[31:0]         ), //o
@@ -292,19 +319,20 @@ module apple_riscv_soc (
     .reset                 (reset                                 )  //i
   );
   SibUart uart_inst (
-    .uart_txd           (uart_inst_uart_txd                    ), //o
-    .uart_rxd           (uart_port_rxd                         ), //i
-    .uart_sib_sel       (perip_switch_clientSib_2_sel          ), //i
-    .uart_sib_enable    (perip_switch_clientSib_2_enable       ), //i
-    .uart_sib_write     (perip_switch_clientSib_2_write        ), //i
-    .uart_sib_mask      (perip_switch_clientSib_2_mask[3:0]    ), //i
-    .uart_sib_addr      (perip_switch_clientSib_2_addr[11:0]   ), //i
-    .uart_sib_wdata     (perip_switch_clientSib_2_wdata[31:0]  ), //i
-    .uart_sib_rdata     (uart_inst_uart_sib_rdata[31:0]        ), //o
-    .uart_sib_ready     (uart_inst_uart_sib_ready              ), //o
-    .uart_sib_resp      (uart_inst_uart_sib_resp               ), //o
-    .clk                (clk                                   ), //i
-    .reset              (reset                                 )  //i
+    .io_uart_interrupt    (uart_inst_io_uart_interrupt           ), //o
+    .uart_txd             (uart_inst_uart_txd                    ), //o
+    .uart_rxd             (uart_port_rxd                         ), //i
+    .uart_sib_sel         (perip_switch_clientSib_2_sel          ), //i
+    .uart_sib_enable      (perip_switch_clientSib_2_enable       ), //i
+    .uart_sib_write       (perip_switch_clientSib_2_write        ), //i
+    .uart_sib_mask        (perip_switch_clientSib_2_mask[3:0]    ), //i
+    .uart_sib_addr        (perip_switch_clientSib_2_addr[11:0]   ), //i
+    .uart_sib_wdata       (perip_switch_clientSib_2_wdata[31:0]  ), //i
+    .uart_sib_rdata       (uart_inst_uart_sib_rdata[31:0]        ), //o
+    .uart_sib_ready       (uart_inst_uart_sib_ready              ), //o
+    .uart_sib_resp        (uart_inst_uart_sib_resp               ), //o
+    .clk                  (clk                                   ), //i
+    .reset                (reset                                 )  //i
   );
   Sib_decoder imem_switch (
     .hostSib_sel           (cpu_core_imem_sib_sel                ), //i
@@ -360,21 +388,30 @@ module apple_riscv_soc (
     .clientSib_2_enable    (dmem_switch_clientSib_2_enable       ), //o
     .clientSib_2_write     (dmem_switch_clientSib_2_write        ), //o
     .clientSib_2_mask      (dmem_switch_clientSib_2_mask[3:0]    ), //o
-    .clientSib_2_addr      (dmem_switch_clientSib_2_addr[15:0]   ), //o
+    .clientSib_2_addr      (dmem_switch_clientSib_2_addr[11:0]   ), //o
     .clientSib_2_wdata     (dmem_switch_clientSib_2_wdata[31:0]  ), //o
-    .clientSib_2_rdata     (perip_switch_hostSib_rdata[31:0]     ), //i
-    .clientSib_2_ready     (perip_switch_hostSib_ready           ), //i
-    .clientSib_2_resp      (perip_switch_hostSib_resp            ), //i
+    .clientSib_2_rdata     (plic_inst_plic_sib_rdata[31:0]       ), //i
+    .clientSib_2_ready     (plic_inst_plic_sib_ready             ), //i
+    .clientSib_2_resp      (plic_inst_plic_sib_resp              ), //i
+    .clientSib_3_sel       (dmem_switch_clientSib_3_sel          ), //o
+    .clientSib_3_enable    (dmem_switch_clientSib_3_enable       ), //o
+    .clientSib_3_write     (dmem_switch_clientSib_3_write        ), //o
+    .clientSib_3_mask      (dmem_switch_clientSib_3_mask[3:0]    ), //o
+    .clientSib_3_addr      (dmem_switch_clientSib_3_addr[15:0]   ), //o
+    .clientSib_3_wdata     (dmem_switch_clientSib_3_wdata[31:0]  ), //o
+    .clientSib_3_rdata     (perip_switch_hostSib_rdata[31:0]     ), //i
+    .clientSib_3_ready     (perip_switch_hostSib_ready           ), //i
+    .clientSib_3_resp      (perip_switch_hostSib_resp            ), //i
     .clk                   (clk                                  ), //i
     .reset                 (reset                                )  //i
   );
   Sib_decoder_2 perip_switch (
-    .hostSib_sel           (dmem_switch_clientSib_2_sel           ), //i
-    .hostSib_enable        (dmem_switch_clientSib_2_enable        ), //i
-    .hostSib_write         (dmem_switch_clientSib_2_write         ), //i
-    .hostSib_mask          (dmem_switch_clientSib_2_mask[3:0]     ), //i
-    .hostSib_addr          (dmem_switch_clientSib_2_addr[15:0]    ), //i
-    .hostSib_wdata         (dmem_switch_clientSib_2_wdata[31:0]   ), //i
+    .hostSib_sel           (dmem_switch_clientSib_3_sel           ), //i
+    .hostSib_enable        (dmem_switch_clientSib_3_enable        ), //i
+    .hostSib_write         (dmem_switch_clientSib_3_write         ), //i
+    .hostSib_mask          (dmem_switch_clientSib_3_mask[3:0]     ), //i
+    .hostSib_addr          (dmem_switch_clientSib_3_addr[15:0]    ), //i
+    .hostSib_wdata         (dmem_switch_clientSib_3_wdata[31:0]   ), //i
     .hostSib_rdata         (perip_switch_hostSib_rdata[31:0]      ), //o
     .hostSib_ready         (perip_switch_hostSib_ready            ), //o
     .hostSib_resp          (perip_switch_hostSib_resp             ), //o
@@ -671,7 +708,6 @@ module apple_riscv_soc (
   assign _zz_35 = gpio_inst_io_gpio_writeEnable;
   assign uart_port_txd = uart_inst_uart_txd;
   assign _zz_36 = 1'b0;
-  assign _zz_37 = 1'b0;
   assign _zz_33 = gpio_port_gpio;
 
 endmodule
@@ -833,64 +869,83 @@ module Sib_decoder_1 (
   output              clientSib_2_enable,
   output              clientSib_2_write,
   output     [3:0]    clientSib_2_mask,
-  output     [15:0]   clientSib_2_addr,
+  output     [11:0]   clientSib_2_addr,
   output     [31:0]   clientSib_2_wdata,
   input      [31:0]   clientSib_2_rdata,
   input               clientSib_2_ready,
   input               clientSib_2_resp,
+  output              clientSib_3_sel,
+  output              clientSib_3_enable,
+  output              clientSib_3_write,
+  output     [3:0]    clientSib_3_mask,
+  output     [15:0]   clientSib_3_addr,
+  output     [31:0]   clientSib_3_wdata,
+  input      [31:0]   clientSib_3_rdata,
+  input               clientSib_3_ready,
+  input               clientSib_3_resp,
   input               clk,
   input               reset
 );
-  reg        [31:0]   _zz_6;
-  reg                 _zz_7;
-  reg                 _zz_8;
-  wire       [1:0]    _zz_9;
-  reg        [2:0]    dec_sel;
-  reg        [2:0]    dec_sel_ff;
+  reg        [31:0]   _zz_8;
+  reg                 _zz_9;
+  reg                 _zz_10;
+  wire       [1:0]    _zz_11;
+  reg        [3:0]    dec_sel;
+  reg        [3:0]    dec_sel_ff;
   wire                dec_good;
   wire                _zz_1;
   wire                _zz_2;
   wire                _zz_3;
   wire                _zz_4;
-  wire       [1:0]    _zz_5;
+  wire                _zz_5;
+  wire                _zz_6;
+  wire       [1:0]    _zz_7;
 
-  assign _zz_9 = {_zz_2,_zz_1};
+  assign _zz_11 = {_zz_3,_zz_2};
   always @(*) begin
-    case(_zz_9)
+    case(_zz_11)
       2'b00 : begin
-        _zz_6 = clientSib_0_rdata;
+        _zz_8 = clientSib_0_rdata;
       end
       2'b01 : begin
-        _zz_6 = clientSib_1_rdata;
+        _zz_8 = clientSib_1_rdata;
+      end
+      2'b10 : begin
+        _zz_8 = clientSib_2_rdata;
       end
       default : begin
-        _zz_6 = clientSib_2_rdata;
+        _zz_8 = clientSib_3_rdata;
       end
     endcase
   end
 
   always @(*) begin
-    case(_zz_5)
+    case(_zz_7)
       2'b00 : begin
-        _zz_7 = clientSib_0_resp;
-        _zz_8 = clientSib_0_ready;
+        _zz_9 = clientSib_0_resp;
+        _zz_10 = clientSib_0_ready;
       end
       2'b01 : begin
-        _zz_7 = clientSib_1_resp;
-        _zz_8 = clientSib_1_ready;
+        _zz_9 = clientSib_1_resp;
+        _zz_10 = clientSib_1_ready;
+      end
+      2'b10 : begin
+        _zz_9 = clientSib_2_resp;
+        _zz_10 = clientSib_2_ready;
       end
       default : begin
-        _zz_7 = clientSib_2_resp;
-        _zz_8 = clientSib_2_ready;
+        _zz_9 = clientSib_3_resp;
+        _zz_10 = clientSib_3_ready;
       end
     endcase
   end
 
-  assign dec_good = (dec_sel != 3'b000);
+  assign dec_good = (dec_sel != 4'b0000);
   always @ (*) begin
     dec_sel[0] = ((32'h01000000 <= hostSib_addr) && (hostSib_addr <= 32'h01ffffff));
     dec_sel[1] = ((32'h02000000 <= hostSib_addr) && (hostSib_addr <= 32'h02000fff));
-    dec_sel[2] = ((32'h02002000 <= hostSib_addr) && (hostSib_addr <= 32'h02004fff));
+    dec_sel[2] = ((32'h02001000 <= hostSib_addr) && (hostSib_addr <= 32'h02001fff));
+    dec_sel[3] = ((32'h02002000 <= hostSib_addr) && (hostSib_addr <= 32'h02004fff));
   end
 
   assign clientSib_0_write = hostSib_write;
@@ -906,19 +961,27 @@ module Sib_decoder_1 (
   assign clientSib_1_mask = hostSib_mask;
   assign clientSib_1_sel = (hostSib_sel && dec_sel[1]);
   assign clientSib_2_write = hostSib_write;
-  assign clientSib_2_addr = hostSib_addr[15 : 0];
+  assign clientSib_2_addr = hostSib_addr[11 : 0];
   assign clientSib_2_wdata = hostSib_wdata;
   assign clientSib_2_enable = hostSib_enable;
   assign clientSib_2_mask = hostSib_mask;
   assign clientSib_2_sel = (hostSib_sel && dec_sel[2]);
-  assign _zz_1 = dec_sel_ff[1];
-  assign _zz_2 = dec_sel_ff[2];
-  assign hostSib_rdata = _zz_6;
-  assign _zz_3 = dec_sel[1];
-  assign _zz_4 = dec_sel[2];
-  assign _zz_5 = {_zz_4,_zz_3};
-  assign hostSib_resp = (_zz_7 && dec_good);
-  assign hostSib_ready = _zz_8;
+  assign clientSib_3_write = hostSib_write;
+  assign clientSib_3_addr = hostSib_addr[15 : 0];
+  assign clientSib_3_wdata = hostSib_wdata;
+  assign clientSib_3_enable = hostSib_enable;
+  assign clientSib_3_mask = hostSib_mask;
+  assign clientSib_3_sel = (hostSib_sel && dec_sel[3]);
+  assign _zz_1 = dec_sel_ff[3];
+  assign _zz_2 = (dec_sel_ff[1] || _zz_1);
+  assign _zz_3 = (dec_sel_ff[2] || _zz_1);
+  assign hostSib_rdata = _zz_8;
+  assign _zz_4 = dec_sel[3];
+  assign _zz_5 = (dec_sel[1] || _zz_4);
+  assign _zz_6 = (dec_sel[2] || _zz_4);
+  assign _zz_7 = {_zz_6,_zz_5};
+  assign hostSib_resp = (_zz_9 && dec_good);
+  assign hostSib_ready = _zz_10;
   always @ (posedge clk) begin
     dec_sel_ff <= dec_sel;
   end
@@ -971,6 +1034,7 @@ module Sib_decoder (
 endmodule
 
 module SibUart (
+  output              io_uart_interrupt,
   output              uart_txd,
   input               uart_rxd,
   input               uart_sib_sel,
@@ -1026,6 +1090,7 @@ module SibUart (
   wire                txFull;
   wire                rxFull;
   wire                rxEmpty;
+  wire                rxAvail;
   wire       [5:0]    _zz_2;
   wire       `UartStopType_defaultEncoding_type _zz_3;
   wire       `UartParityType_defaultEncoding_type _zz_4;
@@ -1142,7 +1207,7 @@ module SibUart (
         busCtrl_rdata[11 : 8] = uartCtrl_1_io_read_queueWithOccupancy_io_occupancy;
       end
       12'h010 : begin
-        busCtrl_rdata[0 : 0] = (! rxEmpty);
+        busCtrl_rdata[0 : 0] = rxAvail;
         busCtrl_rdata[1 : 1] = rxFull;
         busCtrl_rdata[4 : 4] = txFull;
         busCtrl_rdata[5 : 5] = rxEmpty;
@@ -1209,6 +1274,8 @@ module SibUart (
   assign txFull = (streamFifo_2_io_availability == 4'b0000);
   assign rxFull = (uartCtrl_1_io_read_queueWithOccupancy_io_occupancy == 4'b1000);
   assign rxEmpty = (uartCtrl_1_io_read_queueWithOccupancy_io_occupancy == 4'b0000);
+  assign rxAvail = (! rxEmpty);
+  assign io_uart_interrupt = (rxAvail || rxFull);
   assign _zz_2 = uart_sib_wdata[5 : 0];
   assign _zz_3 = _zz_2[3 : 3];
   assign _zz_4 = _zz_2[5 : 4];
@@ -1556,6 +1623,141 @@ module gpio (
       12'h004 : begin
         if(busCtrl_doWrite)begin
           io_gpio_writeEnable_driver <= gpio_sib_wdata[31 : 0];
+        end
+      end
+      default : begin
+      end
+    endcase
+  end
+
+
+endmodule
+
+module plic (
+  output              io_external_interrupt,
+  input               io_gpio_int,
+  input               io_timer_int,
+  input               io_uart_int,
+  input               plic_sib_sel,
+  input               plic_sib_enable,
+  input               plic_sib_write,
+  input      [3:0]    plic_sib_mask,
+  input      [11:0]   plic_sib_addr,
+  input      [31:0]   plic_sib_wdata,
+  output     [31:0]   plic_sib_rdata,
+  output              plic_sib_ready,
+  output reg          plic_sib_resp,
+  input               clk,
+  input               reset
+);
+  wire                busCtrl_doWrite;
+  wire                busCtrl_doRead;
+  reg        [31:0]   busCtrl_rdata;
+  reg        [31:0]   busCtrl_rdata_regNext;
+  reg        [0:0]    timer_int_int_en;
+  reg        [0:0]    timer_int_int_pe;
+  wire                timer_int_int_aggr;
+  reg        [0:0]    gpio_int_int_en;
+  reg        [0:0]    gpio_int_int_pe;
+  wire                gpio_int_int_aggr;
+  reg        [0:0]    uart_int_int_en;
+  reg        [0:0]    uart_int_int_pe;
+  wire                uart_int_int_aggr;
+
+  assign busCtrl_doWrite = (((plic_sib_sel && plic_sib_enable) && plic_sib_ready) && plic_sib_write);
+  assign busCtrl_doRead = (((plic_sib_sel && plic_sib_enable) && plic_sib_ready) && (! plic_sib_write));
+  always @ (*) begin
+    busCtrl_rdata = 32'h0;
+    case(plic_sib_addr)
+      12'h0 : begin
+        busCtrl_rdata[0 : 0] = timer_int_int_en;
+      end
+      12'h004 : begin
+        busCtrl_rdata[0 : 0] = timer_int_int_pe;
+      end
+      12'h008 : begin
+        busCtrl_rdata[0 : 0] = gpio_int_int_en;
+      end
+      12'h00c : begin
+        busCtrl_rdata[0 : 0] = gpio_int_int_pe;
+      end
+      12'h010 : begin
+        busCtrl_rdata[0 : 0] = uart_int_int_en;
+      end
+      12'h014 : begin
+        busCtrl_rdata[0 : 0] = uart_int_int_pe;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  always @ (*) begin
+    plic_sib_resp = 1'b0;
+    case(plic_sib_addr)
+      12'h0 : begin
+        plic_sib_resp = 1'b1;
+      end
+      12'h004 : begin
+        plic_sib_resp = 1'b1;
+      end
+      12'h008 : begin
+        plic_sib_resp = 1'b1;
+      end
+      12'h00c : begin
+        plic_sib_resp = 1'b1;
+      end
+      12'h010 : begin
+        plic_sib_resp = 1'b1;
+      end
+      12'h014 : begin
+        plic_sib_resp = 1'b1;
+      end
+      default : begin
+      end
+    endcase
+  end
+
+  assign plic_sib_ready = 1'b1;
+  assign plic_sib_rdata = busCtrl_rdata_regNext;
+  assign timer_int_int_aggr = (timer_int_int_pe != 1'b0);
+  assign gpio_int_int_aggr = (gpio_int_int_pe != 1'b0);
+  assign uart_int_int_aggr = (uart_int_int_pe != 1'b0);
+  assign io_external_interrupt = ((timer_int_int_aggr || gpio_int_int_aggr) || uart_int_int_aggr);
+  always @ (posedge clk) begin
+    busCtrl_rdata_regNext <= busCtrl_rdata;
+    timer_int_int_pe <= io_timer_int;
+    gpio_int_int_pe <= io_gpio_int;
+    uart_int_int_pe <= io_uart_int;
+    case(plic_sib_addr)
+      12'h0 : begin
+        if(busCtrl_doWrite)begin
+          timer_int_int_en <= plic_sib_wdata[0 : 0];
+        end
+      end
+      12'h004 : begin
+        if(busCtrl_doWrite)begin
+          timer_int_int_pe <= plic_sib_wdata[0 : 0];
+        end
+      end
+      12'h008 : begin
+        if(busCtrl_doWrite)begin
+          gpio_int_int_en <= plic_sib_wdata[0 : 0];
+        end
+      end
+      12'h00c : begin
+        if(busCtrl_doWrite)begin
+          gpio_int_int_pe <= plic_sib_wdata[0 : 0];
+        end
+      end
+      12'h010 : begin
+        if(busCtrl_doWrite)begin
+          uart_int_int_en <= plic_sib_wdata[0 : 0];
+        end
+      end
+      12'h014 : begin
+        if(busCtrl_doWrite)begin
+          uart_int_int_pe <= plic_sib_wdata[0 : 0];
         end
       end
       default : begin

@@ -32,6 +32,9 @@ case class UartCfg(
 
 case class SibUart(cfg: UartCfg, sibCfg: SibConfig) extends Component {
 
+  val io = new Bundle{
+    val uart_interrupt = out Bool
+  }
   val uart = master(Uart())
   val uart_sib = slave(Sib(sibCfg))
   val busCtrl = SibSlaveFactory(uart_sib)
@@ -64,12 +67,14 @@ case class SibUart(cfg: UartCfg, sibCfg: SibConfig) extends Component {
   busCtrl.readStreamNonBlocking(rxQueue, address = 0xC, validBitOffset = 31, payloadBitOffset = 0)
   busCtrl.read(rxOccup, 0xC, 8, "Uart remaining RX data in FIFO")
 
-  // == Uart Interrupt == //
+  // == Uart Interrupt and Status == //
   val txFull  = (txAvail === 0)
   val rxFull  = (rxOccup === cfg.rxFifoDepth)
   val rxEmpty = (rxOccup === 0)
-  busCtrl.read(~rxEmpty,0x10, 0, "Uart rx avail interrupt")
+  val rxAvail = ~rxEmpty
+  busCtrl.read(rxAvail,0x10, 0, "Uart rx avail interrupt")
   busCtrl.read(rxFull  ,0x10, 1, "Uart rx full interrupt")
   busCtrl.read(txFull  ,0x10, 4, "Uart tx FIFO full")
   busCtrl.read(rxEmpty ,0x10, 5, "Uart rx FIFO empty")
+  io.uart_interrupt := rxAvail | rxFull
 }

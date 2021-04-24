@@ -53,6 +53,10 @@ class SOC_PARAM {
   val SIB_CLIC_HI = Integer.parseInt("02000FFF", 16)
   val CLIC_ADDR_WIDTH = 12
 
+  val SIB_PLIC_LO = Integer.parseInt("02001000", 16)
+  val SIB_PLIC_HI = Integer.parseInt("02001FFF", 16)
+  val PLIC_ADDR_WIDTH = 12
+
   val SIB_PERIP_HOST_LO = Integer.parseInt("02002000", 16)
   val SIB_PERIP_HOST_HI = Integer.parseInt("02004FFF", 16)
   val PERIP_HOST_ADDR_WIDTH = 16
@@ -70,11 +74,6 @@ class SOC_PARAM {
   val SIB_UART_HI = Integer.parseInt("4FFF", 16)
   val UART_ADDR_WIDTH = 12
 
-
-  /*
-  val APB_PLIC_LO = B"32'h02001000"
-  val APB_PLIC_HI = B"32'h02001FFF"
-  */
 
   // ========================== //
   //       SIB Bus Config       //
@@ -105,6 +104,13 @@ class SOC_PARAM {
     dataWidth    = XLEN,
     addr_lo      = SIB_CLIC_LO,
     addr_hi      = SIB_CLIC_HI
+  )
+
+  val plicSibCfg = SibConfig(
+    addressWidth = PLIC_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_PLIC_LO,
+    addr_hi      = SIB_PLIC_HI
   )
 
   val peripHostSibCfg = SibConfig(

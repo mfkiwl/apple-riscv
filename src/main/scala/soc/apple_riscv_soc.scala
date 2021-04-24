@@ -41,7 +41,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     val cpu_core  = apple_riscv(cfg.cpu_param)
     val imem_inst = imem(cfg.soc_param)
     val dmem_inst = dmem(cfg.soc_param)
-    val clic_inst = clic(cfg.soc_param)
+    val clic_inst = clic(cfg.soc_param.clicSibCfg, cfg.soc_param.CLIC_TIMER_WIDTH)
+    val plic_inst = plic(cfg.soc_param.plicSibCfg)
     val gpio_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpioSibCfg)
     val timer_inst = timer(cfg.soc_param.timerSibCfg)
     val uart_inst = SibUart(cfg.uartCfg, cfg.soc_param.uartSibCfg)
@@ -52,7 +53,7 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     val imem_switch = Sib_decoder(cfg.soc_param.cpuSibCfg, imemClientSibCfg)
 
     // dmem bus switch
-    val dmemClientSibCfg = Array(cfg.soc_param.dmemSibCfg, cfg.soc_param.clicSibCfg, cfg.soc_param.peripHostSibCfg)
+    val dmemClientSibCfg = Array(cfg.soc_param.dmemSibCfg, cfg.soc_param.clicSibCfg, cfg.soc_param.plicSibCfg, cfg.soc_param.peripHostSibCfg)
     val dmem_switch = Sib_decoder(cfg.soc_param.cpuSibCfg, dmemClientSibCfg)
 
     // peripheral switch
@@ -70,7 +71,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     dmem_switch.hostSib <> cpu_core.dmem_sib            // To CPU
     dmem_switch.clientSib(0) <> dmem_inst.dmem_sib      // To dmem
     dmem_switch.clientSib(1) <> clic_inst.clic_sib      // To CLIC
-    dmem_switch.clientSib(2) <> perip_switch.hostSib    // To Peripheral SIB Switch
+    dmem_switch.clientSib(2) <> plic_inst.plic_sib      // To PLIC
+    dmem_switch.clientSib(3) <> perip_switch.hostSib    // To Peripheral SIB Switch
 
     // peripheral switch connection
     perip_switch.clientSib(0) <> timer_inst.timer_sib   // To Timer
@@ -82,13 +84,19 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     imem_dbg_sib <> imem_inst.imem_dbg_sib
 
     // == Other port connection == //
+
     gpio_port.gpio <> gpio_inst.io.gpio
     uart_port <> uart_inst.uart
 
-    cpu_core.io.external_interrupt  := False
+    // connect interrupt to cpu core
+    cpu_core.io.external_interrupt  := plic_inst.io.external_interrupt
     cpu_core.io.timer_interrupt     := clic_inst.io.timer_interrupt
     cpu_core.io.software_interrupt  := clic_inst.io.software_interrupt
     cpu_core.io.debug_interrupt     := False
 
+    // connect peripheral interrupt to plic
+    plic_inst.io.gpio_int  := gpio_inst.io.gpio_int_pe
+    plic_inst.io.timer_int := timer_inst.io.timer_interrupt
+    plic_inst.io.uart_int  := uart_inst.io.uart_interrupt
 
 }

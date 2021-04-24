@@ -2,6 +2,9 @@
 
 ## Milestone 0.2
 
+- 04/23/2021
+  - Designed a simple plic module.
+
 - 04/22/2021
   - Redesigned the SIB module.
     - Designed the slaveFactory, so we can use SpinalHDL slaveFactory to create memory mapped register accessing logic
