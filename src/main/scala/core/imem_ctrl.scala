@@ -18,7 +18,7 @@
 package core
 
 import spinal.core._
-import sib._
+import bus.sib._
 import spinal.lib.master
 
 case class imem_ctrl_io(param: CPU_PARAM) extends Bundle {

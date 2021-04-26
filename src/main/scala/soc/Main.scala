@@ -35,7 +35,7 @@ object Main{
       uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
     )
     val spinalCfg = SpinalConfig(
-      targetDirectory = "rtl/soc"
+      targetDirectory = "gen/rtl"
     ).generateVerilog(InOutWrapper(apple_riscv_soc(cfg)))
   }
 }

@@ -18,7 +18,7 @@
 package ip
 
 import soc._
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib._
 

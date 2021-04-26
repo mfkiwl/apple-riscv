@@ -17,11 +17,12 @@
 
 package soc
 
-import spinal.core._
-import spinal.lib._
-import sib._
 import core._
 import ip._
+import bus.sib._
+
+import spinal.core._
+import spinal.lib._
 import spinal.lib.com.uart.Uart
 
 

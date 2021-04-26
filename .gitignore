@@ -41,6 +41,9 @@ simWorkspace/
 tmp/
 null
 
+# generated files
+gen/*
+
 # tests
 *__pycache__
 tests/cocotb/*/*.xml

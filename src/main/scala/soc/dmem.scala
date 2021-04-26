@@ -1,6 +1,6 @@
 package soc
 
-import sib.Sib
+import bus.sib.Sib
 import spinal.core._
 import spinal.lib.slave
 

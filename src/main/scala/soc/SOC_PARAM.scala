@@ -18,7 +18,7 @@
 
 package soc
 
-import sib._
+import bus.sib._
 
 class SOC_PARAM {
   val NAME = "apple-riscv-soc"
