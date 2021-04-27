@@ -63,3 +63,6 @@ fpga/xilinx/core
 fpga/xilinx/soc
 fpga/intel/soc
 fpga/intel/core
+
+# sdk
+sdk/*/*/*.o

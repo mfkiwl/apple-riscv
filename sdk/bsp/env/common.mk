@@ -10,11 +10,12 @@ NEWLIB_DIR  = $(BSP_BASE)/newlib
 ASM_SRCS += $(ENV_DIR)/start.S
 
 C_SRCS += $(NEWLIB_DIR)/_exit.c
-
+C_SRCS += $(ENV_DIR)/init.c
 
 LINKER_SCRIPT := $(ENV_DIR)/link_bram.lds
 
 INCLUDES += -I$(ENV_DIR)
+INCLUDES += -I$(NEWLIB_DIR)
 
 #LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl, --gc-sections  -Wl,--check_sections
 LDFLAGS += -T $(LINKER_SCRIPT)  -nostartfiles -Wl,--gc-sections  -Wl,--check-sections
@@ -42,7 +43,7 @@ $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 $(ASM_OBJS): %.o: %.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-$(C_OBJS): %.o: %.c)
+$(C_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -include sys/cdefs.h -c -o $@ $<
 
 .PHONY: clean
