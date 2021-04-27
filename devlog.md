@@ -3,7 +3,9 @@
 ## Milestone 0.2
 
 - 04/26/2021
-  - Changed soc architecture. Added a new gpio
+  - Changed soc architecture. Added a new gpio port to control led/switch/button
+  - Designed an uart2imem module which can fill the instruction rom from uart rx module
+  - Added the uart2imem module and another uart controller to soc
 
 - 04/23/2021
   - Designed a simple plic module.
