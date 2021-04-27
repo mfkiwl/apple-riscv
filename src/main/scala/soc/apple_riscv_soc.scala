@@ -35,7 +35,8 @@ case class soc_cfg(
 
 case class apple_riscv_soc(cfg: soc_cfg) extends Component {
 
-    val gpio_port = gpio_io(cfg.gpioCfg, useInt = false)
+    val gpio0_port = gpio_io(cfg.gpioCfg, useInt = false)
+    val gpio1_port = gpio_io(cfg.gpioCfg, useInt = false)
     val uart_port = master(Uart())
 
     // == soc component instance == //
@@ -44,9 +45,10 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     val dmem_inst = dmem(cfg.soc_param)
     val clic_inst = clic(cfg.soc_param.clicSibCfg, cfg.soc_param.CLIC_TIMER_WIDTH)
     val plic_inst = plic(cfg.soc_param.plicSibCfg)
-    val gpio_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpioSibCfg)
     val timer_inst = timer(cfg.soc_param.timerSibCfg)
     val uart_inst = SibUart(cfg.uartCfg, cfg.soc_param.uartSibCfg)
+    val gpio0_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpio0SibCfg)
+    val gpio1_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpio1SibCfg)
 
     // == SOC Bus Switch instance == //
     // imem switch
@@ -58,7 +60,7 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     val dmem_switch = Sib_decoder(cfg.soc_param.cpuSibCfg, dmemClientSibCfg)
 
     // peripheral switch
-    val peripClientSibCfg = Array(cfg.soc_param.timerSibCfg, cfg.soc_param.gpioSibCfg, cfg.soc_param.uartSibCfg)
+    val peripClientSibCfg = Array(cfg.soc_param.timerSibCfg, cfg.soc_param.uartSibCfg, cfg.soc_param.gpio0SibCfg, cfg.soc_param.gpio1SibCfg)
     val perip_switch = Sib_decoder(cfg.soc_param.peripHostSibCfg, peripClientSibCfg)
 
 
@@ -77,8 +79,9 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
 
     // peripheral switch connection
     perip_switch.clientSib(0) <> timer_inst.timer_sib   // To Timer
-    perip_switch.clientSib(1) <> gpio_inst.gpio_sib     // To GPIO
-    perip_switch.clientSib(2) <> uart_inst.uart_sib     // To Uart
+    perip_switch.clientSib(1) <> uart_inst.uart_sib     // To Uart
+    perip_switch.clientSib(2) <> gpio0_inst.gpio_sib    // To GPIO0
+    perip_switch.clientSib(3) <> gpio1_inst.gpio_sib    // To GPIO1
 
     // == Imem debug bus == //
     val imem_dbg_sib = slave(Sib(cfg.soc_param.imemSibCfg))
@@ -86,7 +89,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
 
     // == Other port connection == //
 
-    gpio_port.gpio <> gpio_inst.io.gpio
+    gpio0_port.gpio <> gpio0_inst.io.gpio
+    gpio1_port.gpio <> gpio1_inst.io.gpio
     uart_port <> uart_inst.uart
 
     // connect interrupt to cpu core
@@ -96,7 +100,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     cpu_core.io.debug_interrupt     := False
 
     // connect peripheral interrupt to plic
-    plic_inst.io.gpio_int  := gpio_inst.io.gpio_int_pe
+    plic_inst.io.gpio0_int  := gpio0_inst.io.gpio_int_pe
+    plic_inst.io.gpio1_int  := gpio1_inst.io.gpio_int_pe
     plic_inst.io.timer_int := timer_inst.io.timer_interrupt
     plic_inst.io.uart_int  := uart_inst.io.uart_interrupt
 

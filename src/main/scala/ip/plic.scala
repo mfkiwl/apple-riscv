@@ -26,9 +26,10 @@ import spinal.lib._
 
 case class plic_io() extends Bundle {
   val external_interrupt = out Bool
-  val gpio_int           = in Bool
   val timer_int          = in Bool
   val uart_int           = in Bool
+  val gpio0_int           = in Bool
+  val gpio1_int           = in Bool
 }
 
 case class plic_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, addr: Int, interrupt: Bits, intName: String) extends Area {
@@ -48,9 +49,10 @@ case class plic(sibCfg: SibConfig) extends Component {
   val plic_sib = slave(Sib(sibCfg))
   val busCtrl  = SibSlaveFactory(plic_sib)
 
-  val timer_int = plic_interrupt_gen(busCtrl, 1, 0x00, io.timer_int.asBits, "Timer")
-  val gpio_int  = plic_interrupt_gen(busCtrl, 1, 0x08, io.gpio_int.asBits,  "GPIO")
-  val uart_int  = plic_interrupt_gen(busCtrl, 1, 0x10, io.uart_int.asBits,  "Uart")
+  val timer_int = plic_interrupt_gen(busCtrl, 1, 0, io.timer_int.asBits, "Timer")
+  val uart_int  = plic_interrupt_gen(busCtrl, 1, 8, io.uart_int.asBits,   "Uart")
+  val gpio0_int  = plic_interrupt_gen(busCtrl, 1, 16, io.gpio0_int.asBits, "GPIO0")
+  val gpio1_int  = plic_interrupt_gen(busCtrl, 1, 24, io.gpio1_int.asBits, "GPIO1")
 
-  io.external_interrupt := timer_int.int_aggr | gpio_int.int_aggr | uart_int.int_aggr
+  io.external_interrupt := gpio0_int.int_aggr | gpio1_int.int_aggr | timer_int.int_aggr | uart_int.int_aggr
 }

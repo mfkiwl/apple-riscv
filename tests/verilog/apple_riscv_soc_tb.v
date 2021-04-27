@@ -60,7 +60,8 @@ end
   wire              imem_dbg_sib_ready;
   wire              imem_dbg_sib_resp;
 
-  wire     [31:0]   gpio_port_gpio;
+  wire     [31:0]   gpio0_port_gpio;
+  wire     [31:0]   gpio1_port_gpio;
   wire              uart_port_txd;
   reg               uart_port_rxd = 'b0;
 

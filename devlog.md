@@ -2,6 +2,9 @@
 
 ## Milestone 0.2
 
+- 04/26/2021
+  - Changed soc architecture. Added a new gpio
+
 - 04/23/2021
   - Designed a simple plic module.
 
