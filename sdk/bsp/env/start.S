@@ -1,0 +1,46 @@
+.section .init
+.globl _start
+.type _start @function
+
+_start:
+
+    // disable all the interrupt
+    csrrci x0, mstatus, 0x8
+
+.option push
+.option norelax
+    // assign address pointed by __global_pointer$ to gp register
+    // __global_pointer is defined in linker script file
+    la gp, __global_pointer$
+.option pop
+    // assign address pointed by _sp to sp register
+    // _sp is defined in the linker script file
+    la sp, _sp
+
+    // initialize bss section
+    la a0, __bss_start
+    la a1, _end
+    bgeu a0, a1, 2f
+1:
+    sw zero, 0(a0)
+    addi a0, a0, 4
+    bltu a0, a1, 1b
+2:
+
+    // call global constructors
+    la a0, __libc_fini_array
+    call atexit
+    call __libc_init_array
+    // Note:
+    // __libc_fini_array, atexit and __libc_init_array function are special lib function in
+    // Newlib C runtime library.
+
+    // call main function
+    // argc == argv = 0
+    li a0, 0
+    li a1, 0
+    call main
+    tail exit
+
+1:
+    j 1b
